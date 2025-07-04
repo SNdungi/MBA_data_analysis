@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-fluid">
+    <h1>Configure Data Encoding</h1>
+    <a href="{{ url_for('ops.index') }}" class="btn btn-sm btn-outline-dark">
+        <i class="fas fa-arrow-left me-1"></i> Back to Main Page
+    </a>
+</div>
+<p >Configure the encoding strategy for <strong>{{ csv_filename }}</strong>. Changes are saved to the database.</p>
+
+<div class="row">
+    <!-- Left Column: Configuration Forms -->
+    <div class="col-lg-12">
+
+        <!-- Bulk Likert Update Form -->
+        <div class="card mb-4 shadow">
+            <div class="card-header bg-fluid-cream fw-bold">
+                <h4>Bulk Assign Likert Scale</h4>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('encoding.update') }}" method="post">
+                    <input type="hidden" name="map_filename" value="{{ map_filename }}">
+                    <input type="hidden" name="csv_filename" value="{{ csv_filename }}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3"><label for="bulk_start_key" class="form-label">From Column</label><select id="bulk_start_key" name="bulk_start_key" class="form-select form-select-sm">{% for c in configs %}<option value="{{ c.column_key }}">{{ c.column_key }}</option>{% endfor %}</select></div>
+                        <div class="col-md-3"><label for="bulk_end_key" class="form-label">To Column</label><select id="bulk_end_key" name="bulk_end_key" class="form-select form-select-sm">{% for c in configs %}<option value="{{ c.column_key }}">{{ c.column_key }}</option>{% endfor %}</select></div>
+                        <div class="col-md-3"><label for="bulk_scale_type" class="form-label">Scale Type</label><select id="bulk_scale_type" name="bulk_scale_type" class="form-select form-select-sm"><option value="likert_5_point">5-Point Likert</option></select></div>
+                        <div class="col-md-2 d-flex align-items-center pb-2"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="bulk_is_reverse" id="bulk_is_reverse"><label class="form-check-label" for="bulk_is_reverse">Reverse</label></div></div>
+                        <div class="col-md-1"><button type="submit" name="bulk-update-submit" class="btn btn-sm btn-dark">Apply</button></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Individual Column Configuration Form -->
+        <h4>Individual Column Configurations</h4>
+        <form action="{{ url_for('encoding.update') }}" method="post">
+            <input type="hidden" name="map_filename" value="{{ map_filename }}">
+            <input type="hidden" name="csv_filename" value="{{ csv_filename }}">
+            <div class="table-responsive preview-container mb-3" style="font-size: 0.8rem; max-height: 800px;">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th scope="col">Key</th>
+                            <th scope="col">Original Question</th>
+                            <th scope="col" style="width: 20%;">Encoder Type</th>
+                            <th scope="col" style="width: 25%;">Configuration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in configs %}
+                        <tr>
+                            <td><code>{{ config.column_key }}</code></td>
+                            <td>{{ config.original_name }}</td>
+                            <td>
+                                <select name="encoder_type_{{ config.id }}" class="form-select form-select-sm encoder-type-select" data-config-id="{{ config.id }}">
+                                    <option value="None" {% if config.encoder_type == 'None' %}selected{% endif %}>None (Ignore)</option>
+                                    <option value="Nominal" {% if config.encoder_type == 'Nominal' %}selected{% endif %}>Nominal (One-Hot)</option>
+                                    <option value="Ordinal" {% if config.encoder_type == 'Ordinal' %}selected{% endif %}>Ordinal</option>
+                                    <option value="Likert" disabled {% if config.encoder_type == 'Likert' %}selected{% endif %}>Likert</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div id="config_ordinal_{{ config.id }}" class="config-options" style="display: {% if config.encoder_type == 'Ordinal' %}block{% else %}none{% endif %};">
+                                    <input type="text" name="ordinal_order_{{ config.id }}" class="form-control form-control-sm" placeholder="e.g., Low, Medium, High" value="{{ config.encoder_config.get('order', [])|join(', ') }}">
+                                    <div class="form-text mt-1">Comma-separated, in order.</div>
+                                </div>
+                                {% if config.encoder_type == 'Likert' %}
+                                <div class="badge {% if config.encoder_config.get('is_reverse') %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ config.encoder_config.get('scale') }} {% if config.encoder_config.get('is_reverse') %}(Reversed){% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" name="save-all-submit" class="btn btn-dark">Save Individual Configurations</button>
+        </form>
+    </div>
+
+    <!-- Right Column: Data Preview & Final Step -->
+    <div class="row g-5">
+        <div class="col-lg-8 card mb-4 shadow-sm h-100">
+            <div class="card-header fw-bold"><h4>Data Preview</h4></div>
+            <div class="card-body preview-container">
+                {{ df_preview_html|safe }}
+            </div>
+        </div>
+
+        <div class=" col-lg-4 card border-fluid-orange shadow-sm h-100">
+            <div class="card-header bg-fluid-orange text-white fw-bold">
+                <h4>Final Step: Execute Encoding</h4>
+            </div>
+            <div class="card-body">
+                <p>Once you have saved your configurations, click below to perform the encoding and generate the final files.</p>
+                <form action="{{ url_for('encoding.run_encoding') }}" method="post">
+                    <input type="hidden" name="csv_filename" value="{{ csv_filename }}">
+                    <input type="hidden" name="map_filename" value="{{ map_filename }}">
+                    <button type="submit" class="btn btn-fluid-orange w-100">
+                        <i class="fas fa-cogs me-2"></i>Generate Encoded File & Codebook
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const encoderTypeSelects = document.querySelectorAll('.encoder-type-select');
+
+    encoderTypeSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const configId = this.dataset.configId;
+            document.querySelectorAll(`.config-options[id$="_${configId}"]`).forEach(el => el.style.display = 'none');
+            
+            if (this.value === 'Ordinal') {
+                document.getElementById(`config_ordinal_${configId}`).style.display = 'block';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

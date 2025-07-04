@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Data Encoding Methodology</h1>
+            <p class="col-md-8 fs-4">A guide to the strategic approach for transforming raw survey data into a numerically encoded format suitable for rigorous statistical analysis.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h2 class="pb-2 border-bottom">The Three-Phase Approach</h2>
+            <p>
+                Encoding data is not merely a technical step; it is a critical part of the research process that directly impacts the validity of your findings. This tool follows a systematic, three-phase methodology to ensure data is transformed in a transparent, statistically sound, and meaningful way.
+            </p>
+        </div>
+    </div>
+
+    <div class="accordion mt-4" id="methodologyAccordion">
+
+        <!-- Phase 1: Discovery & Strategy -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <strong>Phase 1: Discovery & Strategy - "Understand Before You Touch"</strong>
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#methodologyAccordion">
+                <div class="accordion-body">
+                    <p>This is the most crucial phase. Rushing this step is the most common source of error in data analysis. The goal is to understand the <em>meaning</em> and <em>type</em> of every single variable before any transformation is applied.</p>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            1. Data Dictionary Deep Dive (The "What")
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">We must first classify each variable from your dataset based on its nature:</p>
+                            <ul class="list-group">
+                                <li class="list-group-item"><strong>Nominal Categorical:</strong> Data with no inherent order (e.g., Department: 'Sales', 'HR', 'Engineering').</li>
+                                <li class="list-group-item"><strong>Ordinal Categorical:</strong> Data with a clear, meaningful order (e.g., Experience: '0-3 years', '3-5 years', '5-10 years').</li>
+                                <li class="list-group-item"><strong>Likert Scale:</strong> A special type of ordinal data, typically used to measure attitudes or opinions. We must confirm its properties, such as the number of points (5-point, 7-point) and its directionality.</li>
+                                <li class="list-group-item"><strong>Binary:</strong> A special case with only two values (e.g., 'Yes'/'No').</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            2. Define the Encoding Strategy (The "How")
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Based on the variable type, we select the optimal encoding method:</p>
+                            <dl class="row">
+                                <dt class="col-sm-3">For Nominal Data:</dt>
+                                <dd class="col-sm-9"><strong>One-Hot Encoding</strong> is the gold standard. It creates new binary (0/1) columns for each category, preventing the false assumption of an order.</dd>
+
+                                <dt class="col-sm-3">For Ordinal Data:</dt>
+                                <dd class="col-sm-9"><strong>Integer (Label) Encoding</strong> is used. It maps categories to numbers that respect their rank (e.g., `'Low' -> 1`, `'Medium' -> 2`, `'High' -> 3`).</dd>
+                                
+                                <dt class="col-sm-3">For Likert Scale Data:</dt>
+                                <dd class="col-sm-9">
+                                    <p>We treat this as <strong>Ordinal/Interval Data</strong>, mapping responses to a numerical scale (e.g., `'Strongly Disagree' -> 1` to `'Strongly Agree' -> 5`).</p>
+                                    <p class="fw-bold text-danger">A critical sub-step is handling <strong>Reverse-Coded Questions</strong>. For negatively phrased items (e.g., "The system is confusing"), the scale must be inverted to ensure all scores point in the same direction of sentiment. Failure to do so invalidates the analysis.</p>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 2: Execution & Validation -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <strong>Phase 2: Execution & Validation - "Trust, But Verify"</strong>
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#methodologyAccordion">
+                <div class="accordion-body">
+                    <p>Once the strategy is defined, we execute the transformation and rigorously validate the output.</p>
+                    <ul class="list-unstyled">
+                        <li><strong>1. Configurable Implementation:</strong> The encoding logic is implemented to be driven by a configuration file (e.g., `config.toml`). This separates the code from the project-specific encoding rules, enhancing reusability and transparency.</li>
+                        <li class="mt-2"><strong>2. Automatic Codebook Generation:</strong> After encoding, the system should automatically generate a human-readable "codebook". This file serves as a permanent record, showing exactly how each original value was mapped to its new numerical representation. This is essential for reproducibility and auditing.</li>
+                        <li class="mt-2"><strong>3. Sanity Checks:</strong> We must verify the transformation. This includes comparing descriptive statistics (like counts) between the original and encoded data and using cross-tabulations to visually confirm the mapping is correct.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 3: Documentation & Automation -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    <strong>Phase 3: Documentation & Automation - "Make It Repeatable & Understandable"</strong>
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#methodologyAccordion">
+                <div class="accordion-body">
+                    <p>The final phase integrates the encoding process into an automated, user-friendly workflow within this application.</p>
+                    <p>The goal is to provide an interface where the user can:</p>
+                    <ul>
+                        <li>Select a source CSV file.</li>
+                        <li>View the automatically identified columns and their types.</li>
+                        <li>Configure the encoding rules (e.g., specify which columns are nominal, ordinal, and which Likert items need to be reverse-coded).</li>
+                        <li>Execute the encoding process with a single click.</li>
+                        <li>Receive the encoded data file and its corresponding codebook as outputs, ready for the next stage of analysis (e.g., bootstrapping, modeling).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+:root {
+  /* Primary Colors */
+  --fluidcore-red: #ec340b;       /* Logo Red */
+  --fluidcore-teal: #23797c;      /* Tagline Teal */
+  --fluidcore-cream: #eee4d3;     /* Background Cream for accents */
+
+  /* Secondary Colors */
+  --fluidcore-orange: #ff5e00;    /* Primary Action Orange */
+  --fluidcore-dark-brown: #271209; /* Deep Shadow Brown for Text */
+  --fluidcore-gold: Gold;      /* Light Tan/Gold for highlights */
+  --fluidcore-white: #ffffff;     /* Pure White for main background */
+
+  /* Utility Colors */
+  --fluidcore-shadow: rgba(22, 10, 5, 0.1);
+  --fluidcore-border: #e9e2d7;
+
+  /* Typography */
+  --fluidcore-heading-font: 'DM Serif Text', serif;
+  --fluidcore-body-font: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--fluidcore-body-font);
+  font-size: 0.85rem; /* A slightly more readable default */
+  color: var(--fluidcore-dark-brown);
+  background-color: var(--fluidcore-white); /* --- SET TO WHITE AS REQUESTED --- */
+  padding-top: 5rem;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--fluidcore-heading-font);
+  font-weight: normal;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+h1, .display-5 {
+    color: var(--fluidcore-orange);
+}
+h2, h3, h4, h5, h6 {
+    color: var(--fluidcore-teal);
+}
+
+h1, .display-5 { font-size: 2.5rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.2rem; }
+
+code, pre {
+  font-family: var(--fluidcore-body-font);
+  background-color: var(--fluidcore-border);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+/* Custom Component Styles */
+.navbar-custom {
+    background-color: var(--fluidcore-dark-brown);
+}
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: var(--fluidcore-cream);
+}
+.navbar-custom .nav-link:hover {
+    color: var(--fluidcore-gold);
+}
+
+.card {
+    border-color: var(--fluidcore-border);
+}
+
+.bg-fluid-cream {
+    background-color: var(--fluidcore-cream) !important;
+}
+
+.alert-fluid-info {
+    color: var(--fluidcore-dark-brown);
+    background-color: #f7f1e5; /* A lighter version of cream for alerts */
+    border-color: var(--fluidcore-border);
+}
+
+.btn-fluid-orange {
+    background-color: var(--fluidcore-orange);
+    border-color: var(--fluidcore-orange);
+    color: var(--fluidcore-white);
+    font-weight: bold;
+}
+.btn-fluid-orange:hover {
+    background-color: #d13f1a;
+    border-color: #be3917;
+    color: var(--fluidcore-white);
+}
+
+/* Updated Preview Container Styles */
+.preview-container {
+	max-height: 400px;
+	overflow: auto;
+	font-family: var(--fluidcore-body-font); /* Use theme font */
+	font-size: 0.75rem;
+    border: 1px solid var(--fluidcore-border);
+    border-radius: .25rem;
+}
+.preview-container .table {
+	white-space: nowrap;
+	margin-bottom: 0;
+}
+.preview-container pre {
+	margin: 0;
+	padding: 1rem;
+	background-color: var(--fluidcore-cream); /* Use theme color */
+}
+.btn-data{
+	background-color: var(--fluidcore-dark-brown);
+	color: var(--fluidcore-gold);
+}
+
+/* ==========================================================================
+   Footer Styles
+   ========================================================================== */
+.footer-custom {
+    background-color: var(--fluidcore-dark-brown);
+    color: var(--fluidcore-cream);
+    padding: 3rem 0;
+    margin-top: 5rem;
+    font-size: 0.9rem;
+}
+
+.footer-custom h5 {
+    font-family: var(--fluidcore-heading-font);
+    color: var(--fluidcore-orange);
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.footer-custom .footer-links {
+    list-style: none;
+    padding-left: 0;
+}
+
+.footer-custom .footer-links li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-custom .footer-links a {
+    color: var(--fluidcore-cream);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-custom .footer-links a:hover {
+    color: var(--fluidcore-gold);
+    text-decoration: underline;
+}
+
+.footer-custom .social-icons a {
+    color: var(--fluidcore-cream);
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    transition: color 0.3s ease;
+}
+
+.footer-custom .social-icons a:hover {
+    color: var(--fluidcore-orange);
+}
+
+.footer-custom .footer-bottom {
+    border-top: 1px solid #4d3e38; /* A slightly lighter brown for the divider */
+    padding-top: 1.5rem;
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--fluidcore-gold);
+}
+
+/* ... (all your existing CSS) ... */
+
+/* ==========================================================================
+   Header with Background Image
+   ========================================================================== */
+.hero-header {
+    /* The background image URL will be set inline in the HTML */
+    background-position: right center; /* Aligns the image to the right, centered vertically */
+    background-size: contain;          /* Scales the image to fit without being cropped */
+    background-repeat: no-repeat;      /* Prevents the image from tiling */
+    position: relative; /* Needed for any potential pseudo-elements if added later */
+}
+
+/* Responsive adjustment: Hide the background image on smaller screens */
+@media (max-width: 992px) {
+    .hero-header {
+        background-image: none !important; /* Hide the image on tablets and phones */
+    }
+    .hero-header .container-fluid {
+        text-align: center; /* Center the text when the image is gone */
+    }
+    .hero-header .container-fluid p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

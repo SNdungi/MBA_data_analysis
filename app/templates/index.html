@@ -1,0 +1,229 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-fluid-cream rounded-3 shadow-sm hero-header" 
+     style="background-image: url('{{ url_for('static', filename='images/fc_bannre_1300x300.png') }}');">
+    
+    <div class="container-fluid py-4">
+        <!-- The h1 and p tags are placed inside a container that takes up about half the space on large screens -->
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold">Bootstrap Your Data</h1>
+            <p class="fs-5">Configure the settings below to simulate new data from your source file. You can perform a standard bootstrap or a "remix" bootstrap for survey data.</p>
+        </div>
+    </div>
+</div>
+
+{% if show_last_result_link %}
+<div class="alert bg-light d-flex justify-content-between align-items-center" role="alert">
+    <div>
+        <h4 class="alert-heading">View Previous Results</h4>
+        <p class="mb-0">The most recent simulation result is available. You can view it directly or run a new simulation below.</p>
+    </div>
+    <a href="{{ url_for('ops.results') }}" class="btn btn-sm btn-outline-dark shadow" style="background-color: var(--fluidcore-cream); color: var(--fluidcore-teal);">View Last Result</a>
+</div>
+{% endif %}
+
+<!-- Main Form -->
+<form action="{{ url_for('ops.run_bootstrap') }}" method="post" id="bootstrap-form">
+    <div class="row g-5 m-auto p-0">
+        <!-- Column 1: Configuration -->
+        <div class="col-lg-4 border-end">
+            <h2>Configuration</h2>
+
+            <!-- File Selection -->
+            <div class="mb-4">
+                <label for="csv_file" class="form-label fw-bold">Select Source CSV File</label>
+                <select class="form-select" id="csv_file" name="csv_file" required>
+                    <option value="" selected disabled>-- Select a file --</option>
+                    {% for file in csv_files %}
+                    <option value="{{ file }}">{{ file }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Place CSVs in the `static/uploads` directory.</div>
+            </div>
+            
+            <button type="button" class="btn btn-outline-dark mb-3" id="generate-map-btn" disabled>
+                Generate & Preview JSON Map
+            </button>
+            <hr>
+            
+            <!-- Bootstrap Type Choice -->
+            <h4>Bootstrap Type</h4>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="bootstrap_type" id="type_standard" value="standard" checked>
+                <label class="form-check-label" for="type_standard">
+                    <strong>Standard Bootstrap</strong> (Resample entire rows)
+                </label>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="radio" name="bootstrap_type" id="type_remix" value="remix">
+                <label class="form-check-label" for="type_remix">
+                    <strong>Remix Bootstrap</strong> (Shuffle a section of columns independently)
+                </label>
+            </div>
+
+            <!-- Common Bootstrap Settings -->
+            <h4>Bootstrap Settings</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="new_size" class="form-label">New Data Size</label>
+                    <input type="number" class="form-control" id="new_size" name="new_size" value="500" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="random_state" class="form-label">Random State</label>
+                    <input type="number" class="form-control" id="random_state" name="random_state" value="42">
+                </div>
+            </div>
+
+            <!-- Remix-Specific Settings (Dynamically shown/hidden) -->
+            <div id="remix-options-wrapper">
+                <h4>Remix Settings <small class="text-muted">(for Remix Bootstrap only)</small></h4>
+                <div class="mb-3">
+                    <label for="start_remix_col" class="form-label">Start of Remix Section</label>
+                    <select class="form-select" id="start_remix_col" name="start_remix_col" disabled>
+                        <option value="">-- Generate Map First --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="end_remix_col" class="form-label">End of Remix Section</label>
+                    <select class="form-select" id="end_remix_col" name="end_remix_col" disabled>
+                        <option value="">-- Generate Map First --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hidden inputs to carry auto-generated filenames -->
+            <input type="hidden" id="map_path" name="map_path">
+            <input type="hidden" id="output_file" name="output_file">
+            
+            <button type="submit" class="btn btn-sm btn-data mt-4 rounded-5 mb-3 px-2 fw-bold" >Run Simulation</button>
+        </div>
+
+ <!-- Column 2: Previews -->
+        <div class="col-lg-8 ">
+            <h2>Live Previews</h2>
+            <!-- CSV Preview -->
+            <div class="card shadow">
+                <div class="card-header fw-bold">CSV Preview (First 10 Rows)</div>
+                <div class="card-body preview-container" id="csv-preview-container">
+                    <p class="text-muted">Select a CSV file to see a preview.</p>
+                </div>
+            </div>
+            <!-- JSON Preview -->
+            <div class="card shadow mt-4">
+                <div class="card-header fw-bold">JSON Map Preview</div>
+                <div class="card-body preview-container" id="json-preview-container">
+                    <p class="text-muted">Click the "Generate & Preview" button after selecting a CSV.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Get all the DOM elements we need to control ---
+    const csvSelect = document.getElementById('csv_file');
+    const generateMapBtn = document.getElementById('generate-map-btn');
+    const csvPreviewContainer = document.getElementById('csv-preview-container');
+    const jsonPreviewContainer = document.getElementById('json-preview-container');
+    const bootstrapTypeRadios = document.querySelectorAll('input[name="bootstrap_type"]');
+    const remixWrapper = document.getElementById('remix-options-wrapper');
+    const startRemixSelect = document.getElementById('start_remix_col');
+    const endRemixSelect = document.getElementById('end_remix_col');
+    const mapPathInput = document.getElementById('map_path');
+    const outputPathInput = document.getElementById('output_file');
+
+    // --- Helper Functions ---
+    function populateRemixSelects(columns) {
+        startRemixSelect.innerHTML = '<option value="">-- Select Start --</option>';
+        endRemixSelect.innerHTML = '<option value="">-- Select End --</option>';
+        columns.forEach(col => {
+            startRemixSelect.innerHTML += `<option value="${col}">${col}</option>`;
+            endRemixSelect.innerHTML += `<option value="${col}">${col}</option>`;
+        });
+    }
+
+    function toggleRemixOptions(enable) {
+        if (enable) {
+            remixWrapper.style.opacity = '1';
+            startRemixSelect.disabled = false;
+            endRemixSelect.disabled = false;
+            startRemixSelect.required = true;
+            endRemixSelect.required = true;
+        } else {
+            remixWrapper.style.opacity = '0.5';
+            startRemixSelect.disabled = true;
+            endRemixSelect.disabled = true;
+            startRemixSelect.required = false;
+            endRemixSelect.required = false;
+        }
+    }
+
+    // --- Event Listeners ---
+
+    // 1. When a new CSV file is selected from the dropdown
+    csvSelect.addEventListener('change', function() {
+        const csvFile = this.value;
+        if (!csvFile) return;
+
+        // Reset the interface for the new selection
+        generateMapBtn.disabled = false;
+        csvPreviewContainer.innerHTML = '<p class="text-info">Loading CSV preview...</p>';
+        jsonPreviewContainer.innerHTML = '<p class="text-muted">Click the "Generate & Preview" button.</p>';
+        startRemixSelect.innerHTML = '<option value="">-- Generate Map First --</option>';
+        endRemixSelect.innerHTML = '<option value="">-- Generate Map First --</option>';
+
+        // Set hidden form values for filenames
+        const baseName = csvFile.replace('.csv', '');
+        mapPathInput.value = baseName + '.json';
+        outputPathInput.value = 'simulated_' + baseName + '.csv';
+        
+        // Fetch and display the CSV preview
+        fetch(`/preview_csv/${csvFile}`)
+            .then(response => response.json())
+            .then(data => {
+                csvPreviewContainer.innerHTML = data.error ? `<p class="text-danger">${data.error}</p>` : data.html;
+            })
+            .catch(error => {
+                csvPreviewContainer.innerHTML = '<p class="text-danger">Failed to fetch CSV preview.</p>';
+            });
+    });
+
+    // 2. When the "Generate & Preview JSON Map" button is clicked
+    generateMapBtn.addEventListener('click', function() {
+        const csvFile = csvSelect.value;
+        if (!csvFile) return;
+
+        jsonPreviewContainer.innerHTML = '<p class="text-info">Generating and loading JSON map...</p>';
+
+        fetch(`/generate_and_preview_json/${csvFile}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    jsonPreviewContainer.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    const jsonString = JSON.stringify(data.map_data, null, 2);
+                    jsonPreviewContainer.innerHTML = `<pre><code>${jsonString}</code></pre>`;
+                    populateRemixSelects(data.columns);
+                }
+            })
+            .catch(error => {
+                jsonPreviewContainer.innerHTML = '<p class="text-danger">Failed to fetch JSON map.</p>';
+            });
+    });
+
+    // 3. When the user changes the bootstrap type (Standard vs. Remix)
+    bootstrapTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            toggleRemixOptions(this.value === 'remix');
+        });
+    });
+
+    // --- Initial State on Page Load ---
+    toggleRemixOptions(document.querySelector('input[name="bootstrap_type"]:checked').value === 'remix');
+});
+</script>
+{% endblock %}

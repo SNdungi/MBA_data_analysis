@@ -1,0 +1,35 @@
+# Configuration file for the data bootstrapping project
+
+[files]
+csv_file = "PLM_SYSTEMS_ADOPTION_IN_EPZ_V2.csv"
+json_map_file = "PLM_SYSTEMS_ADOPTION_IN_EPZ_V2.json"
+output_file = "simulated_remixed_data.csv"
+encoding = "latin1"
+
+[settings]
+new_data_size = 395
+random_state = 42
+
+[remix_config]
+start_of_remix_section = "q6" 
+
+# ===================================================================
+# SECTION FOR YOUR FUTURE DATA ENCODER
+# This section is not used by the current script, but is structured
+# for a future `encode_data()` method you might develop.
+# ===================================================================
+[encoders]
+  # Example for a specific column
+  [encoders.experience]
+    "0-3 years" = 1
+    "3-5 years" = 2
+    "5-10 years" = 3
+    "10+ years" = 4
+
+  # Example of a reusable Likert scale encoder
+  [encoders.likert_5_point]
+    "Strongly Disagree" = 1
+    "Disagree" = 2
+    "Neutral" = 3
+    "Agree" = 4
+    "Strongly Agree" = 5
