@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div div class="container">
+
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-fluid">
+        <h1 class="h2">Bootstrap Results</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('ops.index') }}" class="btn btn-sm btn-outline-dark">
+                <i class="fas fa-arrow-left me-1"></i> Run a New Simulation
+            </a>
+        </div>
+    </div>
+
+    <!-- "Next Step" Card using the custom theme -->
+    <div class="card text-center mb-4 border-fluid-orange shadow-sm">
+        <div class="card-body bg-fluid-cream">
+            <h5 class="card-title text-fluid-red">Proceed to Data Encoding</h5>
+            <p class="card-text">
+                Your data has been simulated. The next critical step is to encode it into a numerical format for statistical analysis.
+            </p>
+            <!-- THIS IS THE CORRECTED LINE -->
+            <a href="{{ url_for('encoding.definitions', study_id=session.filenames['study_id']) }}" class="btn btn-fluid-orange">
+                Configure Data Encoding <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- File Viewer Column -->
+        <div class="col-lg-5">
+            <h2>Generated Files</h2>
+            <div class="list-group shadow-sm">
+                <span class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file-csv me-2 text-fluid-teal"></i>
+                        Original Data: <strong>{{ session.filenames.original }}</strong>
+                    </div>
+                    <a href="{{ url_for('ops.view_df', filename=session.filenames.original) }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                </span>
+                <span class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-project-diagram me-2 text-fluid-teal"></i>
+                        Question Map: <strong>{{ session.filenames.map }}</strong>
+                    </div>
+                    <a href="{{ url_for('ops.view_file', type='generated', filename=session.filenames.map) }}" class="badge bg-secondary rounded-pill text-decoration-none">View JSON</a>
+                </span>
+                <span class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file-invoice me-2 text-fluid-teal"></i>
+                        Simulated Data: <strong>{{ session.filenames.output }}</strong>
+                    </div>
+                    <a href="{{ url_for('ops.view_df', filename=session.filenames.output, type='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                </span>
+            </div>
+        </div>
+
+        <!-- Graph Viewer Column -->
+        <div class="col-lg-7">
+            <h2>Comparison Graphs</h2>
+            {% if session.get('filenames', {}).get('graphs') %}
+                {% for graph in session.filenames.graphs %}
+                <div class="card mb-3 shadow-sm">
+                    <img src="{{ url_for('static', filename=graph) }}" class="card-img-top" alt="Comparison Graph">
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-fluid-info">
+                    <strong>No Graphs Generated.</strong> This can happen if the selected columns for comparison were not numeric.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

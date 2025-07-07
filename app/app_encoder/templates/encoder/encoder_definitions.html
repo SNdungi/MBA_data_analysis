@@ -1,0 +1,500 @@
+{% extends "encoder_base.html" %}
+
+{% block encoder_content %}
+
+<!-- ================================================================================= -->
+<!-- Custom CSS for the new table display                                            -->
+
+
+<!-- ================================================================================= -->
+<!-- Header and Actions (No changes here)                                            -->
+<!-- ================================================================================= -->
+<div class="d-flex justify-content-end align-items-end mb-4">
+
+    <div class="d-flex align-items-end">
+        <button type="button" class="btn btn-sm btn-fluid-orange me-2" data-bs-toggle="modal" data-bs-target="#newDefinitionModal">
+            <i class="fas fa-plus me-1"></i> <strong>Create </strong>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary me-2 rounded-5" data-bs-toggle="modal" data-bs-target="#dataPreviewModal">
+            <i class="fas fa-eye me-1"></i>
+        </button>
+        <form action="{{ url_for('encoding.refresh_prototypes') }}" method="post" >
+             <input type="hidden" name="study_id" value="{{ study.id }}">
+             <button type="submit" class="btn btn-sm btn-outline-secondary rounded-5" title="Sync prototypes from config file">
+                <i class="fas fa-sync-alt me-1"></i> 
+             </button>
+        </form>
+    </div>
+</div>
+
+<!-- ================================================================================= -->
+<!-- Definitions Display Table (REFACTORED)                                          -->
+<!-- ================================================================================= -->
+
+    <div class="table-responsive preview-container" style="font-size: 0.8rem; max-height: 600px;">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="table-light sticky-top">
+                <tr>
+                    <th class="px-2 p-2" style="width: 15%;">Definition Name</th>
+                    <th  class="p-2" style="width: 15%;">Encoder Type</th>
+                    <th  class="px-2 p-2">Configuration</th>
+                    <th  class="text-center p-2" style="width: 10%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if definitions %}
+                    {% for def in definitions %}
+                    <tr>
+                        <td>
+                            <small class="text-fluid-red px-2">{{ def.name }}</small>
+                        </td>
+                        <td>
+                            <small style="color: var(--fluidcore-teal);">{{ def.prototype.name }}</small>
+                        </td>
+                        <td >
+                            {# Flatten the JSON into a single line for display #}
+                            <code>{{ def.configuration|tojson }}</code>
+                        </td>
+                        <td class="text-center action-icons">
+                            <!-- Edit Button (Icon) -->
+                            <button class="btn btn-link me-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editDefinitionModal"
+                                    data-def-id="{{ def.id }}"
+                                    data-def-name="{{ def.name }}"
+                                    data-def-config='{{ def.configuration|tojson(indent=2) }}' {# Keep indented for the edit modal #}
+                                    title="Edit '{{ def.name }}'">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+
+                            <!-- Conditional Delete Button (Icon) -->
+                            {% if not def.column_assignments %}
+                                <!-- Active Delete Icon -->
+                                <button class="btn btn-link text-danger m-0 p-0"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteDefinitionModal"
+                                        data-def-id="{{ def.id }}"
+                                        data-def-name="{{ def.name }}"
+                                        title="Delete '{{ def.name }}'">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            {% else %}
+                                <!-- Disabled Delete Icon with Tooltip -->
+                                <span class="btn btn-link disabled m-0 p-0" data-bs-toggle="tooltip" data-bs-placement="top"
+                                      title="Cannot delete. This definition is used by {{ def.column_assignments|length }} column(s).">
+                                    <i class="fas fa-trash-alt"></i>
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="text-center p-5">
+                                <h4 class="text-muted">No Definitions Yet</h4>
+                                <p class="mb-0">Click the "Create New Definition" button to build your first encoding recipe.</p>
+                                <i class="fas fa-magic fa-3x text-fluid-teal opacity-50 mt-3"></i>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+<!-- ================================================================================= -->
+<!-- MODALS (No changes needed for the modals)                                       -->
+<!-- ================================================================================= -->
+
+<!-- Data Preview Modal -->
+<div class="modal fade" id="dataPreviewModal" tabindex="-1" aria-labelledby="dataPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dataPreviewModalLabel">Raw Data Preview (First 5 Rows)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-container">
+            {{ df_preview_html|safe }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- "Smart" Modal for Creating a New Encoder Definition -->
+<div class="modal fade" id="newDefinitionModal" tabindex="-1" aria-labelledby="newDefinitionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form id="newDefinitionForm" action="{{ url_for('encoding.create_definition') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newDefinitionModalLabel">Create New Encoder Definition</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="study_id" value="{{ study.id }}">
+                    <!-- This TEXTAREA is now hidden and will be populated by JavaScript -->
+                    <textarea name="configuration" id="json_configuration_output" style="display: none;"></textarea>
+                    
+                    <!-- Step 1: Basic Info -->
+                    <h6>Step 1: Basic Information</h6>
+                    <div class="p-3 mb-4 bg-light rounded border">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="definition_name" class="form-label">Definition Name</label>
+                                <input type="text" class="form-control" name="definition_name" id="definition_name" placeholder="e.g., 'Positive Satisfaction Scale'" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prototype_id" class="form-label">Encoder Type</label>
+                                <select class="form-select" name="prototype_id" id="prototype_id" required>
+                                    <option value="" selected disabled>-- Choose a type to continue --</option>
+                                    {% for p in prototypes %}
+                                    <option value="{{ p.id }}" data-encoder-type="{{ p.encoder_type }}">{{ p.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Dynamic Configuration UI -->
+                    <div id="configuration-ui-wrapper" style="display: none;">
+                        <h6>Step 2: Configure the Mapping</h6>
+                        
+                        <!-- LIKERT SCALE UI -->
+                        <div id="likert-config-ui" class="config-panel" style="display: none;">
+                            <p class="form-text">Enter the text label for each numeric value. The values themselves are fixed.</p>
+                            <table class="table table-bordered">
+                                <thead class="table-light"><tr><th>Encoded Value</th><th>Text Label (e.g., "Strongly Disagree")</th></tr></thead>
+                                <tbody>
+                                    <!-- Rows will be added by JS based on prototype name -->
+                                </tbody>
+                            </table>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" value="" id="likert_is_reverse">
+                                <label class="form-check-label" for="likert_is_reverse">
+                                    This is a reverse-coded scale (e.g., for negative questions).
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ORDINAL SCALE UI -->
+                        <div id="ordinal-config-ui" class="config-panel" style="display: none;">
+                             <p class="form-text">Add categories in order from lowest to highest. The first entry will be encoded as 0, the second as 1, and so on.</p>
+                             <div id="ordinal-input-list">
+                                 <!-- Ordinal inputs will be added here by JS -->
+                             </div>
+                             <button type="button" class="btn btn-sm btn-outline-success mt-2" id="add-ordinal-btn">
+                                 <i class="fas fa-plus me-1"></i> Add Category
+                             </button>
+                        </div>
+                        
+                        <!-- NOMINAL/BINARY INFO UI -->
+                        <div id="info-config-ui" class="config-panel" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No specific mapping is needed for this encoder type. The encoding is handled automatically based on the values found in the data.
+                            </div>
+                        </div>
+                        
+                        <!-- MULTICATEGORY UI -->
+                        <div id="nominal-multi-config-ui" class="config-panel" style="display: none;">
+                            <p class="form-text">
+                                Enter the exact categories you want to search for in the text. Each category will become a new 0/1 column in your data. This is case-insensitive.
+                                Example: For "USA, US, UNITED STATES", just enter "USA".
+                            </p>
+                            <div id="nominal-multi-input-list">
+                                <!-- Inputs will be added here by JS -->
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-success mt-2" id="add-nominal-multi-btn">
+                                <i class="fas fa-plus me-1"></i> Add Category
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Definition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editDefinitionModal" tabindex="-1" aria-labelledby="editDefinitionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ url_for('encoding.update_definition') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editDefinitionModalLabel">Edit Encoder Definition</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="study_id" value="{{ study.id }}">
+                    <!-- This hidden input will be populated by JavaScript -->
+                    <input type="hidden" id="edit_definition_id" name="definition_id">
+                    
+                    <div class="mb-3">
+                        <label for="edit_definition_name" class="form-label">Definition Name</label>
+                        <input type="text" class="form-control" id="edit_definition_name" name="edit_definition_name" required>
+                        <div class="form-text">A unique, friendly name for this recipe.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_configuration" class="form-label">Configuration (in JSON format)</label>
+                        <textarea class="form-control" id="edit_configuration" name="edit_configuration" rows="12" required></textarea>
+                        <div class="form-text">The actual mapping dictionary. Must be valid JSON.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ================== NEW DELETE CONFIRMATION MODAL ================== -->
+<div class="modal fade" id="deleteDefinitionModal" tabindex="-1" aria-labelledby="deleteDefinitionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="deleteDefinitionForm" action="{{ url_for('encoding.delete_definition') }}" method="post">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteDefinitionModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="study_id" value="{{ study.id }}">
+                    <input type="hidden" id="delete_definition_id" name="definition_id">
+                    <p>Are you sure you want to permanently delete the definition: 
+                       <strong id="delete-def-name-placeholder"></strong>?
+                    </p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Yes, Delete It</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block encoder_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Initialize Bootstrap 5 Tooltips ---
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    // --- The rest of your existing JavaScript ---
+    const prototypeSelect = document.getElementById('prototype_id');
+    const configWrapper = document.getElementById('configuration-ui-wrapper');
+    const allConfigPanels = document.querySelectorAll('.config-panel');
+    const newDefinitionForm = document.getElementById('newDefinitionForm');
+    const jsonOutputTextarea = document.getElementById('json_configuration_output');
+
+    // --- Logic for Ordinal UI ---
+    const ordinalList = document.getElementById('ordinal-input-list');
+    const addOrdinalBtn = document.getElementById('add-ordinal-btn');
+
+    function createOrdinalInput(placeholder = '') {
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <span class="input-group-text"><i class="fas fa-grip-vertical"></i></span>
+            <input type="text" class="form-control ordinal-input" placeholder="${placeholder}" required>
+            <button class="btn btn-outline-danger remove-ordinal-btn" type="button"><i class="fas fa-trash"></i></button>
+        `;
+        ordinalList.appendChild(div);
+    }
+    
+    addOrdinalBtn.addEventListener('click', () => createOrdinalInput('e.g., 10+ years'));
+
+    ordinalList.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-ordinal-btn')) {
+            e.target.closest('.input-group').remove();
+        }
+    });
+
+        // --- Add logic for the new NominalMulti UI ---
+    const nominalMultiList = document.getElementById('nominal-multi-input-list');
+    const addNominalMultiBtn = document.getElementById('add-nominal-multi-btn');
+
+    function createNominalMultiInput(placeholder = '') {
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control nominal-multi-input" placeholder="${placeholder}" required>
+            <button class="btn btn-outline-danger remove-nominal-multi-btn" type="button"><i class="fas fa-trash"></i></button>
+        `;
+        nominalMultiList.appendChild(div);
+    }
+
+    addNominalMultiBtn.addEventListener('click', () => createNominalMultiInput('e.g., UK'));
+
+    nominalMultiList.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-nominal-multi-btn')) {
+            e.target.closest('.input-group').remove();
+        }
+    });
+
+
+    // --- Main Dropdown Logic ---
+    prototypeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const encoderType = selectedOption.getAttribute('data-encoder-type');
+        const prototypeName = selectedOption.textContent;
+
+        // Hide all panels and show the main wrapper
+        allConfigPanels.forEach(panel => panel.style.display = 'none');
+        configWrapper.style.display = 'block';
+
+        if (encoderType === 'Likert') {
+            const panel = document.getElementById('likert-config-ui');
+            const tbody = panel.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear previous
+            
+            // Infer points from prototype name (e.g., "5-Point Likert")
+            const points = parseInt(prototypeName.match(/\d+/)[0] || 5);
+            const placeholders = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
+
+            for (let i = 1; i <= points; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge bg-secondary">${i}</span></td>
+                    <td><input type="text" class="form-control likert-input" data-value="${i}" placeholder="${placeholders[i-1] || ''}" required></td>
+                `;
+                tbody.appendChild(row);
+            }
+            panel.style.display = 'block';
+        } else if (encoderType === 'Ordinal') {
+            const panel = document.getElementById('ordinal-config-ui');
+            ordinalList.innerHTML = ''; // Clear previous
+            createOrdinalInput('e.g., 0-3 years');
+            createOrdinalInput('e.g., 4-9 years');
+            panel.style.display = 'block';
+        
+        } else if (encoderType === 'NominalMulti') {
+            const panel = document.getElementById('nominal-multi-config-ui');
+            nominalMultiList.innerHTML = ''; // Clear previous
+            createNominalMultiInput('e.g., USA');
+            createNominalMultiInput('e.g., Canada');
+            createNominalMultiInput('e.g., Europe');
+            panel.style.display = 'block';
+
+        } else if (encoderType === 'Nominal' || encoderType === 'Qualitative') {
+        // Show the generic info panel for these types
+        document.getElementById('info-config-ui').style.display = 'block';
+    }
+        else { // Nominal, Binary, etc.
+             document.getElementById('info-config-ui').style.display = 'block';
+        }
+    });
+
+    // --- Form Submission Logic ---
+    newDefinitionForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop submission to build JSON first
+
+        const selectedOption = prototypeSelect.options[prototypeSelect.selectedIndex];
+        const encoderType = selectedOption.getAttribute('data-encoder-type');
+        let config = {};
+
+        if (encoderType === 'NominalMulti') {
+            config['categories'] = [];
+            document.querySelectorAll('.nominal-multi-input').forEach(input => {
+                const val = input.value.trim();
+                if (val) {
+                    config['categories'].push(val);
+                }
+            });
+            
+        } else if (encoderType === 'Likert') {
+            config['map'] = {}
+            document.querySelectorAll('.likert-input').forEach(input => {
+                const key = input.value.trim();
+                const val = parseInt(input.getAttribute('data-value'));
+                if (key) {
+                    config['map'][key] = val;
+                }
+            });
+            config['is_reverse'] = document.getElementById('likert_is_reverse').checked;
+        
+        } else if (encoderType === 'Ordinal') {
+            config['order'] = [];
+            document.querySelectorAll('.ordinal-input').forEach(input => {
+                const val = input.value.trim();
+                if (val) {
+                    config['order'].push(val);
+                }
+            });
+        }
+        // For Nominal/Binary, config remains an empty {} which is fine.
+
+        jsonOutputTextarea.value = JSON.stringify(config, null, 2);
+        
+        // Now, really submit the form
+        this.submit();
+    });
+
+        // ---  THE "EDIT" MODAL ---
+    const editModal = document.getElementById('editDefinitionModal');
+    if (editModal) {
+        const modalTitle = editModal.querySelector('.modal-title');
+        const definitionIdInput = editModal.querySelector('#edit_definition_id');
+        const definitionNameInput = editModal.querySelector('#edit_definition_name');
+        const configurationTextarea = editModal.querySelector('#edit_configuration');
+
+        // This event listener is the key. It runs right before the modal is shown.
+        editModal.addEventListener('show.bs.modal', function(event) {
+            // Get the button that triggered the modal (our new Edit button)
+            const button = event.relatedTarget;
+
+            // Extract the data we stored in the button's data-* attributes
+            const defId = button.getAttribute('data-def-id');
+            const defName = button.getAttribute('data-def-name');
+            const defConfigStr = button.getAttribute('data-def-config');
+            
+            // Pretty-print the JSON for the textarea
+            try {
+                const defConfigObj = JSON.parse(defConfigStr);
+                configurationTextarea.value = JSON.stringify(defConfigObj, null, 2);
+            } catch (e) {
+                configurationTextarea.value = defConfigStr; // Fallback to raw string
+            }
+
+            // Populate the modal's form fields with this data
+            modalTitle.textContent = 'Edit Definition: ' + defName;
+            definitionIdInput.value = defId;
+            definitionNameInput.value = defName;
+            
+        });
+    }
+
+    // ---  THE "DELETE" MODAL ---
+    const deleteModal = document.getElementById('deleteDefinitionModal');
+    if (deleteModal) {
+        const definitionIdInput = deleteModal.querySelector('#delete_definition_id');
+        const namePlaceholder = deleteModal.querySelector('#delete-def-name-placeholder');
+
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const defId = button.getAttribute('data-def-id');
+            const defName = button.getAttribute('data-def-name');
+
+            // Populate the hidden ID input and the confirmation text
+            definitionIdInput.value = defId;
+            namePlaceholder.textContent = defName;
+        });
+    }
+});
+</script>
+{% endblock %}

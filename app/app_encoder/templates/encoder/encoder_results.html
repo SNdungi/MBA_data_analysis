@@ -1,0 +1,64 @@
+{% extends "encoder_base.html" %}
+
+{% block encoder_content %}
+<div class="d-flex justify-content-end align-items-center mb-4 pb-2">
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('ops.view_file', filename=codebook_filename, type='generated') }}" class="btn btn-sm btn-secondary rounded-start-4">
+            <i class="fas fa-book me-1"></i> View Codebook
+        </a>
+        <a href="{{ url_for('ops.view_file', filename=encoded_csv_filename, type='generated', as_attachment=True) }}" class="btn btn-sm btn-warning rounded-end-4">
+            <i class="fas fa-download me-1"></i> Download CSV
+        </a>
+    </div>
+
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table id="resultsTable" class="table table-sm table-striped table-hover" style="width:100%">
+            <thead>
+                <tr>
+                    {% for header in table_headers %}
+                        <th data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ column_map.get(header, 'No question text available.') }}">
+                            {{ header }} <i class="fas fa-info-circle text-black-50 ms-1"></i>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table_data %}
+                <tr>
+                    {% for cell in row %}
+                    <td>{{ cell }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block encoder_scripts %}
+<!-- DataTables CSS and JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables for interactive features
+        $('#resultsTable').DataTable({
+            "scrollX": true, // Allows horizontal scrolling for wide tables
+            "deferRender": true, // Improves performance on large datasets
+            "pageLength": 25, // Set default number of rows
+            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ]
+        });
+
+        // Initialize Bootstrap 5 Tooltips for the table headers
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    });
+</script>
+{% endblock %}

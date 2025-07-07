@@ -1,0 +1,77 @@
+# Configuration file for the data bootstrapping project
+
+[files]
+csv_file = "PLM_SYSTEMS_ADOPTION_IN_EPZ_V2.csv"
+json_map_file = "PLM_SYSTEMS_ADOPTION_IN_EPZ_V2.json"
+output_file = "simulated_remixed_data.csv"
+encoding = "latin1"
+
+[settings]
+new_data_size = 395
+random_state = 42
+
+[remix_config]
+start_of_remix_section = "q6" 
+
+# ==========================================================
+# Default Encoder Prototypes
+# This file defines the standard, built-in encoder types
+# that are available to users when they configure a new study.
+# The application will read this file to seed the database.
+# ==========================================================
+
+[[prototypes]]
+name = "5-Point Likert"
+encoder_type = "Likert"
+description = "Standard 5-point satisfaction/agreement scale (e.g., Strongly Disagree to Strongly Agree)."
+
+[[prototypes]]
+name = "7-Point Likert"
+encoder_type = "Likert"
+description = "A 7-point scale for more granular attitude or opinion responses."
+
+[[prototypes]]
+name = "Custom Ordinal"
+encoder_type = "Ordinal"
+description = "For variables with a clear, user-defined order (e.g., experience levels, education)."
+
+[[prototypes]]
+name = "Nominal (Simple Categorical)"
+encoder_type = "Nominal"
+description = "For single-answer, mutually exclusive categories (e.g., 'Role in Company'). Creates one column with integer codes."
+
+[[prototypes]]
+name = "Nominal (Multi-Response)"
+encoder_type = "NominalMulti" # Use a new, distinct internal type
+description = "For 'check-all-that-apply' questions (e.g., 'Countries'). Creates multiple new 0/1 columns."
+
+[[prototypes]]
+name = "Qualitative (Do Not Encode)"
+encoder_type = "Qualitative" # A new type to signal "pass-through"
+description = "For open-ended text. This column will be ignored by the encoder and passed through as-is."
+
+[[prototypes]]
+name = "Binary (Yes/No)"
+encoder_type = "Binary"
+description = "For simple Yes/No, True/False, or 0/1 responses."
+
+# ===================================================================
+# SECTION FOR YOUR FUTURE DATA ENCODER
+# This section is not used by the current script, but is structured
+# for a future `encode_data()` method you might develop.
+# ===================================================================
+[encoders]
+  # Example for a specific column
+  [encoders.experience]
+    "0-3 years" = 1
+    "3-5 years" = 2
+    "5-10 years" = 3
+    "10+ years" = 4
+
+  # Example of a reusable Likert scale encoder
+  [encoders.likert_5_point]
+    "Strongly Disagree" = 1
+    "Disagree" = 2
+    "Neutral" = 3
+    "Agree" = 4
+    "Strongly Agree" = 5
