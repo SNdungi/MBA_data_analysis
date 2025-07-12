@@ -76,7 +76,6 @@ class DataBootstrapper:
         print("✅ Standard bootstrap complete.")
         return self.simulated_df
 
-    # --- FIX: The bootstrap_remix method signature and logic are now correct ---
     def bootstrap_remix(self,
                         new_size: int,
                         start_remix_col: str,
@@ -98,7 +97,6 @@ class DataBootstrapper:
         if start_index > end_index:
             raise ValueError("The 'start' remix column must come before the 'end' column.")
 
-        # --- FIX: Logic updated to handle a slice from start to end ---
         remix_cols = all_cols[start_index : end_index + 1]
         fixed_cols = all_cols[:start_index] + all_cols[end_index + 1:]
         
@@ -107,7 +105,6 @@ class DataBootstrapper:
         
         if random_state: np.random.seed(random_state)
         
-        # Handle cases where there are no fixed columns
         if fixed_cols:
             fixed_part = self.original_df[fixed_cols].sample(n=new_size, replace=True, random_state=random_state)
         else:
@@ -120,7 +117,43 @@ class DataBootstrapper:
         print("✅ Remix bootstrap complete.")
         return self.simulated_df
 
-    # --- FIX: The plot_comparison method now correctly saves the file ---
+    # =============================================================================
+    # NEW DEEP REMIX SAMPLER
+    # =============================================================================
+    def bootstrap_deep_remix(self, new_size: int, random_state: Optional[int] = None) -> pd.DataFrame:
+        """
+        Performs a 'deep remix' bootstrap, shuffling each column independently
+        to create completely new, decorrelated rows.
+        """
+        if self.original_df is None:
+            raise ValueError("Original data not loaded.")
+
+        print("\n🔄 Performing DEEP REMIX (cell-level) bootstrap...")
+        
+        new_data = {}
+        
+        # To ensure each column is shuffled with a different random pattern,
+        # we use the main random_state to generate a unique seed for each column.
+        # This makes the entire process reproducible.
+        rng = np.random.default_rng(random_state)
+        num_cols = len(self.original_df.columns)
+        column_seeds = rng.integers(low=0, high=10**6, size=num_cols)
+        
+        for i, col in enumerate(self.original_df.columns):
+            # Sample `new_size` values from the current column, with replacement.
+            # Use the unique seed generated for this specific column.
+            col_seed = column_seeds[i]
+            new_data[col] = self.original_df[col].sample(
+                n=new_size, 
+                replace=True, 
+                random_state=col_seed, 
+                ignore_index=True
+            )
+        
+        self.simulated_df = pd.DataFrame(new_data)
+        print("✅ Deep Remix bootstrap complete.")
+        return self.simulated_df
+
     def plot_comparison(self, column_name: str, save_path: Optional[str] = None):
         """Visualizes and saves the comparison plot to a file."""
         if self.original_df is None or self.simulated_df is None:
@@ -150,7 +183,6 @@ class DataBootstrapper:
             plt.close(fig)
             print(f"   - Plot saved to '{save_path}'")
         else:
-            # This part should not be used in the web app context
             plt.show()
 
     def save_simulated_data(self, output_path: str):

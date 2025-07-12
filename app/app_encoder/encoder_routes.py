@@ -14,9 +14,7 @@ def _get_study_and_check_files(study_id):
     """Helper to get study and check for result files."""
     study = Study.query.get_or_404(study_id)
     base_name = study.map_filename.replace('.json', '')
-    
-    # <<< CHANGE 1: STANDARDIZED FILENAME LOGIC >>>
-    # This logic will now be used by all functions in this file.
+
     encoded_csv_filename = f"{base_name}_encoded.csv"
     codebook_filename = f"{base_name}_codebook.json" # Use .json extension
 
@@ -37,7 +35,7 @@ def definitions(study_id):
         # Fetch all necessary data for the UI
         study_definitions = EncoderDefinition.query.filter_by(study_id=study.id).order_by(EncoderDefinition.name).all()
         prototypes = EncoderPrototype.query.all()
-        df_preview = pd.read_csv(csv_path, encoding='latin1', nrows=5)
+        df_preview = pd.read_csv(csv_path, encoding='latin1', nrows=100)
         
         return render_template(
             'encoder_definitions.html',
@@ -130,31 +128,57 @@ def assign_definition():
 
     return redirect(url_for('encoding.assign', study_id=study_id))
 
-
 # In app/app_encoder/encoder_routes.py
 
 @encoding_bp.route('/run-encoding', methods=['POST'])
 def run_encoding():
-    """(Step 3) Executes the data encoding process with sanity checks."""
+    """(Step 3) Executes the data encoding process on the SIMULATED data."""
     study_id = request.form.get('study_id')
     study = Study.query.get_or_404(study_id)
     
-    csv_filename = study.map_filename.replace('.json', '.csv')
-    base_name = os.path.splitext(csv_filename)[0]
+    # --- 1. DEFINE ALL FILENAMES BASED ON STUDY ---
+    base_name = study.map_filename.replace('.json', '')
     
+    # Input file for this process
+    simulated_filename = f"simulated_{base_name}.csv"
+    
+    # Output files for this process
     encoded_csv_filename = f"{base_name}_encoded.csv"
-    codebook_filename = f"{base_name}_codebook.json" # We need a .json file
+    codebook_filename = f"{base_name}_codebook.json"
+    
+    # Paths
+    generated_folder = current_app.config['GENERATED_FOLDER']
+    simulated_path = os.path.join(generated_folder, simulated_filename)
+    map_path = os.path.join(generated_folder, study.map_filename)
 
     try:
-        encoder_config = EncodingConfigManager.generate_encoder_class_config(study.id)
+        # --- 2. ENSURE SIMULATED FILE EXISTS ---
+        if not os.path.exists(simulated_path):
+            flash(f"Simulated data file '{simulated_filename}' not found. Please run a bootstrap simulation first from the main page.", "danger")
+            return redirect(url_for('encoding.assign', study_id=study.id))
+
+        # --- 3. THE KEY FIX: READ SIMULATED DATA WITH CORRECT COLUMN NAMES ---
+        # Load the question map to get the short keys ('q1', 'q2', etc.)
+        with open(map_path, 'r', encoding='utf-8') as f:
+            question_map = json.load(f)
         
-        csv_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_filename)
-        raw_df = pd.read_csv(csv_path, encoding='latin1')
+        # The keys of the map are the column names we need.
+        column_keys = list(question_map.keys())
+
+        # Read the simulated CSV, but tell pandas to use our keys as the column names.
+        # We use `header=0` to confirm we're replacing the first row (the header).
+        # We use `names=column_keys` to provide the new names.
+        raw_df = pd.read_csv(simulated_path, encoding='latin1', header=0, names=column_keys)
+        # --- END OF KEY FIX ---
+
+        # --- 4. RUN THE ENCODER (This part is now correct) ---
+        encoder_config = EncodingConfigManager.generate_encoder_class_config(study.id)
         engine = DataEncoder(dataframe=raw_df, config=encoder_config)
         encoded_dataframe, _, warnings = engine.encode()
         
         codebook_dictionary = engine.codebook
         
+        # --- 5. HANDLE WARNINGS AND SAVE OUTPUTS (No changes needed here) ---
         if warnings:
             flash("Encoding complete, but with warnings. Please review the messages below.", "warning")
             for warning in warnings:
@@ -168,20 +192,20 @@ def run_encoding():
         else:
             flash('Data successfully encoded with no issues!', 'success')
 
-        generated_folder = current_app.config['GENERATED_FOLDER']
         encoded_csv_path = os.path.join(generated_folder, encoded_csv_filename)
         codebook_path = os.path.join(generated_folder, codebook_filename)
         
         encoded_dataframe.to_csv(encoded_csv_path, index=False)
         
-        # Now we save the correct dictionary object as a JSON file.
         with open(codebook_path, 'w', encoding='utf-8') as f:
             json.dump(codebook_dictionary, f, indent=4)
             
         return redirect(url_for('encoding.results', study_id=study.id))
 
+    except FileNotFoundError:
+         flash(f"A required file was not found. Please ensure the map file '{study.map_filename}' exists.", "danger")
+         return redirect(url_for('encoding.assign', study_id=study.id))
     except Exception as e:
-        # Add logging to see the real error in your terminal
         current_app.logger.error(f"A critical error occurred during encoding: {e}", exc_info=True)
         flash(f"A critical error occurred during encoding: {e}", "danger")
         return redirect(url_for('encoding.assign', study_id=study.id))
@@ -235,6 +259,10 @@ def results(study_id):
     encoded_csv_path = os.path.join(generated_folder, encoded_csv_filename)
     codebook_path = os.path.join(generated_folder, codebook_filename)
     
+    csv_filename = study.map_filename.replace('.json', '.csv')
+    csv_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_filename)
+    df_preview = pd.read_csv(csv_path, encoding='latin1', nrows=10)
+    
     # Check if the necessary result files exist
     if not os.path.exists(encoded_csv_path) or not os.path.exists(codebook_path):
         flash("Result files for the interactive table were not found. Please run the encoding process first.", "warning")
@@ -243,7 +271,7 @@ def results(study_id):
     try:
         # Read the encoded data as strings and the codebook
         df = pd.read_csv(encoded_csv_path, dtype=str).fillna('')
-        with open(codebook_path, 'r', encoding='utf-8') as f:
+        with open(codebook_path, 'r', encoding='latin1') as f:
             codebook = json.load(f)
 
         # Create a mapping from the short column name to the full question text
@@ -260,7 +288,8 @@ def results(study_id):
             table_data=df.values.tolist(),
             codebook_filename=codebook_filename,
             encoded_csv_filename=encoded_csv_filename,
-            result_files_exist=True
+            result_files_exist=True,
+            df_preview_html=df_preview.to_html(classes='table table-sm', index=False, border=0),
         )
 
     except Exception as e:

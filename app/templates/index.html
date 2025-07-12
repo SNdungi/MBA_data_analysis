@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<div div class="container">
+<div class="container">
     <!-- Header Section -->
     <div class="p-5 mb-4 bg-fluid-cream rounded-3 shadow-sm hero-header" 
         style="background-image: url('{{ url_for('static', filename='images/fc_bannre_1300x300.png') }}');">
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Main content area with two columns -->
-    <div class=" row g-5">
+    <div class="row g-5">
         <!-- Left Column: Study Management -->
         <div class="col-lg-4">
             <h2>My Studies</h2>
@@ -30,10 +30,8 @@
             <div class="list-group shadow-sm">
                 {% if studies %}
                     {% for study in studies %}
-                    <!-- Each list item is now a container for multiple actions -->
                     <div class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <!-- This part is the "selector" for the tool -->
+                        <div class="d-flex w-100 justify-content-between align-items-center">
                             <div class="study-selector flex-grow-1" style="cursor: pointer;" 
                                         data-csv-name="{{ study.map_filename.replace('.json', '.csv') }}" 
                                         data-study-id="{{ study.id }}"> 
@@ -41,10 +39,12 @@
                                 <p class="mb-1 small">{{ study.topic or 'No topic provided' }}</p>
                                 <small class="text-muted">Data file: {{ study.map_filename.replace('.json', '.csv') }}</small>
                             </div>
-                            <!-- This is the button for viewing results -->
-                            <div class="ms-3">
-                                <a href="{{ url_for('ops.view_study_results', study_id=study.id) }}" class="btn btn-sm btn-outline-dark" title="View last results for this study">
-                                    <i class="fas fa-chart-bar"></i> Results
+                            <div class="ms-3 d-flex flex-column gap-2">
+                                <a href="{{ url_for('encoding.assign', study_id=study.id) }}" class="btn btn-sm btn-outline-primary" title="Define Encoders">
+                                    <i class="fas fa-sliders-h"></i> Encode
+                                </a>
+                                <a href="{{ url_for('analysis.dashboard', study_id=study.id) }}" class="btn btn-sm btn-outline-success" title="Analyze Data">
+                                    <i class="fas fa-chart-bar"></i> Analyze
                                 </a>
                             </div>
                         </div>
@@ -58,15 +58,22 @@
             </div>
             <hr>
             
+            <div class="card bg-light border-warning mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-dark">Admin Tools</h5>
+                    <p class="card-text small text-muted">Manage system-level settings and perform data cleanup.</p>
+                    <a href="{{ url_for('ops.housekeeping') }}" class="btn btn-warning">
+                        <i class="fas fa-trash-alt me-2"></i> Housekeeping
+                    </a>
+                </div>
+            </div>
 
             <h2>Simulation Tool</h2>
-            <p class="text-muted" id="tool-prompt">Select a study on the left to activate this tool.</p>
+            <p class="text-muted" id="tool-prompt">Select a study on the left to activate the legacy simulation tool.</p>
 
-            <!-- The entire tool is wrapped here, to be enabled/disabled by JS -->
             <div id="bootstrap-tool-wrapper" class="is-disabled">
                 <form action="{{ url_for('ops.run_bootstrap') }}" method="post" id="bootstrap-form">
                     
-                    <!-- This input is now hidden, its value is set by JS when a study is selected -->
                     <input type="hidden" id="csv_file" name="csv_file" required>
                     <input type="hidden" id="study_id" name="study_id">
                     
@@ -77,10 +84,20 @@
                     </div>
                     <hr>
                     
-                    <!-- The rest of the form is identical to your previous version -->
                     <h4>Bootstrap Type</h4>
-                    <div class="form-check"><input class="form-check-input" type="radio" name="bootstrap_type" id="type_standard" value="standard" checked><label class="form-check-label" for="type_standard"><strong>Standard Bootstrap</strong> (Resample entire rows)</label></div>
-                    <div class="form-check mb-3"><input class="form-check-input" type="radio" name="bootstrap_type" id="type_remix" value="remix"><label class="form-check-label" for="type_remix"><strong>Remix Bootstrap</strong> (Shuffle a section of columns independently)</label></div>
+                    <!-- Updated Radio Buttons with Tooltips -->
+                    <div class="form-check" data-bs-toggle="tooltip" title="Standard method. Preserves relationships between columns within each row.">
+                        <input class="form-check-input" type="radio" name="bootstrap_type" id="type_standard" value="standard" checked>
+                        <label class="form-check-label" for="type_standard"><strong>Standard Bootstrap</strong> (Resample rows)</label>
+                    </div>
+                    <div class="form-check" data-bs-toggle="tooltip" title="Shuffles a defined block of columns, keeping other columns and the row structure intact.">
+                        <input class="form-check-input" type="radio" name="bootstrap_type" id="type_remix" value="remix">
+                        <label class="form-check-label" for="type_remix"><strong>Remix Bootstrap</strong> (Shuffle column block)</label>
+                    </div>
+                    <div class="form-check mb-3" data-bs-toggle="tooltip" title="Maximum shuffle. Each cell is an independent random sample from its original column. Breaks all row-wise correlations.">
+                        <input class="form-check-input" type="radio" name="bootstrap_type" id="type_deep_remix" value="deep_remix">
+                        <label class="form-check-label" for="type_deep_remix"><strong>Deep Remix Bootstrap</strong> (Shuffle cells)</label>
+                    </div>
                     
                     <h4>Bootstrap Settings</h4>
                     <div class="row">
@@ -102,13 +119,10 @@
                     </div>
                 </form>
             </div>
-
         </div>
-
-        <!-- Right Column: Bootstrap Tool -->
+        <!-- (Rest of the file is unchanged) -->
         <div class="col-lg-8 border-start ps-lg-5">
-                    <!-- Live Previews Section -->
-            <h3 class="mt-5">Live Previews</h3>
+            <h3>Live Previews</h3>
             <div class="card shadow-sm mb-3">
                 <div class="card-header fw-bold">CSV Preview (First 10 Rows)</div>
                 <div class="card-body preview-container" id="csv-preview-container"><p class="text-muted">Select a study to preview its data.</p></div>
@@ -119,8 +133,7 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal for Creating a New Study -->
+    <!-- (Modal is unchanged) -->
     <div class="modal fade" id="newStudyModal" tabindex="-1" aria-labelledby="newStudyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -157,35 +170,40 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // === NEW SCRIPT FOR STUDY-BASED WORKFLOW ===
+    // Enable Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // --- (Rest of the script is unchanged) ---
     const studyIdHiddenInput = document.getElementById('study_id');
     const bootstrapToolWrapper = document.getElementById('bootstrap-tool-wrapper');
     const toolPrompt = document.getElementById('tool-prompt');
     const csvHiddenInput = document.getElementById('csv_file');
     const studySelectors = document.querySelectorAll('.study-selector');
+    let activeStudyItem = null;
 
     studySelectors.forEach(selector => {
         selector.addEventListener('click', function(e) {
             e.preventDefault();
-            studySelectors.forEach(el => el.classList.remove('active'));
-            this.classList.add('active');
+            if (activeStudyItem) {
+                activeStudyItem.classList.remove('active');
+            }
+            const parentListItem = this.closest('.list-group-item');
+            parentListItem.classList.add('active');
+            activeStudyItem = parentListItem;
             
             const csvName = this.dataset.csvName;
-            const studyId = this.dataset.studyId; // Get the study ID
+            const studyId = this.dataset.studyId;
             csvHiddenInput.value = csvName;
             studyIdHiddenInput.value = studyId; 
-            
-            
-            // This is the key that links the two parts of the script
             csvHiddenInput.dispatchEvent(new Event('change'));
-
             bootstrapToolWrapper.classList.remove('is-disabled');
             toolPrompt.style.display = 'none';
         });
     });
 
-    // --- OLD SCRIPT (now controlled by the one above) ---
-    // Get all the DOM elements we need to control
     const generateMapBtn = document.getElementById('generate-map-btn');
     const csvPreviewContainer = document.getElementById('csv-preview-container');
     const jsonPreviewContainer = document.getElementById('json-preview-container');
@@ -206,24 +224,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function toggleRemixOptions(enable) {
-        remixWrapper.style.opacity = enable ? '1' : '0.5';
+        remixWrapper.style.display = enable ? 'block' : 'none'; // Use display instead of opacity for better layout handling
         startRemixSelect.disabled = !enable;
         endRemixSelect.disabled = !enable;
         startRemixSelect.required = enable;
         endRemixSelect.required = enable;
     }
 
-    // This listener now waits for the 'change' event from the hidden input
     csvHiddenInput.addEventListener('change', function() {
         const csvFile = this.value;
         if (!csvFile) return;
-
         generateMapBtn.disabled = false;
         csvPreviewContainer.innerHTML = '<p class="text-info">Loading CSV preview...</p>';
         jsonPreviewContainer.innerHTML = '<p class="text-muted">Click the "Generate & Preview" button.</p>';
         startRemixSelect.innerHTML = '<option value="">-- Generate Map First --</option>';
         endRemixSelect.innerHTML = '<option value="">-- Generate Map First --</option>';
-
         const baseName = csvFile.replace('.csv', '');
         mapPathInput.value = baseName + '.json';
         outputPathInput.value = 'simulated_' + baseName + '.csv';
@@ -241,9 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
     generateMapBtn.addEventListener('click', function() {
         const csvFile = csvHiddenInput.value;
         if (!csvFile) return;
-
         jsonPreviewContainer.innerHTML = '<p class="text-info">Generating and loading JSON map...</p>';
-
         fetch(`/generate_and_preview_json/${csvFile}`)
             .then(response => response.json())
             .then(data => {
@@ -262,11 +275,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     bootstrapTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
+            // Only show remix options for 'remix' type. Hide for all others.
             toggleRemixOptions(this.value === 'remix');
         });
     });
-
-    // Initial State on Page Load
+    
+    // Set initial state correctly, hide remix options by default unless 'remix' is checked
     toggleRemixOptions(document.querySelector('input[name="bootstrap_type"]:checked').value === 'remix');
 });
 </script>

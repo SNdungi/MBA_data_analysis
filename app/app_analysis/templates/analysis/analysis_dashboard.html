@@ -1,0 +1,230 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+
+    
+    {% include "_messages.html" %}
+
+    <div class="row g-4">
+        <!-- ==========================================================================
+           ANALYSIS SIDEBAR
+        ========================================================================== -->
+        <div class="col-lg-3 p-0">
+            <div class="accordion rounded-0" id="analysis-sidebar">
+
+                <!-- Section 1: Data Preparation -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingDataPrep">
+                        <button class="accordion-button {% if selected_analysis != 'composite' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataPrep">
+                            <i class="fas fa-cogs fa-fw me-3"></i>Data Preparation
+                        </button>
+                    </h6>
+                    <div id="collapseDataPrep" class="accordion-collapse collapse {% if selected_analysis == 'composite' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('analysis.create_composite', study_id=study.id) }}" method="POST">
+                                <input type="hidden" name="analysis_type" value="composite">
+                                <h6>Create Composite Variable</h6>
+                                <div class="mb-3">
+                                    <label for="new_var_name" class="form-label">New Variable Name:</label>
+                                    <input type="text" id="new_var_name" name="new_var_name" class="form-control form-control-sm" required placeholder="e.g., Digitization_Score">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="source_vars" class="form-label">Source Variables (Numeric):</label>
+                                    <select id="source_vars" name="source_vars" class="form-select form-select-sm" multiple required size="6">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-fluid-orange btn-sm w-100">Create Variable</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Descriptive Analysis -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingDescriptives">
+                        <button class="accordion-button {% if selected_analysis not in ['categorical_descriptive', 'descriptive', 'multi_descriptive'] %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDescriptives">
+                            <i class="fas fa-chart-pie fa-fw me-3"></i>Descriptive Analysis
+                        </button>
+                    </h6>
+                    <div id="collapseDescriptives" class="accordion-collapse collapse {% if selected_analysis in ['categorical_descriptive', 'descriptive', 'multi_descriptive'] %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <!-- Categorical -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="categorical_descriptive">
+                                <h6>Categorical Frequencies</h6>
+                                <select name="cat_descriptive_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}" {% if request.form.cat_descriptive_var == var %}selected{% endif %}>{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- Numeric -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="descriptive">
+                                <h6>Numeric Distribution</h6>
+                                <select name="descriptive_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}" {% if request.form.descriptive_var == var %}selected{% endif %}>{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- Multi-Variable -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="multi_descriptive">
+                                <h6>Multi-Variable Summary</h6>
+                                <select name="multi_descriptive_vars" class="form-select form-select-sm mb-2" multiple required size="5">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Inferential Analysis -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingInferential">
+                        <button class="accordion-button {% if selected_analysis not in ['correlation', 'ttest', 'one_sample_ttest', 'anova', 'chi2'] %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInferential">
+                            <i class="fas fa-search-plus fa-fw me-3"></i>Inferential Analysis
+                        </button>
+                    </h6>
+                    <div id="collapseInferential" class="accordion-collapse collapse {% if selected_analysis in ['correlation', 'ttest', 'one_sample_ttest', 'anova', 'chi2'] %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <!-- Correlation -->
+                             <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="correlation">
+                                <h6>Correlation (Pearson)</h6>
+                                <label class="form-label">Variable 1:</label>
+                                <select name="corr_var1" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label">Variable 2:</label>
+                                <select name="corr_var2" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- T-Test -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                 <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="ttest">
+                                <h6>Independent Samples T-Test</h6>
+                                <label class="form-label">Continuous Var:</label>
+                                <select name="ttest_continuous_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label">Grouping Var (Binary):</label>
+                                <select name="ttest_group_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- One Sample T-Test -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                 <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="one_sample_ttest">
+                                <h6>One-Sample T-Test</h6>
+                                <label class="form-label">Variable:</label>
+                                <select name="one_sample_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label">Test Value:</label>
+                                <input type="number" step="any" name="popmean" value="3.0" class="form-control form-control-sm mb-2">
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- ANOVA -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                 <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="anova">
+                                <h6>ANOVA</h6>
+                                <label class="form-label">Dependent Var (Numeric):</label>
+                                <select name="anova_dependent_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label">Independent Var (Categorical):</label>
+                                <select name="anova_independent_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- Chi-Squared -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                 <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="chi2">
+                                <h6>Chi-Squared Test</h6>
+                                <label class="form-label">Variable 1:</label>
+                                <select name="chi2_var1" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label">Variable 2:</label>
+                                <select name="chi2_var2" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           ANALYSIS RESULTS PANEL
+        ========================================================================== -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-end align-items-end mb-4">
+                <div>
+                    <a href="{{ url_for('analysis.dashboard', study_id=study.id, reset=1) }}" class="btn btn-sm btn-outline-warning" title="Reset Data & Composite Variables"><i class="fas fa-sync-alt me-1"></i> </a>
+                </div>
+            </div>
+            <div id="results-panel">
+                <div class="card shadow-sm">
+                    <div class="card-body" style="min-height: 75vh;">
+                        {% if result %}
+                            <h3 class="mb-4">{{ result.title }}</h3>
+                            
+                            {% if result.stats_table_html %}
+                                <h5>Statistical Summary</h5>
+                                <div class="table-responsive mb-4">
+                                    {{ result.stats_table_html | safe }}
+                                </div>
+                            {% endif %}
+    
+                             {% if result.contingency_table_html %}
+                                <h5>Contingency Table</h5>
+                                 <div class="table-responsive mb-4">{{ result.contingency_table_html | safe }}</div>
+                             {% endif %}
+    
+                            {% if result.plot_url %}
+                                <h5>Visualization</h5>
+                                <div class="text-center bg-light p-3 rounded mb-4">
+                                    <img src="data:image/png;base64,{{ result.plot_url }}" class="img-fluid" alt="Analysis Plot">
+                                </div>
+                            {% endif %}
+                            
+                            {% if result.interpretation %}
+                                <h5><i class="fas fa-comment-dots text-info me-2"></i>Interpretation</h5>
+                                <div class="alert alert-light" role="alert">
+                                    {{ result.interpretation }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="d-flex flex-column justify-content-center align-items-center h-100 text-center text-muted p-5">
+                                <i class="fas fa-arrow-circle-left fa-4x mb-4"></i>
+                                <h3>Ready for Analysis</h3>
+                                <p>Use the sidebar to prepare your data or run descriptive and inferential tests. Your results will be displayed here.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

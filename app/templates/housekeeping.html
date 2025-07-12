@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                <h2>Housekeeping & Data Cleanup</h2>
+                <p class="lead text-muted">Use these tools to permanently remove studies and their associated data from the database and file system. These actions cannot be undone.</p>
+            </div>
+
+            {% include '_messages.html' %}
+
+            <div class="row g-4">
+                <!-- Card for Deleting a Single Study -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-eraser me-2"></i>Delete a Specific Study</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <p class="card-text">Select a study to delete. This will remove the study record, all its encoder definitions, column assignments, and associated files (.csv, .json, graphs) from the server.</p>
+                            
+                            {% if studies %}
+                            <form action="{{ url_for('ops.perform_cleanup') }}" method="POST" class="mt-auto">
+                                <input type="hidden" name="action" value="delete_one">
+                                <div class="mb-3">
+                                    <label for="study_id" class="form-label">Select Study to Delete:</label>
+                                    <select name="study_id" id="study_id" class="form-select" required>
+                                        <option value="" disabled selected>-- Choose a study --</option>
+                                        {% for study in studies %}
+                                            <option value="{{ study.id }}">{{ study.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Are you sure you want to permanently delete this study and all its data?')">
+                                    Delete Selected Study
+                                </button>
+                            </form>
+                            {% else %}
+                                <div class="alert alert-secondary mt-auto">No studies found to delete.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card for Deleting ALL Data -->
+                <div class="col-md-6">
+                    <div class="card h-100 border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-skull-crossbones me-2"></i>Purge All Studies & Data</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <p class="card-text">This will completely wipe all studies, definitions, and encodings from the database. It will also delete ALL files in the uploads, generated, and graphs folders.</p>
+                            <div class="alert alert-danger mt-auto">
+                                <h4 class="alert-heading">Extreme Danger Zone!</h4>
+                                <p>This is a master reset. There is no confirmation beyond the next click.</p>
+                                <hr>
+                                <form action="{{ url_for('ops.perform_cleanup') }}" method="POST">
+                                    <input type="hidden" name="action" value="delete_all">
+                                    <button type="submit" class="btn btn-danger w-100 fw-bold" onclick="return confirm('ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete ALL studies, ALL files, and ALL configurations. This action cannot be undone.')">
+                                        PURGE ALL DATA
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

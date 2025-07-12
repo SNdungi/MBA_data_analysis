@@ -1,76 +1,65 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom border-fluid">
-    <a href="{{ url_for('ops.index') }}" class="btn btn-sm btn-outline-dark">
-        <i class="fas fa-arrow-left me-1"></i> Back 
-    </a>
-    <h6 >Encoding Workflow: <span >{{ study.name }}</span></h6>
-
-</div>
-
 <div class="row g-5">
-<!-- Sidebar Navigation -->
-<div class="col-lg-2">
-    <div class="card shadow-sm sticky-top" style="top: 1rem;">
-        <div class="list-group list-group-flush">
-            <!-- Step 1 -->
-            <a href="{{ url_for('encoding.definitions', study_id=study.id) }}" 
-               class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.definitions' %}active{% endif %}">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1"><strong>Step 1:</strong> Definitions</h6>
-                    <span class="badge rounded-pill bg-secondary mb-3">{{ definitions|length }}</span>
-                </div>
-                <small class="text-muted">Create and view encoding recipes.</small>
-            </a>
+    <!-- Sidebar Navigation for Encoding Steps -->
+    <div class="col-lg-3"> {# A bit wider for better text flow #}
+        <div class="card shadow-sm sticky-top" style="top: 1rem;">
+            <div class="list-group list-group-flush">
+                <!-- Step 1 -->
+                <a href="{{ url_for('encoding.definitions', study_id=study.id) }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.definitions' %}active{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1"><strong>1a:</strong> Definitions</h6>
+                        <span class="badge rounded-pill bg-secondary mb-3">{{ definitions|length }}</span>
+                    </div>
+                    <small class="text-muted">Create and view encoding recipes.</small>
+                </a>
 
-            <!-- Step 2 -->
-            <a href="{{ url_for('encoding.assign', study_id=study.id) }}" 
-               class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.assign' %}active{% endif %}">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1"><strong>Step 2:</strong> Assign to Columns</h6>
-                </div>
-                <small class="text-muted">Apply your recipes to data columns.</small>
-            </a>
-        </div>
+                <!-- Step 2 -->
+                <a href="{{ url_for('encoding.assign', study_id=study.id) }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.assign' %}active{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1"><strong>1b:</strong> Assign to Columns</h6>
+                    </div>
+                    <small class="text-muted">Apply your recipes to data columns.</small>
+                </a>
+            </div>
 
-        <!-- Step 3 -->
-        <div class="card-body border-top">
-            <h6 class="card-title"><strong>Step 3:</strong> Execute & Generate</h6>
-            <p class="card-text small text-muted">Once assignments are complete, run the encoding process to generate the final files.</p>
-            <form action="{{ url_for('encoding.run_encoding') }}" method="post">
-                <input type="hidden" name="study_id" value="{{ study.id }}">
-                <button type="submit" class="btn btn-fluid-orange w-100">
-                    <i class="fas fa-cogs me-2"></i>Generate Encoded File
-                </button>
-            </form>
-        </div>
+            <!-- Step 3 -->
+            <div class="card-body border-top">
+                <h6 class="card-title"><strong>1c:</strong> Execute & Generate</h6>
+                <p class="card-text small text-muted">Run the encoding process to generate the final files for analysis.</p>
+                <form action="{{ url_for('encoding.run_encoding') }}" method="post">
+                    <input type="hidden" name="study_id" value="{{ study.id }}">
+                    <button type="submit" class="btn btn-fluid-orange w-100">
+                        <i class="fas fa-cogs me-2"></i>Generate Encoded File
+                    </button>
+                </form>
+            </div>
 
-        <!-- Step 4 -->
-        {% if result_files_exist %}
-        <div class="list-group list-group-flush">
-            <a href="{{ url_for('encoding.results', study_id=study.id) }}" 
-               class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.results' %}active{% endif %}">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1"><strong>Step 4:</strong> View Results</h6>
-                </div>
-                <small class="text-muted">Explore the encoded data table.</small>
-            </a>
+            <!-- Step 4: Link to Results -->
+            {% if result_files_exist %}
+            <div class="list-group list-group-flush border-top">
+                <a href="{{ url_for('encoding.results', study_id=study.id) }}" 
+                   class="list-group-item list-group-item-action {% if request.endpoint == 'encoding.results' %}active{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1"><strong>1d:</strong> View Encoded Data</h6>
+                    </div>
+                    <small class="text-muted">Explore the final encoded data table.</small>
+                </a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
-</div>
-
 
     <!-- Main Content Area -->
-    <div class="col-lg-10">
+    <div class="col-lg-9">
         {% block encoder_content %}{% endblock %}
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-    {# Child templates can add their own scripts here #}
     {% block encoder_scripts %}{% endblock %}
 {% endblock %}

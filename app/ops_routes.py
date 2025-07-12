@@ -8,6 +8,8 @@ from app.app_encoder.encoder_models import Study
 from app.app_encoder.encoder_manager import EncodingConfigManager
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import NotFound
+import shutil # Import shutil for directory operations
+from app.app_encoder.encoder_models import db, Study
 
 
 
@@ -15,10 +17,16 @@ ops_bp = Blueprint('ops', __name__)
 
 
 
+
 @ops_bp.route('/documentation')
 def documentation():
     """Renders the methodology documentation page."""
     return render_template('documentation.html', title="Encoding Methodology")
+
+@ops_bp.route('/guide')
+def guide():
+    """Renders the methodology documentation page."""
+    return render_template('analysis_docs.html', title="Results and Summary")
 
 @ops_bp.route('/')
 def index():
@@ -196,26 +204,24 @@ def generate_and_preview_json(csv_filename):
         return jsonify({'error': str(e)})
 
 
-
 @ops_bp.route('/run-bootstrap', methods=['POST'])
 def run_bootstrap():
     form_data = request.form
     try:
         # --- 1. Gather Common Configuration ---
-        bootstrap_type = form_data.get('bootstrap_type') # <-- THE NEW KEY
+        bootstrap_type = form_data.get('bootstrap_type')
         csv_file = form_data.get('csv_file')
         map_file = form_data.get('map_path')
         output_file = form_data.get('output_file')
         study_id = form_data.get('study_id')
 
         if not bootstrap_type:
-            raise ValueError("Bootstrap type was not selected. Please choose Standard or Remix.")
+            raise ValueError("Bootstrap type was not selected.")
 
-        # These are always required, so we can get them here
         new_size = int(form_data.get('new_size'))
         random_state = int(form_data.get('random_state'))
 
-        # --- 2. Build Paths (same as before) ---
+        # --- 2. Build Paths ---
         csv_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_file)
         map_path = os.path.join(current_app.config['GENERATED_FOLDER'], map_file)
         output_path = os.path.join(current_app.config['GENERATED_FOLDER'], output_file)
@@ -223,7 +229,7 @@ def run_bootstrap():
         # --- 3. Instantiate and Run based on TYPE ---
         bootstrapper = DataBootstrapper(file_path=csv_path, map_path=map_path, encoding='latin1')
         
-        start_remix_col = None # Initialize for graph logic later
+        start_remix_col = None
 
         if bootstrap_type == 'remix':
             start_remix_col = form_data.get('start_remix_col')
@@ -238,10 +244,17 @@ def run_bootstrap():
                 random_state=random_state
             )
         
+        # --- NEW LOGIC FOR DEEP REMIX ---
+        elif bootstrap_type == 'deep_remix':
+            bootstrapper.bootstrap_deep_remix(
+                new_size=new_size, 
+                random_state=random_state
+            )
+
         elif bootstrap_type == 'standard':
             bootstrapper.bootstrap(new_size=new_size, random_state=random_state)
 
-        # --- 4. Save and Generate Graphs (same logic, but now it's safe) ---
+        # --- (Rest of the function is unchanged) ---
         bootstrapper.save_simulated_data(output_path)
         flash('Bootstrap process completed successfully!', 'success')
 
@@ -253,7 +266,7 @@ def run_bootstrap():
             start_index = all_cols.index(start_remix_col)
             if start_index > 0: cols_to_plot.append(all_cols[start_index - 1])
             cols_to_plot.append(start_remix_col)
-        else: # Standard bootstrap
+        else: # Standard and Deep Remix bootstrap
             cols_to_plot = all_cols[:2]
 
         for col in cols_to_plot:
@@ -262,7 +275,6 @@ def run_bootstrap():
             bootstrapper.plot_comparison(column_name=col, save_path=graph_save_path)
             graph_paths.append(os.path.join('graphs', graph_filename))
         
-        # --- 5. Store results in session (same as before) ---
         session['filenames'] = {
             'study_id': study_id,
             'original': csv_file,
@@ -272,7 +284,7 @@ def run_bootstrap():
         }
         return redirect(url_for('ops.results'))
 
-    except (ValueError, TypeError) as e: # Catch specific errors
+    except (ValueError, TypeError) as e:
         flash(f'Configuration Error: {e}', 'danger')
         return redirect(url_for('ops.index'))
     except Exception as e:
@@ -354,3 +366,86 @@ def view_df(filename):
         flash(f"Could not display file: {e}", "danger")
         return redirect(url_for('ops.results'))
 
+
+# =============================================================================
+# NEW HOUSEKEEPING ROUTES
+# =============================================================================
+
+def _clear_folder_contents(folder_path):
+    """Helper function to delete all files and subdirectories in a folder."""
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
+
+
+@ops_bp.route('/housekeeping')
+def housekeeping():
+    """Renders the data cleanup page."""
+    studies = Study.query.order_by(Study.name).all()
+    return render_template('housekeeping.html', studies=studies, title="Housekeeping")
+
+
+@ops_bp.route('/perform_cleanup', methods=['POST'])
+def perform_cleanup():
+    """Handles the deletion of studies and/or all associated data."""
+    action = request.form.get('action')
+
+    try:
+        if action == 'delete_one':
+            study_id = request.form.get('study_id')
+            if not study_id:
+                flash('You must select a study to delete.', 'warning')
+                return redirect(url_for('ops.housekeeping'))
+
+            study_to_delete = Study.query.get_or_404(study_id)
+            study_name = study_to_delete.name
+            
+            # 1. Delete associated files from disk
+            base_name = study_to_delete.map_filename.replace('.json', '')
+            files_to_check = [
+                os.path.join(current_app.config['UPLOADS_FOLDER'], f"{base_name}.csv"),
+                os.path.join(current_app.config['GENERATED_FOLDER'], study_to_delete.map_filename),
+                os.path.join(current_app.config['GENERATED_FOLDER'], f"{base_name}_encoded.csv"),
+                os.path.join(current_app.config['GENERATED_FOLDER'], f"simulated_{base_name}.csv")
+            ]
+            for file_path in files_to_check:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            
+            # 2. Delete the study from the database (cascades will handle children)
+            db.session.delete(study_to_delete)
+            db.session.commit()
+            
+            flash(f"Successfully deleted study '{study_name}' and all its associated data.", 'success')
+
+        elif action == 'delete_all':
+            # 1. Delete all records from the database
+            # Deleting all studies will cascade and delete all children definitions and encodings
+            num_studies = db.session.query(Study).delete()
+            db.session.commit()
+
+            # 2. Clear the contents of the data folders
+            _clear_folder_contents(current_app.config['UPLOADS_FOLDER'])
+            _clear_folder_contents(current_app.config['GENERATED_FOLDER'])
+            _clear_folder_contents(current_app.config['GRAPHS_FOLDER'])
+            
+            flash(f"Successfully purged {num_studies} studies and all associated files.", 'success')
+            # Also clear the session in case it holds stale data
+            session.clear()
+
+        else:
+            flash('Invalid cleanup action specified.', 'danger')
+
+    except NotFound:
+        flash("The study you tried to delete could not be found.", "danger")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"An error occurred during cleanup: {e}", "danger")
+
+    return redirect(url_for('ops.housekeeping'))

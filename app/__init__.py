@@ -49,6 +49,9 @@ def create_app():
         from app.app_encoder.encoder_routes import encoding_bp
         app.register_blueprint(encoding_bp)
         
+        from app.app_analysis.analysis_routes import analysis_bp
+        app.register_blueprint(analysis_bp)
+        
         from app.app_encoder.encoder_manager import EncodingConfigManager
         EncodingConfigManager.seed_prototypes()
         
