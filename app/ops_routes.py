@@ -9,7 +9,7 @@ from app.app_encoder.encoder_manager import EncodingConfigManager
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import NotFound
 import shutil # Import shutil for directory operations
-from app.app_encoder.encoder_models import db, Study
+from app.app_encoder.encoder_models import db, Study,EncoderDefinition
 
 
 
@@ -87,9 +87,10 @@ def index():
 
 @ops_bp.route('/create_study', methods=['POST'])
 def create_study():
-    """Handles the form submission for creating a new study."""
+    """Handles the form submission for creating a new study, with an option to clone encoders."""
     study_name = request.form.get('study_name')
     uploaded_file = request.files.get('source_csv')
+    clone_from_study_id = request.form.get('clone_from_study_id') # Get the new optional field
 
     if not study_name or not uploaded_file or uploaded_file.filename == '':
         flash('Study Name and a CSV file are required.', 'danger')
@@ -100,32 +101,55 @@ def create_study():
         return redirect(url_for('ops.index'))
 
     try:
-        # Create a secure, standardized base name for all related files
-        # e.g., "My First Analysis" -> "my_first_analysis"
         secure_base_name = secure_filename(study_name.lower().replace(' ', '_'))
         csv_filename = f"{secure_base_name}.csv"
         map_filename = f"{secure_base_name}.json"
 
-        # Check if a study with this name or a file with this name already exists
         if Study.query.filter_by(name=study_name).first() or Study.query.filter_by(map_filename=map_filename).first():
              flash(f"A study named '{study_name}' or with a conflicting filename already exists.", 'warning')
              return redirect(url_for('ops.index'))
 
-        # Save the uploaded file to the designated folder
         csv_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_filename)
         uploaded_file.save(csv_path)
 
-        # Create the study record in the database
-        EncodingConfigManager.get_or_create_study(
+        # Create the new study object BUT DON'T COMMIT YET
+        new_study = Study(
             name=study_name,
             map_filename=map_filename,
             topic=request.form.get('study_topic', ''),
             description=request.form.get('study_description', '')
         )
+        db.session.add(new_study)
+        # Flush the session to get the new_study.id for the cloned definitions
+        db.session.flush()
+
+        # --- NEW CLONING LOGIC ---
+        source_study_name = None
+        if clone_from_study_id and clone_from_study_id.isdigit():
+            source_study = Study.query.get(int(clone_from_study_id))
+            if source_study:
+                source_study_name = source_study.name
+                # Iterate and create deep copies of each definition
+                for source_def in source_study.definitions:
+                    new_def = EncoderDefinition(
+                        study_id=new_study.id, # Link to the NEW study
+                        prototype_id=source_def.prototype_id,
+                        name=source_def.name,
+                        configuration=source_def.configuration # This copies the JSON data
+                    )
+                    db.session.add(new_def)
+                print(f"Cloning {len(source_study.definitions)} definitions from '{source_study.name}' to '{new_study.name}'.")
+
+        # Now commit the new study and all cloned definitions in one transaction
+        db.session.commit()
         
-        flash(f"Study '{study_name}' created successfully! You can now work with it below.", 'success')
+        if source_study_name:
+            flash(f"Study '{study_name}' created successfully, cloning definitions from '{source_study_name}'.", 'success')
+        else:
+            flash(f"Study '{study_name}' created successfully with a blank slate!", 'success')
 
     except Exception as e:
+        db.session.rollback() # Rollback in case of an error during cloning
         flash(f"An error occurred while creating the study: {e}", 'danger')
 
     return redirect(url_for('ops.index'))
@@ -257,30 +281,12 @@ def run_bootstrap():
         # --- (Rest of the function is unchanged) ---
         bootstrapper.save_simulated_data(output_path)
         flash('Bootstrap process completed successfully!', 'success')
-
-        graph_paths = []
-        all_cols = list(bootstrapper.question_map.keys())
-        cols_to_plot = []
-        
-        if bootstrap_type == 'remix':
-            start_index = all_cols.index(start_remix_col)
-            if start_index > 0: cols_to_plot.append(all_cols[start_index - 1])
-            cols_to_plot.append(start_remix_col)
-        else: # Standard and Deep Remix bootstrap
-            cols_to_plot = all_cols[:2]
-
-        for col in cols_to_plot:
-            graph_filename = f"comparison_{col}.png"
-            graph_save_path = os.path.join(current_app.config['GRAPHS_FOLDER'], graph_filename)
-            bootstrapper.plot_comparison(column_name=col, save_path=graph_save_path)
-            graph_paths.append(os.path.join('graphs', graph_filename))
         
         session['filenames'] = {
             'study_id': study_id,
             'original': csv_file,
             'map': map_file,
             'output': output_file,
-            'graphs': graph_paths
         }
         return redirect(url_for('ops.results'))
 

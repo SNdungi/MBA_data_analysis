@@ -2,9 +2,9 @@
   /* Primary Colors */
   --fluidcore-red: #ec340b;       /* Logo Red */
   --fluidcore-teal: #23797c; 
-  --fluid-core: cyan;     /* Tagline Teal */
+  --fluid-core-cyan: rgb(6, 209, 209);     /* Tagline Teal */
   --fluidcore-cream: #f0e6d3;     /* Background Cream for accents */
-  --fluidcore-coffee: rgb(247, 241, 238);
+  --fluidcore-coffee: #f7f1ee;
   --fluidcore-salmon: salmon;
 
   /* Secondary Colors */
@@ -60,6 +60,19 @@ pre {
   overflow-x: auto;
   padding: 1rem;
 }
+
+.text-fluid-red {
+  color: var(--fluidcore-red);
+}
+.text-fluid-orange {
+  color: var(--fluidcore-orange);
+}
+.text-fluid-cyan {
+  color: var(--fluid-core-cyan);
+}
+
+
+
 
 /* Custom Component Styles */
 .navbar-custom {
@@ -371,4 +384,18 @@ pre {
 
 #results-panel img {
     border: 1px solid var(--fluidcore-border);
+}
+
+.analysis-wrapper {
+display: flex;
+flex-direction: row-reverse; /* Sidebar on right */
+min-height: 100vh;
+background: #f8f8f8;
+
+}
+.encoder-wrapper {
+display: flex;
+min-height: 100vh;
+background: #f8f8f8;
+
 }

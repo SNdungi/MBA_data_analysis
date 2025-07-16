@@ -19,7 +19,7 @@
         <!-- Left Column: Study Management -->
         <div class="col-lg-4">
             <h2>My Studies</h2>
-            <p class="text-muted">Select a study from the list to load it into the simulation tool on the right.</p>
+            <p class="text-muted">Select a study to manage its encoding, analysis, or run a legacy simulation.</p>
             
             <div class="d-grid gap-2 mb-3">
                 <button type="button" class="btn btn-fluid-orange" data-bs-toggle="modal" data-bs-target="#newStudyModal">
@@ -68,8 +68,8 @@
                 </div>
             </div>
 
-            <h2>Simulation Tool</h2>
-            <p class="text-muted" id="tool-prompt">Select a study on the left to activate the legacy simulation tool.</p>
+            <h2>Legacy Simulation Tool</h2>
+            <p class="text-muted" id="tool-prompt">Select a study on the left to activate this tool.</p>
 
             <div id="bootstrap-tool-wrapper" class="is-disabled">
                 <form action="{{ url_for('ops.run_bootstrap') }}" method="post" id="bootstrap-form">
@@ -85,28 +85,27 @@
                     <hr>
                     
                     <h4>Bootstrap Type</h4>
-                    <!-- Updated Radio Buttons with Tooltips -->
                     <div class="form-check" data-bs-toggle="tooltip" title="Standard method. Preserves relationships between columns within each row.">
                         <input class="form-check-input" type="radio" name="bootstrap_type" id="type_standard" value="standard" checked>
-                        <label class="form-check-label" for="type_standard"><strong>Standard Bootstrap</strong> (Resample rows)</label>
+                        <label class="form-check-label" for="type_standard"><strong>Standard</strong></label>
                     </div>
                     <div class="form-check" data-bs-toggle="tooltip" title="Shuffles a defined block of columns, keeping other columns and the row structure intact.">
                         <input class="form-check-input" type="radio" name="bootstrap_type" id="type_remix" value="remix">
-                        <label class="form-check-label" for="type_remix"><strong>Remix Bootstrap</strong> (Shuffle column block)</label>
+                        <label class="form-check-label" for="type_remix"><strong>Remix</strong></label>
                     </div>
                     <div class="form-check mb-3" data-bs-toggle="tooltip" title="Maximum shuffle. Each cell is an independent random sample from its original column. Breaks all row-wise correlations.">
                         <input class="form-check-input" type="radio" name="bootstrap_type" id="type_deep_remix" value="deep_remix">
-                        <label class="form-check-label" for="type_deep_remix"><strong>Deep Remix Bootstrap</strong> (Shuffle cells)</label>
+                        <label class="form-check-label" for="type_deep_remix"><strong>Deep Remix</strong></label>
                     </div>
                     
-                    <h4>Bootstrap Settings</h4>
+                    <h4>Settings</h4>
                     <div class="row">
                         <div class="col-md-6 mb-3"><label for="new_size" class="form-label">New Data Size</label><input type="number" class="form-control" id="new_size" name="new_size" value="500" required></div>
                         <div class="col-md-6 mb-3"><label for="random_state" class="form-label">Random State</label><input type="number" class="form-control" id="random_state" name="random_state" value="42"></div>
                     </div>
 
-                    <div id="remix-options-wrapper">
-                        <h4>Remix Settings <small class="text-muted">(for Remix only)</small></h4>
+                    <div id="remix-options-wrapper" style="display: none;">
+                        <h4>Remix Settings</h4>
                         <div class="mb-3"><label for="start_remix_col" class="form-label">Start of Remix Section</label><select class="form-select" id="start_remix_col" name="start_remix_col" disabled><option value="">-- Generate Map First --</option></select></div>
                         <div class="mb-3"><label for="end_remix_col" class="form-label">End of Remix Section</label><select class="form-select" id="end_remix_col" name="end_remix_col" disabled><option value="">-- Generate Map First --</option></select></div>
                     </div>
@@ -120,7 +119,7 @@
                 </form>
             </div>
         </div>
-        <!-- (Rest of the file is unchanged) -->
+
         <div class="col-lg-8 border-start ps-lg-5">
             <h3>Live Previews</h3>
             <div class="card shadow-sm mb-3">
@@ -133,7 +132,8 @@
             </div>
         </div>
     </div>
-    <!-- (Modal is unchanged) -->
+
+    <!-- Modal for Creating a New Study -->
     <div class="modal fade" id="newStudyModal" tabindex="-1" aria-labelledby="newStudyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -155,6 +155,20 @@
                             <label for="source_csv" class="form-label">Source Data File (CSV)</label>
                             <input class="form-control" type="file" id="source_csv" name="source_csv" accept=".csv" required>
                         </div>
+                        <hr>
+                        <!-- NEW CLONING OPTION -->
+                        <div class="mb-3">
+                            <label for="clone_from_study_id" class="form-label">Clone Encoder Definitions from (Optional)</label>
+                            <select class="form-select" name="clone_from_study_id" id="clone_from_study_id">
+                                <option value="">-- Start with a blank slate --</option>
+                                {% for study in studies %}
+                                    <option value="{{ study.id }}">{{ study.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Speeds up setup by copying all encoder definitions from an existing study to this new one.
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -168,15 +182,14 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- The JavaScript block is unchanged. No modifications are needed here. -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Enable Bootstrap tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // --- (Rest of the script is unchanged) ---
     const studyIdHiddenInput = document.getElementById('study_id');
     const bootstrapToolWrapper = document.getElementById('bootstrap-tool-wrapper');
     const toolPrompt = document.getElementById('tool-prompt');
@@ -224,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function toggleRemixOptions(enable) {
-        remixWrapper.style.display = enable ? 'block' : 'none'; // Use display instead of opacity for better layout handling
+        remixWrapper.style.display = enable ? 'block' : 'none';
         startRemixSelect.disabled = !enable;
         endRemixSelect.disabled = !enable;
         startRemixSelect.required = enable;
@@ -275,12 +288,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     bootstrapTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            // Only show remix options for 'remix' type. Hide for all others.
             toggleRemixOptions(this.value === 'remix');
         });
     });
     
-    // Set initial state correctly, hide remix options by default unless 'remix' is checked
     toggleRemixOptions(document.querySelector('input[name="bootstrap_type"]:checked').value === 'remix');
 });
 </script>

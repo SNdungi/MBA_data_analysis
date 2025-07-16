@@ -16,6 +16,9 @@ def dashboard(study_id):
     try:
         manager = AnalysisManager(study_id)
         variable_types = manager.get_variable_types()
+        labeled_data = {}
+        for col in variable_types.get('categorical', []):
+            labeled_data[col] = manager._apply_value_labels(manager.data[col]).dropna().tolist()
     except FileNotFoundError:
         flash("Encoded data not found. Please generate the encoded file from the Encoding Workflow first.", "warning")
         return redirect(url_for('encoding.assign', study_id=study_id))
@@ -23,6 +26,7 @@ def dashboard(study_id):
     return render_template('analysis_dashboard.html', 
                            study=manager.study,
                            variables=variable_types,
+                           data_for_js=labeled_data,
                            result=None)
 
 @analysis_bp.route('/create_composite/<int:study_id>', methods=['POST'])
@@ -50,30 +54,43 @@ def run_analysis():
     variable_types = manager.get_variable_types()
     result = None
     
+    custom_figure_title = request.form.get('figure_title')
+    
     try:
-        # --- NEW ANALYSIS TYPES ---
         if analysis_type == 'categorical_descriptive':
             col = request.form.get('cat_descriptive_var')
-            result = manager.run_categorical_descriptives(col)
+            plot_type = request.form.get('plot_type', 'bar')
+            bar_orientation = request.form.get('bar_orientation', 'horizontal')
+            pie_style = request.form.get('pie_style', 'pie')
+            pie_explode = request.form.get('pie_explode') # Get the new value
+            
+            result = manager.run_categorical_descriptives(
+                col, plot_type=plot_type, figure_title=custom_figure_title,
+                bar_orientation=bar_orientation, pie_style=pie_style,
+                pie_explode=pie_explode # Pass it to the manager
+            )
+            
+        elif analysis_type == 'ordinal_analysis':
+            col = request.form.get('ordinal_var')
+            result = manager.run_ordinal_analysis(col, figure_title=custom_figure_title)
         
         elif analysis_type == 'multi_descriptive':
             cols = request.form.getlist('multi_descriptive_vars')
-            result = manager.run_multi_descriptives(cols)
+            result = manager.run_multi_descriptives(cols, figure_title=custom_figure_title)
         
         elif analysis_type == 'correlation':
             var1 = request.form.get('corr_var1')
             var2 = request.form.get('corr_var2')
-            result = manager.run_correlation(var1, var2)
+            result = manager.run_correlation(var1, var2, figure_title=custom_figure_title)
             
         elif analysis_type == 'one_sample_ttest':
             col = request.form.get('one_sample_var')
             popmean = float(request.form.get('popmean', 3.0)) # Default to 3 as per docs
             result = manager.run_one_sample_ttest(col, popmean)
 
-        # --- EXISTING ANALYSIS TYPES ---
         elif analysis_type == 'descriptive':
             col = request.form.get('descriptive_var')
-            result = manager.run_descriptive_analysis(col)
+            result = manager.run_descriptive_analysis(col,figure_title=custom_figure_title)
         
         elif analysis_type == 'anova':
             dep = request.form.get('anova_dependent_var')
@@ -88,7 +105,11 @@ def run_analysis():
         elif analysis_type == 'chi2':
             var1 = request.form.get('chi2_var1')
             var2 = request.form.get('chi2_var2')
-            result = manager.run_chi_squared(var1, var2)
+            result = manager.run_chi_squared(var1, var2,figure_title=custom_figure_title)
+            
+        elif analysis_type == 'comparison_plot':
+            col_key = request.form.get('comparison_var')
+            result = manager.run_comparison_plot(col_key)
         
         else:
             flash("Invalid analysis type selected.", "danger")
@@ -96,9 +117,14 @@ def run_analysis():
     except (ValueError, TypeError, Exception) as e:
         flash(f"An error occurred during analysis: {e}", "danger")
         
+    labeled_data = {}
+    for col in variable_types.get('categorical', []):
+        labeled_data[col] = manager._apply_value_labels(manager.data[col]).dropna().tolist()
+        
     return render_template('analysis_dashboard.html',
                            study=manager.study,
                            variables=variable_types,
+                           data_for_js=labeled_data,
                            result=result,
                            selected_analysis=analysis_type)
     

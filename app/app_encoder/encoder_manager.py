@@ -45,6 +45,20 @@ class EncodingConfigManager:
             print(f"Seeded {len(new_prototypes_to_add)} new encoder prototypes to the database.")
         else:
             print("Encoder prototypes are already up-to-date in the database.")
+            
+    @staticmethod
+    def get_column_map(study_id: int) -> Dict[str, str]:
+        """
+        Loads the JSON file that maps short keys (q1) to original questions for a study.
+        """
+        study = Study.query.get_or_404(study_id)
+        map_path = os.path.join(current_app.config['GENERATED_FOLDER'], study.map_filename)
+        try:
+            with open(map_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"WARNING: Could not load column map file '{map_path}'. Error: {e}")
+            return {} # Return an empty dict to prevent crashes
 
     @staticmethod
     def get_or_create_study(name: str, map_filename: str, topic: str = "", description: str = "") -> Study:
@@ -125,23 +139,12 @@ class EncodingConfigManager:
         
         # 2. Loop through each assignment and follow the relationships.
         for config in column_configs:
-            # Get the prototype's type ('Likert', 'Ordinal') via the relationships:
-            # ColumnEncoding -> EncoderDefinition -> EncoderPrototype -> encoder_type
             prototype_type = config.encoder_definition.prototype.encoder_type
-            
-            # If this is the first time we've seen this type, create the dictionary for it.
             if prototype_type not in encoder_config:
                 encoder_config[prototype_type] = {}
-            
-            # Get the column's short key (e.g., "q10").
+
             column_key = config.column_key
-            
-            # Get the recipe directly from the EncoderDefinition's .configuration field.
-            # This is the crucial step you asked to confirm.
             definition_config = config.encoder_definition.configuration
-            
-            # Directly map the column key to its specific encoding configuration.
-            # Example: encoder_config["Likert"]["q10"] = {"Strongly Disagree": 1, ...}
             encoder_config[prototype_type][column_key] = definition_config
 
         # 3. Add the crucial column map for translating keys to full question text.
@@ -191,6 +194,74 @@ class EncodingConfigManager:
             ColumnEncoding.id.in_(column_ids)
         ).update({'encoder_definition_id': definition.id}, synchronize_session=False)
         db.session.commit()
+        
+    @staticmethod
+    def update_definition_configurations(study_id: int, learned_maps: Dict[str, Dict]):
+        """
+        Updates the configuration of auto-generated encoders (Nominal, Binary)
+        in the database. This version correctly handles updating the JSON field.
+        """
+        if not learned_maps:
+            return
+
+        # Get all column configurations for the study in one query
+        column_configs = ColumnEncoding.query.filter(
+            ColumnEncoding.study_id == study_id,
+            ColumnEncoding.column_key.in_(learned_maps.keys())
+        ).all()
+        
+        # Create a dictionary for quick lookup: { 'q1': <ColumnEncoding object>, ... }
+        config_map = {cc.column_key: cc for cc in column_configs}
+
+        for col_key, new_value_map in learned_maps.items():
+            col_config = config_map.get(col_key)
+            if not col_config or not col_config.encoder_definition:
+                continue
+
+            definition = col_config.encoder_definition
+            
+            # --- THE FIX: We must work with a copy and reassign ---
+            
+            # 1. Get a mutable copy of the current configuration.
+            #    If it's None or empty, start with a fresh dictionary.
+            current_config = definition.configuration or {}
+            
+            # 2. Check if the 'value_map' key exists and has content.
+            if 'value_map' in current_config and current_config['value_map']:
+                # It's not empty, so we must perform the compatibility check.
+                existing_map = current_config['value_map']
+                
+                # Sort items to ensure comparison is not order-dependent.
+                # Convert keys to int for a robust comparison if they are strings (from JSON).
+                sorted_existing = sorted({str(k): v for k, v in existing_map.items()}.items())
+                sorted_new = sorted({str(k): v for k, v in new_value_map.items()}.items())
+
+                if sorted_existing != sorted_new:
+                    raise ValueError(
+                        f"Incompatible Value Maps for definition '{definition.name}' (used by column {col_key}). "
+                        f"The data in this column has different categories than what is already saved in the definition. "
+                        f"Please create and assign a new, unique definition for this column."
+                    )
+                # If they match, there's nothing to do, so we can continue.
+                continue
+            else:
+                # It's empty, so we can safely populate it.
+                # 3. Modify the copied dictionary.
+                current_config['value_map'] = new_value_map
+                
+                # 4. Reassign the entire modified dictionary back to the model's attribute.
+                #    This is what flags the field as "dirty" for SQLAlchemy to update.
+                definition.configuration = current_config
+                
+                # Add a flag to the session to ensure the change is marked.
+                db.session.add(definition) 
+                
+                print(f"INFO: Staging update for definition '{definition.name}' (column {col_key}).")
+        
+        # Commit all staged changes at the end of the loop.
+        db.session.commit()
+        print("INFO: Committed all definition configuration updates to the database.")
+        
 
     @staticmethod
     def delete_encoder_definition(definition_id: int):

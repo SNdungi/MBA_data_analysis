@@ -2,15 +2,84 @@
 
 {% block content %}
 
+<style>
 
-<div class="row g-5">
-    <!-- Main Content Area -->
-    <div class="col-lg-12">
-        {% block analysis_content %}{% endblock %}
-    </div>
+
+  .sidebar {
+    width: 200px;
+    padding: 20px;
+    background-color: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .main-content {
+    flex: 1;
+    padding: 30px;
+  }
+
+  .tag-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    padding: 10px 36px 10px 18px;
+    color: #333;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 4px;
+    background-color: #dfefff;
+    clip-path: polygon(100% 0, 100% 100%, 10% 100%, 0% 50%, 10% 0);
+    transition: background-color 0.3s, color 0.3s;
+    text-align: right;
+  }
+
+  .tag-item::before {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: white;
+  }
+
+  .tag-green  { background-color: #dbf5c2; color: #2f7922; }
+  .tag-yellow { background-color: #f1eb97ff; color: #887a01ff; }
+  .tag-blue   { background-color: #bdeaff; color: #0077aa; }
+  .tag-pink   { background-color: #fcd1dc; color: #b92751; }
+  .tag-purple { background-color: #e5d5ff; color: #654ea3; }
+  .tag-orange { background-color: #ffe9d5ff; color: #a82200ff; }
+
+  .tag-item:hover {
+    filter: brightness(1.1);
+  }
+</style>
+
+<div class="analysis-wrapper">
+
+  <!-- Sidebar on the right -->
+  <div class="sidebar">
+    <a href="#" class="tag-item tag-yellow">Objectives</a>
+    <a href="#" class="tag-item tag-purple">Methodology</a>
+    <a href="#" class="tag-item tag-green">Tests</a>  
+    <a href="#" class="tag-item tag-blue">Findings</a>
+    <a href="#" class="tag-item tag-pink">Analysis</a>
+    <a href="#" class="tag-item tag-orange">summary</a>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    {% block analysis_content %}{% endblock %}
+  </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
-    {% block analysis_scripts %}{% endblock %}
+  {% block analysis_scripts %}{% endblock %}
 {% endblock %}

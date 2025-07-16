@@ -22,11 +22,36 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
+        .nav-container {
+            width: 50%;
+            margin: 0 auto;
+            border-top: 3px solid #ccc; /* "hinge" line */
+            display: flex;
+            justify-content: center;
+            }
+
+            /* Style the nav tabs */
+            .study-nav {
+            border: none;
+            width: 100%;
+            gap: 0.1rem;
+            justify-content: center;
+            }
+
+            .study-nav .nav-link {
+            border: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1.2rem;
+            color: #555;
+            }
         /* Custom style for the active tab in our new study header */
         .study-nav .nav-link.active {
             background-color: var(--fluidcore-cream) !important;
             color: var(--fluidcore-teal) !important;
-            border-bottom: 3px solid var(--fluidcore-gold) !important;
+            border-bottom: 5px solid var(--fluidcore-gold) !important;
         }
     </style>
 
@@ -54,36 +79,31 @@
             </div>
         </div>
     </nav>
-    <header class="py-3 mb-2 study-header"> 
+    <header class="study-header bg-white"> 
         {% if study %}
-        <div class=" shadow-sm mb-4  study-header">
-            <div class="d-flex justify-content-between align-items-center">
+        <div class=" shadow-sm study-header">
+            <div class="d-flex justify-content-center align-items-center p-1">
                 <div>
                     <h5 class="mb-3">
                         <i class="fas fa-flask-vial text-fluid-red me-2"></i>
-                        Working on Study: <strong class="text-dark">{{ study.name }}</strong>
+                         <strong >{{ study.name }}</strong>
                     </h5>
                 </div>
-                <div>
-                    <a href="{{ url_for('ops.index') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Back to All Studies
-                    </a>
-                </div>
+
             </div>
-            <div class="card-body  border-top">
+            <div class="nav-container text-center">
                 <ul class="nav nav-tabs nav-fill study-nav">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.blueprint == 'encoding' %}active{% endif %}" 
-                           href="{{ url_for('encoding.definitions', study_id=study.id) }}">
-                            <i class="fas fa-cogs me-2"></i>1. Encoding Workflow
-                        </a>
+                    <a class="nav-link text-muted {% if request.blueprint == 'encoding' %}active{% endif %}" 
+                        href="{{ url_for('encoding.definitions', study_id=study.id) }}">
+                        <i class="fas fa-cogs me-2"></i>1. Encoding Workflow
+                    </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.blueprint == 'analysis' %}active{% endif %}" 
-                           href="{{ url_for('analysis.dashboard', study_id=study.id) }}">
-                            <i class="fas fa-chart-line me-2"></i>2. Analysis Workbench
-                        </a>
-                 
+                    <a class="nav-link text-muted {% if request.blueprint == 'analysis' %}active{% endif %}" 
+                        href="{{ url_for('analysis.dashboard', study_id=study.id) }}">
+                        <i class="fas fa-chart-line me-2"></i>2. Analysis Workbench
+                    </a>
                     </li>
                 </ul>
             </div>

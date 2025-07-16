@@ -130,55 +130,62 @@ def assign_definition():
 
 # In app/app_encoder/encoder_routes.py
 
+# In app/app_encoder/encoder_routes.py
+
 @encoding_bp.route('/run-encoding', methods=['POST'])
 def run_encoding():
-    """(Step 3) Executes the data encoding process on the SIMULATED data."""
+    """
+    (Step 3) Executes data encoding, persists learned value maps to the database,
+    and saves the encoded data and codebook.
+    """
     study_id = request.form.get('study_id')
     study = Study.query.get_or_404(study_id)
     
-    # --- 1. DEFINE ALL FILENAMES BASED ON STUDY ---
+    # 1. DEFINE ALL FILENAMES BASED ON STUDY
     base_name = study.map_filename.replace('.json', '')
     
-    # Input file for this process
+    # Input file for this process is the simulated data
     simulated_filename = f"simulated_{base_name}.csv"
     
     # Output files for this process
     encoded_csv_filename = f"{base_name}_encoded.csv"
     codebook_filename = f"{base_name}_codebook.json"
     
-    # Paths
+    # Define full paths to the files
     generated_folder = current_app.config['GENERATED_FOLDER']
     simulated_path = os.path.join(generated_folder, simulated_filename)
     map_path = os.path.join(generated_folder, study.map_filename)
 
     try:
-        # --- 2. ENSURE SIMULATED FILE EXISTS ---
+        # 2. ENSURE THE SIMULATED INPUT FILE EXISTS
         if not os.path.exists(simulated_path):
-            flash(f"Simulated data file '{simulated_filename}' not found. Please run a bootstrap simulation first from the main page.", "danger")
+            flash(f"Simulated data file '{simulated_filename}' not found. Please run a bootstrap simulation first.", "danger")
             return redirect(url_for('encoding.assign', study_id=study.id))
 
-        # --- 3. THE KEY FIX: READ SIMULATED DATA WITH CORRECT COLUMN NAMES ---
-        # Load the question map to get the short keys ('q1', 'q2', etc.)
+        # 3. PREPARE THE RAW DATAFRAME FOR THE ENCODER
+        # The encoder class expects column names to be the short keys ('q1', 'q2', etc.)
         with open(map_path, 'r', encoding='utf-8') as f:
             question_map = json.load(f)
-        
-        # The keys of the map are the column names we need.
         column_keys = list(question_map.keys())
-
-        # Read the simulated CSV, but tell pandas to use our keys as the column names.
-        # We use `header=0` to confirm we're replacing the first row (the header).
-        # We use `names=column_keys` to provide the new names.
+        
+        # Load the simulated CSV, forcing the column names to be our short keys
         raw_df = pd.read_csv(simulated_path, encoding='latin1', header=0, names=column_keys)
-        # --- END OF KEY FIX ---
 
-        # --- 4. RUN THE ENCODER (This part is now correct) ---
+        # 4. GENERATE CONFIG AND RUN THE ENCODER
+        # This config tells the encoder which definition to use for each column
         encoder_config = EncodingConfigManager.generate_encoder_class_config(study.id)
         engine = DataEncoder(dataframe=raw_df, config=encoder_config)
-        encoded_dataframe, _, warnings = engine.encode()
         
-        codebook_dictionary = engine.codebook
+        # The .encode() method now returns the learned maps as its fourth value
+        encoded_dataframe, codebook_dictionary, warnings, learned_maps = engine.encode()
         
-        # --- 5. HANDLE WARNINGS AND SAVE OUTPUTS (No changes needed here) ---
+        # 5. PERSIST THE LEARNED MAPS BACK TO THE DATABASE
+        # This is the crucial step that updates the definitions for Nominal/Binary encoders
+        if learned_maps:
+            EncodingConfigManager.update_definition_configurations(study.id, learned_maps)
+            flash("Encoder definitions have been successfully updated with learned value maps.", "info")
+
+        # 6. HANDLE WARNINGS AND PROVIDE FEEDBACK
         if warnings:
             flash("Encoding complete, but with warnings. Please review the messages below.", "warning")
             for warning in warnings:
@@ -192,23 +199,33 @@ def run_encoding():
         else:
             flash('Data successfully encoded with no issues!', 'success')
 
+        # 7. SAVE THE OUTPUT FILES
         encoded_csv_path = os.path.join(generated_folder, encoded_csv_filename)
         codebook_path = os.path.join(generated_folder, codebook_filename)
         
+        # Save the final encoded data
         encoded_dataframe.to_csv(encoded_csv_path, index=False)
         
+        # Save the final codebook
         with open(codebook_path, 'w', encoding='utf-8') as f:
             json.dump(codebook_dictionary, f, indent=4)
             
+        # 8. REDIRECT TO RESULTS
         return redirect(url_for('encoding.results', study_id=study.id))
 
-    except FileNotFoundError:
-         flash(f"A required file was not found. Please ensure the map file '{study.map_filename}' exists.", "danger")
+    except ValueError as e: 
+        # This specifically catches the incompatibility error from the manager
+        flash(f"Compatibility Error: {e}", "danger")
+        return redirect(url_for('encoding.assign', study_id=study.id))
+    except FileNotFoundError as e:
+         flash(f"A required file was not found: {e}", "danger")
          return redirect(url_for('encoding.assign', study_id=study.id))
     except Exception as e:
+        # A general catch-all for any other unexpected errors
         current_app.logger.error(f"A critical error occurred during encoding: {e}", exc_info=True)
         flash(f"A critical error occurred during encoding: {e}", "danger")
         return redirect(url_for('encoding.assign', study_id=study.id))
+    
 
 @encoding_bp.route('/update_definition', methods=['POST'])
 def update_definition():

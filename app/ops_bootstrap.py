@@ -1,14 +1,10 @@
 # File: app/ops_bootstrap.py
-# --- COMPLETE AND CORRECTED VERSION ---
-
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 import json
-import textwrap
+
 import os
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 class DataBootstrapper:
     """
@@ -132,9 +128,6 @@ class DataBootstrapper:
         
         new_data = {}
         
-        # To ensure each column is shuffled with a different random pattern,
-        # we use the main random_state to generate a unique seed for each column.
-        # This makes the entire process reproducible.
         rng = np.random.default_rng(random_state)
         num_cols = len(self.original_df.columns)
         column_seeds = rng.integers(low=0, high=10**6, size=num_cols)
@@ -147,43 +140,12 @@ class DataBootstrapper:
                 n=new_size, 
                 replace=True, 
                 random_state=col_seed, 
-                ignore_index=True
-            )
+                ignore_index=True)
         
         self.simulated_df = pd.DataFrame(new_data)
         print("✅ Deep Remix bootstrap complete.")
         return self.simulated_df
 
-    def plot_comparison(self, column_name: str, save_path: Optional[str] = None):
-        """Visualizes and saves the comparison plot to a file."""
-        if self.original_df is None or self.simulated_df is None:
-            raise ValueError("Both original and simulated data must be available.")
-        if column_name not in self.original_df.columns:
-            raise ValueError(f"Column '{column_name}' not found.")
-
-        if not pd.api.types.is_numeric_dtype(self.original_df[column_name]):
-            print(f"⚠️ Plotting skipped: Column '{column_name}' is not numeric.")
-            return
-
-        print(f"\n📊 Plotting comparison for column: '{column_name}'...")
-        
-        full_question = self.get_question_text(column_name)
-        plot_title = textwrap.fill(full_question, width=60)
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.kdeplot(data=self.original_df, x=column_name, ax=ax, label='Original Data', color='blue', fill=True, alpha=0.1)
-        sns.kdeplot(data=self.simulated_df, x=column_name, ax=ax, label='Simulated Data', color='red', linestyle='--')
-        ax.set_title(f'Distribution Comparison\n{plot_title}', fontsize=14)
-        ax.set_xlabel(column_name)
-        ax.legend()
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path)
-            plt.close(fig)
-            print(f"   - Plot saved to '{save_path}'")
-        else:
-            plt.show()
 
     def save_simulated_data(self, output_path: str):
         if self.simulated_df is None:

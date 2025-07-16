@@ -4,7 +4,7 @@
         "question_text": "1. What is your role in the company?",
         "value_map": {
             "0": "management",
-            "1": "operator",
+            "1": "staff",
             "2": "supervisor"
         }
     },
@@ -109,7 +109,7 @@
     },
     "q19": {
         "encoder_type": "Likert",
-        "question_text": "We can understand and interpret system instructions from designers accurately\u00ef\u00bf\u00bd",
+        "question_text": "We can understand and interpret system instructions from designers accurately\u00a0",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -205,7 +205,7 @@
     },
     "q27": {
         "encoder_type": "Likert",
-        "question_text": "The designer firms have dedicated team for each process we handle\u00ef\u00bf\u00bd",
+        "question_text": "The designer firms have dedicated team for each process we handle\u00a0",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -423,67 +423,77 @@
         "encoder_type": "Nominal (Factorized)",
         "question_text": "5. Which countries do you export to",
         "value_map": {
-            "0": "KENYA,USA",
-            "1": "US,KOREA, CHINA",
-            "2": "USA",
-            "3": "USA , EUROPE",
-            "4": "USA, UK",
-            "5": "USA,CANADA,MEXICO",
-            "6": "USA,EUROPE",
-            "7": "USA,KOREA,",
-            "8": "USA,UK"
+            "0": "America,",
+            "1": "Kenya",
+            "2": "U.S.A and UK",
+            "3": "UNITED STATES",
+            "4": "US",
+            "5": "US,KOREA, CHINA",
+            "6": "USA",
+            "7": "USA , EUROPE",
+            "8": "USA, UK",
+            "9": "USA,CANADA,MEXICO",
+            "10": "USA,Europe",
+            "11": "USA,KOREA,",
+            "12": "USA,Mexico,Canada",
+            "13": "USA/EUROPE",
+            "14": "Usa"
         }
     },
     "q6": {
         "encoder_type": "Nominal (Factorized)",
         "question_text": "6. What type of Apparels produced?",
         "value_map": {
-            "0": "DENIM,PANTS",
-            "1": "DENIM,PANTS,TOPS",
-            "2": "DENIM,WOVEN,KNITS",
-            "3": "GARMENTS",
-            "4": "HOODIES, PANTS, POLO TSHIRTS",
-            "5": "KNITS",
-            "6": "KNITS,",
-            "7": "PANTS, TOPS, SHORTS",
-            "8": "PANTS,SHORTS,POLO TSHIRT,HOODIES,CREW NECK TSHIRT",
-            "9": "PANTS,TOPS,ADULT",
-            "10": "SPORTS, GARMENTS",
-            "11": "UTILITY, JACKETS",
-            "12": "WOVEN",
-            "13": "WOVEN, DENIM, PANTS",
-            "14": "YOUTH"
+            "0": "Bottoms",
+            "1": "DENIM JEANS",
+            "2": "Denim Jeans",
+            "3": "Denim jeans",
+            "4": "GARMENTS",
+            "5": "Garments",
+            "6": "HOODIES, PANTS, POLO TSHIRTS",
+            "7": "Knits",
+            "8": "Knitting",
+            "9": "PANTS, TOPS, SHORTS",
+            "10": "PANTS,SHORTS,POLO TSHIRT,HOODIES,CREW NECK TSHIRT",
+            "11": "Reflector jacket",
+            "12": "Textiles",
+            "13": "Textiles sports wear",
+            "14": "WOVEN DENIM PANTS",
+            "15": "Woven",
+            "16": "Youth wear",
+            "17": "men and ladies attires (knits)"
         }
     },
     "q7": {
         "encoder_type": "Nominal (Factorized)",
         "question_text": "7. Which Product Labels (Designers/Buyers are you currently producing / have produced recently?",
         "value_map": {
-            "0": "IZOD,TCP",
-            "1": "JCPENNY",
-            "2": "LEVIS",
-            "3": "LEVIS , HURLEY , ABERCROMBIE",
-            "4": "LEVIS,ABERCROMBIE",
-            "5": "LEVIS,GV, ABERCROMBIE",
-            "6": "LEVIS,HURLEY,ABERCROMBIE",
-            "7": "LEVIS,HURLEY,ABERCROMBIE,GV",
-            "8": "LEVIS,KONTOOR,GV,TCP, PERRYELLIS",
-            "9": "MAKEITKENYA",
-            "10": "PERRYELLIS",
-            "11": "SAVEYOR",
-            "12": "TCP",
-            "13": "TCP,PERRYELLIS",
-            "14": "TCP,PERRYELLIS,SAVEYOR,MOTION",
-            "15": "TNO,CHAPS,XERTION,MOTION,",
-            "16": "XERSION,MOTION"
+            "0": "Abercrombie & Levis",
+            "1": "Buyers",
+            "2": "Jc penny",
+            "3": "LEVIS / HURLEY / ABERCROMBIE / FITCH",
+            "4": "LEVIS,GV, ABERCROMBIE",
+            "5": "LEVIS,KONTOOR,GV,TCP, PERRY ELLIS",
+            "6": "LEVI\u00c2\u0092S",
+            "7": "Levis",
+            "8": "Levis Hurley Abercrombie",
+            "9": "Levis,Abercrombie and Fitch,Hurley",
+            "10": "Perry Ellis International",
+            "11": "Saveyor vest and security",
+            "12": "TNO,CHAPS,XERTION,MOTION,",
+            "13": "Tcp/Izod/",
+            "14": "The children place",
+            "15": "XERSION,MOTION",
+            "16": "make it kenya sports wear",
+            "17": "the labels depend on the buyer.we have variety of buyers hence labels."
         }
     },
     "q8": {
-        "encoder_type": "Nominal (Factorized)",
+        "encoder_type": "Binary",
         "question_text": "8. Location of the manufacturing plant (tick one)",
         "value_map": {
-            "0": "Machakos",
-            "1": "Nairobi"
+            "0": "No/False",
+            "1": "Yes/True"
         }
     },
     "q9": {

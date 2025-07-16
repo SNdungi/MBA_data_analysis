@@ -1,11 +1,8 @@
-{% extends "layout.html" %}
+{% extends "analysis_base.html" %}
 
-{% block content %}
-<div class="container-fluid">
+{% block analysis_content %}
+
     <!-- Page Header -->
-
-    
-    {% include "_messages.html" %}
 
     <div class="row g-4">
         <!-- ==========================================================================
@@ -18,7 +15,7 @@
                 <div class="accordion-item">
                     <h6 class="accordion-header" id="headingDataPrep">
                         <button class="accordion-button {% if selected_analysis != 'composite' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataPrep">
-                            <i class="fas fa-cogs fa-fw me-3"></i>Data Preparation
+                            <i class="fas fa-cogs fa-fw me-3"></i>Data Prep
                         </button>
                     </h6>
                     <div id="collapseDataPrep" class="accordion-collapse collapse {% if selected_analysis == 'composite' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
@@ -46,21 +43,62 @@
                 <div class="accordion-item">
                     <h6 class="accordion-header" id="headingDescriptives">
                         <button class="accordion-button {% if selected_analysis not in ['categorical_descriptive', 'descriptive', 'multi_descriptive'] %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDescriptives">
-                            <i class="fas fa-chart-pie fa-fw me-3"></i>Descriptive Analysis
+                            <i class="fas fa-chart-pie fa-fw me-3"></i>Descriptive 
                         </button>
                     </h6>
                     <div id="collapseDescriptives" class="accordion-collapse collapse {% if selected_analysis in ['categorical_descriptive', 'descriptive', 'multi_descriptive'] %}show{% endif %}" data-bs-parent="#analysis-sidebar">
                         <div class="accordion-body">
                             <!-- Categorical -->
-                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
-                                <input type="hidden" name="study_id" value="{{ study.id }}">
-                                <input type="hidden" name="analysis_type" value="categorical_descriptive">
-                                <h6>Categorical Frequencies</h6>
-                                <select name="cat_descriptive_var" class="form-select form-select-sm mb-2">
-                                    {% for var in variables.categorical %}<option value="{{ var }}" {% if request.form.cat_descriptive_var == var %}selected{% endif %}>{{ var }}</option>{% endfor %}
+                    <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                        <input type="hidden" name="study_id" value="{{ study.id }}">
+                        <input type="hidden" name="analysis_type" value="categorical_descriptive">
+                        <h6>Categorical Frequencies</h6>
+                        
+                        <label class="form-label">Select Variable:</label>
+                        <!-- ADD AN ID TO THIS SELECTOR FOR JAVASCRIPT -->
+                        <select name="cat_descriptive_var" id="cat_descriptive_var" class="form-select form-select-sm mb-2">
+                            {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                        </select>
+
+                        <label class="form-label">Plot Type:</label>
+                        <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotBar" value="bar" checked> <label class="form-check-label" for="plotBar">Bar Chart</label></div>
+                        <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotHist" value="hist"> <label class="form-check-label" for="plotHist">Histogram</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotPie" value="pie"> <label class="form-check-label" for="plotPie">Pie Chart</label></div>
+
+                        <!-- Contextual Options -->
+                        <div id="bar-chart-options" class="mt-2">
+                            <label for="bar_orientation" class="form-label">Bar Orientation:</label>
+                            <select name="bar_orientation" id="bar_orientation" class="form-select form-select-sm">
+                                <option value="horizontal">Horizontal</option>
+                                <option value="vertical">Vertical</option>
+                            </select>
+                        </div>
+                        
+                        <div id="pie-chart-options" class="mt-2" style="display: none;">
+                            <div class="mb-2">
+                                <label for="pie_style" class="form-label">Pie Style:</label>
+                                <select name="pie_style" id="pie_style" class="form-select form-select-sm">
+                                    <option value="pie">Flat</option>
+                                    <option value="donut">Donut</option>
+                                    <option value="3d">3D Effect</option>
                                 </select>
-                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
-                            </form>
+                            </div>
+                            <div>
+                                <label for="pie_explode" class="form-label">Highlight Slice (Optional):</label>
+                                <select name="pie_explode" id="pie_explode" class="form-select form-select-sm">
+                                    <option value="">-- None --</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
+                            <label for="cat_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                            <input type="text" id="cat_figure_title" name="figure_title" class="form-control form-control-sm">
+                        </div>
+
+                        <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                    </form>
                             <!-- Numeric -->
                             <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
                                 <input type="hidden" name="study_id" value="{{ study.id }}">
@@ -69,6 +107,10 @@
                                 <select name="descriptive_var" class="form-select form-select-sm mb-2">
                                     {% for var in variables.numeric %}<option value="{{ var }}" {% if request.form.descriptive_var == var %}selected{% endif %}>{{ var }}</option>{% endfor %}
                                 </select>
+                                <div class="mb-3">
+                                    <label for="num_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="num_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Correlation of Age and Salary">
+                                </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
                             <!-- Multi-Variable -->
@@ -79,6 +121,38 @@
                                 <select name="multi_descriptive_vars" class="form-select form-select-sm mb-2" multiple required size="5">
                                     {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
                                 </select>
+                                <div class="mb-3">
+                                    <label for="mult_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="mult_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Correlation of Age and Salary">
+                                </div>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Section for Ordinal Analysis -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingOrdinal">
+                        <button class="accordion-button {% if selected_analysis != 'ordinal_analysis' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOrdinal">
+                            <i class="fas fa-sort-amount-up fa-fw me-3"></i>Ordinal
+                        </button>
+                    </h6>
+                    <div id="collapseOrdinal" class="accordion-collapse collapse {% if selected_analysis == 'ordinal_analysis' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="ordinal_analysis">
+                                <h6>Frequency, Median & Mean</h6>
+                                <p class="small text-muted">Provides a full summary for ordered categorical data like experience levels or ratings.</p>
+                                <label class="form-label">Select Ordinal Variable:</label>
+                                <select name="ordinal_var" class="form-select form-select-sm mb-2">
+                                    <!-- We can reuse the categorical list as ordinal vars are a subset -->
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                <div class="mb-3">
+                                    <label for="ord_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="ord_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Age Frequency">
+                                </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
                         </div>
@@ -89,7 +163,7 @@
                 <div class="accordion-item">
                     <h6 class="accordion-header" id="headingInferential">
                         <button class="accordion-button {% if selected_analysis not in ['correlation', 'ttest', 'one_sample_ttest', 'anova', 'chi2'] %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInferential">
-                            <i class="fas fa-search-plus fa-fw me-3"></i>Inferential Analysis
+                            <i class="fas fa-search-plus fa-fw me-3"></i>Inferential
                         </button>
                     </h6>
                     <div id="collapseInferential" class="accordion-collapse collapse {% if selected_analysis in ['correlation', 'ttest', 'one_sample_ttest', 'anova', 'chi2'] %}show{% endif %}" data-bs-parent="#analysis-sidebar">
@@ -107,6 +181,10 @@
                                 <select name="corr_var2" class="form-select form-select-sm mb-2">
                                     {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
                                 </select>
+                                <div class="mb-3">
+                                    <label for="corr_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="corr_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Correlation of Age and Salary">
+                                </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
                             <!-- T-Test -->
@@ -170,6 +248,32 @@
                         </div>
                     </div>
                 </div>
+                <!-- Section 4: Comparative Analysis -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingComparison">
+                        <button class="accordion-button {% if selected_analysis != 'comparison_plot' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseComparison">
+                            <i class="fas fa-equals fa-fw me-3"></i>Comparative
+                        </button>
+                    </h2>
+                    <div id="collapseComparison" class="accordion-collapse collapse {% if selected_analysis == 'comparison_plot' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="comparison_plot">
+                                <h6>Original vs. Simulated</h6>
+                                <p class="small text-muted">Compare the distribution of an encoded variable between the original and simulated datasets.</p>
+                                <label class="form-label">Select Variable:</label>
+                                <select name="comparison_var" class="form-select form-select-sm mb-2">
+                                    {# Use the numeric variables from the main encoded data as the options #}
+                                    {% for var in variables.numeric %}
+                                        <option value="{{ var }}">{{ var }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Generate Plot</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -187,30 +291,54 @@
                 <div class="card shadow-sm">
                     <div class="card-body" style="min-height: 75vh;">
                         {% if result %}
-                            <h3 class="mb-4">{{ result.title }}</h3>
+                            <h5 >{{ result.title }}</h5>
+                            <hr class="mb-4">
                             
                             {% if result.stats_table_html %}
-                                <h5>Statistical Summary</h5>
-                                <div class="table-responsive mb-4">
+                                <h6>Statistical Summary</h6>
+                                <div class="table-responsive p-3 mb-4 shadow">
                                     {{ result.stats_table_html | safe }}
+                                </div>
+                            {% endif %}
+                            {% if result.enhanced_crosstab_html %}
+                                <h5>Crosstabulation</h5>
+                                <div class="table-responsive mb-4">
+                                    {{ result.enhanced_crosstab_html | safe }}
                                 </div>
                             {% endif %}
     
                              {% if result.contingency_table_html %}
-                                <h5>Contingency Table</h5>
-                                 <div class="table-responsive mb-4">{{ result.contingency_table_html | safe }}</div>
+                                <h6>Contingency Table</h6>
+                                 <div class="table-responsive mb-4 shadow">{{ result.contingency_table_html | safe }}</div>
                              {% endif %}
+
+
+                            <!-- NEW: Median/Mode Table -->
+                            {% if result.summary_stats_html %}
+                                <h6>Ordinal Central Tendency</h6>
+                                <div class="table-responsive mb-4 shadow">
+                                    {{ result.summary_stats_html | safe }}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- NEW: Numeric Descriptive Table -->
+                            {% if result.numeric_desc_html %}
+                                <h6>Numeric Summary (Interpretive)</h6>
+                                <div class="table-responsive p-3 mb-4 shadow">
+                                    {{ result.numeric_desc_html | safe }}
+                                </div>
+                            {% endif %}
     
                             {% if result.plot_url %}
-                                <h5>Visualization</h5>
-                                <div class="text-center bg-light p-3 rounded mb-4">
+                                <h6>Visualization</h6>
+                                <div class="text-center bg-light p-3 rounded mb-4 shadow">
                                     <img src="data:image/png;base64,{{ result.plot_url }}" class="img-fluid" alt="Analysis Plot">
                                 </div>
                             {% endif %}
                             
                             {% if result.interpretation %}
-                                <h5><i class="fas fa-comment-dots text-info me-2"></i>Interpretation</h5>
-                                <div class="alert alert-light" role="alert">
+                                <h6><i class="fas fa-comment-dots text-info me-2"></i>Interpretation</h6>
+                                <div class="alert alert-light shadow" role="alert">
                                     {{ result.interpretation }}
                                 </div>
                             {% endif %}
@@ -226,5 +354,56 @@
             </div>
         </div>
     </div>
-</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- JAVASCRIPT FOR DYNAMIC OPTIONS ---
+    const mainVariableSelect = document.getElementById('cat_descriptive_var');
+    const plotTypeRadios = document.querySelectorAll('.plot-type-radio');
+    const barOptions = document.getElementById('bar-chart-options');
+    const pieOptions = document.getElementById('pie-chart-options');
+    const explodeSelect = document.getElementById('pie_explode');
+    
+    // Store the raw data so we can get categories without another server trip
+    const rawData = {{ data_for_js | tojson | safe }};
+
+    function updateExplodeOptions() {
+        const selectedVariable = mainVariableSelect.value;
+        if (!selectedVariable || !rawData[selectedVariable]) {
+            return;
+        }
+
+        // Find unique, non-null categories for the selected variable
+        const categories = [...new Set(rawData[selectedVariable])].filter(cat => cat !== null && cat !== undefined);
+        
+        // Clear existing options
+        explodeSelect.innerHTML = '<option value="">-- None --</option>';
+        
+        // Populate with new options
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            explodeSelect.appendChild(option);
+        });
+    }
+
+    function togglePlotOptions() {
+        const selectedPlot = document.querySelector('.plot-type-radio:checked').value;
+        barOptions.style.display = selectedPlot === 'bar' ? 'block' : 'none';
+        pieOptions.style.display = selectedPlot === 'pie' ? 'block' : 'none';
+    }
+
+    // Event Listeners
+    plotTypeRadios.forEach(radio => radio.addEventListener('change', togglePlotOptions));
+    mainVariableSelect.addEventListener('change', updateExplodeOptions);
+
+    // Initial state setup on page load
+    togglePlotOptions();
+    updateExplodeOptions();
+});
+</script>
+{% endblock %}
+
 {% endblock %}
