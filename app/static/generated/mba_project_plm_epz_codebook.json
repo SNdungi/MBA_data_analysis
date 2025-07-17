@@ -419,65 +419,6 @@
             "5": "Strongly agree"
         }
     },
-    "q5": {
-        "encoder_type": "Nominal (Factorized)",
-        "question_text": "5. Which countries do you export to",
-        "value_map": {
-            "0": "KENYA,USA",
-            "1": "US,KOREA, CHINA",
-            "2": "USA",
-            "3": "USA , EUROPE",
-            "4": "USA, UK",
-            "5": "USA,CANADA,MEXICO",
-            "6": "USA,EUROPE",
-            "7": "USA,KOREA,",
-            "8": "USA,UK"
-        }
-    },
-    "q6": {
-        "encoder_type": "Nominal (Factorized)",
-        "question_text": "6. What type of Apparels produced?",
-        "value_map": {
-            "0": "DENIM,PANTS",
-            "1": "DENIM,PANTS,TOPS",
-            "2": "DENIM,WOVEN,KNITS",
-            "3": "GARMENTS",
-            "4": "HOODIES, PANTS, POLO TSHIRTS",
-            "5": "KNITS",
-            "6": "KNITS,",
-            "7": "PANTS, TOPS, SHORTS",
-            "8": "PANTS,SHORTS,POLO TSHIRT,HOODIES,CREW NECK TSHIRT",
-            "9": "PANTS,TOPS,ADULT",
-            "10": "SPORTS, GARMENTS",
-            "11": "UTILITY, JACKETS",
-            "12": "WOVEN",
-            "13": "WOVEN, DENIM, PANTS",
-            "14": "YOUTH"
-        }
-    },
-    "q7": {
-        "encoder_type": "Nominal (Factorized)",
-        "question_text": "7. Which Product Labels (Designers/Buyers are you currently producing / have produced recently?",
-        "value_map": {
-            "0": "IZOD,TCP",
-            "1": "JCPENNY",
-            "2": "LEVIS",
-            "3": "LEVIS , HURLEY , ABERCROMBIE",
-            "4": "LEVIS,ABERCROMBIE",
-            "5": "LEVIS,GV, ABERCROMBIE",
-            "6": "LEVIS,HURLEY,ABERCROMBIE",
-            "7": "LEVIS,HURLEY,ABERCROMBIE,GV",
-            "8": "LEVIS,KONTOOR,GV,TCP, PERRYELLIS",
-            "9": "MAKEITKENYA",
-            "10": "PERRYELLIS",
-            "11": "SAVEYOR",
-            "12": "TCP",
-            "13": "TCP,PERRYELLIS",
-            "14": "TCP,PERRYELLIS,SAVEYOR,MOTION",
-            "15": "TNO,CHAPS,XERTION,MOTION,",
-            "16": "XERSION,MOTION"
-        }
-    },
     "q8": {
         "encoder_type": "Nominal (Factorized)",
         "question_text": "8. Location of the manufacturing plant (tick one)",

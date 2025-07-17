@@ -76,7 +76,7 @@ def run_analysis():
         
         elif analysis_type == 'multi_descriptive':
             cols = request.form.getlist('multi_descriptive_vars')
-            result = manager.run_multi_descriptives(cols, figure_title=custom_figure_title)
+            result = manager.run_multi_descriptives(cols)
         
         elif analysis_type == 'correlation':
             var1 = request.form.get('corr_var1')
@@ -91,6 +91,21 @@ def run_analysis():
         elif analysis_type == 'descriptive':
             col = request.form.get('descriptive_var')
             result = manager.run_descriptive_analysis(col,figure_title=custom_figure_title)
+            
+        elif analysis_type == 'multi_category_descriptive':
+            col = request.form.get('multi_cat_var')
+            result = manager.run_multi_category_descriptives(col,figure_title=custom_figure_title)
+            
+        elif analysis_type == 'descriptive_ranking':
+            cols = request.form.getlist('ranking_vars')
+            result = manager.run_descriptive_ranking(cols)
+            
+        
+        elif analysis_type == 'comparative_multi_category':
+            var1 = request.form.get('comp_multi_cat_var1')
+            var2 = request.form.get('comp_multi_cat_var2')
+            figure_title = request.form.get('figure_title')
+            result = manager.run_comparative_multi_category(var1, var2, figure_title)
         
         elif analysis_type == 'anova':
             dep = request.form.get('anova_dependent_var')

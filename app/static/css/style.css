@@ -54,12 +54,19 @@ code, pre {
   font-size: 0.7rem !important;
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
+  white-space: pre-wrap;       /* allows wrapping */
+  word-break: break-word;      /* breaks long strings */
+  overflow-wrap: anywhere;     /* aggressive fallback */
+  display: inline-block;       /* important in <td> to allow width-based wrapping */
+  max-width: 100%;             /* restrict to cell/container */
+  box-sizing: border-box;
 }
 
 pre {
-  overflow-x: auto;
-  padding: 1rem;
+  overflow-x: auto;            /* keeps scroll for multiline blocks */
+  white-space: pre-wrap;       /* wraps if needed */
 }
+
 
 .text-fluid-red {
   color: var(--fluidcore-red);
@@ -233,7 +240,6 @@ pre {
 
 }
 
-/* ... (all your existing CSS) ... */
 
 /* ==========================================================================
    Encoder Definition Page Styles

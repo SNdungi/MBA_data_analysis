@@ -49,56 +49,112 @@
                     <div id="collapseDescriptives" class="accordion-collapse collapse {% if selected_analysis in ['categorical_descriptive', 'descriptive', 'multi_descriptive'] %}show{% endif %}" data-bs-parent="#analysis-sidebar">
                         <div class="accordion-body">
                             <!-- Categorical -->
-                    <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
-                        <input type="hidden" name="study_id" value="{{ study.id }}">
-                        <input type="hidden" name="analysis_type" value="categorical_descriptive">
-                        <h6>Categorical Frequencies</h6>
-                        
-                        <label class="form-label">Select Variable:</label>
-                        <!-- ADD AN ID TO THIS SELECTOR FOR JAVASCRIPT -->
-                        <select name="cat_descriptive_var" id="cat_descriptive_var" class="form-select form-select-sm mb-2">
-                            {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
-                        </select>
-
-                        <label class="form-label">Plot Type:</label>
-                        <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotBar" value="bar" checked> <label class="form-check-label" for="plotBar">Bar Chart</label></div>
-                        <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotHist" value="hist"> <label class="form-check-label" for="plotHist">Histogram</label></div>
-                        <div class="form-check mb-2"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotPie" value="pie"> <label class="form-check-label" for="plotPie">Pie Chart</label></div>
-
-                        <!-- Contextual Options -->
-                        <div id="bar-chart-options" class="mt-2">
-                            <label for="bar_orientation" class="form-label">Bar Orientation:</label>
-                            <select name="bar_orientation" id="bar_orientation" class="form-select form-select-sm">
-                                <option value="horizontal">Horizontal</option>
-                                <option value="vertical">Vertical</option>
-                            </select>
-                        </div>
-                        
-                        <div id="pie-chart-options" class="mt-2" style="display: none;">
-                            <div class="mb-2">
-                                <label for="pie_style" class="form-label">Pie Style:</label>
-                                <select name="pie_style" id="pie_style" class="form-select form-select-sm">
-                                    <option value="pie">Flat</option>
-                                    <option value="donut">Donut</option>
-                                    <option value="3d">3D Effect</option>
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="categorical_descriptive">
+                                <h6>Categorical Frequencies</h6>
+                                
+                                <label class="form-label">Select Variable:</label>
+                                <!-- ADD AN ID TO THIS SELECTOR FOR JAVASCRIPT -->
+                                <select name="cat_descriptive_var" id="cat_descriptive_var" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
                                 </select>
-                            </div>
-                            <div>
-                                <label for="pie_explode" class="form-label">Highlight Slice (Optional):</label>
-                                <select name="pie_explode" id="pie_explode" class="form-select form-select-sm">
-                                    <option value="">-- None --</option>
-                                    <!-- Options will be populated by JavaScript -->
+
+                                <label class="form-label">Plot Type:</label>
+                                <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotBar" value="bar" checked> <label class="form-check-label" for="plotBar">Bar Chart</label></div>
+                                <div class="form-check"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotHist" value="hist"> <label class="form-check-label" for="plotHist">Histogram</label></div>
+                                <div class="form-check mb-2"><input class="form-check-input plot-type-radio" type="radio" name="plot_type" id="plotPie" value="pie"> <label class="form-check-label" for="plotPie">Pie Chart</label></div>
+
+                                <!-- Contextual Options -->
+                                <div id="bar-chart-options" class="mt-2">
+                                    <label for="bar_orientation" class="form-label">Bar Orientation:</label>
+                                    <select name="bar_orientation" id="bar_orientation" class="form-select form-select-sm">
+                                        <option value="horizontal">Horizontal</option>
+                                        <option value="vertical">Vertical</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="pie-chart-options" class="mt-2" style="display: none;">
+                                    <div class="mb-2">
+                                        <label for="pie_style" class="form-label">Pie Style:</label>
+                                        <select name="pie_style" id="pie_style" class="form-select form-select-sm">
+                                            <option value="pie">Flat</option>
+                                            <option value="donut">Donut</option>
+                                            <option value="3d">3D Effect</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="pie_explode" class="form-label">Highlight Slice (Optional):</label>
+                                        <select name="pie_explode" id="pie_explode" class="form-select form-select-sm">
+                                            <option value="">-- None --</option>
+                                            <!-- Options will be populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 mt-3">
+                                    <label for="cat_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="cat_figure_title" name="figure_title" class="form-control form-control-sm">
+                                </div>
+
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!-- Multi-Category -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="multi_category_descriptive">
+                                <h6>Multi-Category Frequencies</h6>
+                                <p class="small text-muted">For "select all that apply" questions.</p>
+                                <select name="multi_cat_var" class="form-select form-select-sm mb-2">
+                                    <!-- This can reuse the categorical list, user will know which one to pick -->
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
                                 </select>
-                            </div>
-                        </div>
+                                <div class="mb-3">
+                                    <label for="mc_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="mc_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Export countries">
+                                </div>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            
+                            <!-- Comparative Multi-Category Form -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="comparative_multi_category">
+                                <h6>Comparative Multi-Category</h6>
+                                <p class="small text-muted">Compare frequencies between two 'select all' questions.</p>
+                                
+                                <label class="form-label">Variable 1 (e.g., Product Types):</label>
+                                <select name="comp_multi_cat_var1" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
 
-                        <div class="mb-3 mt-3">
-                            <label for="cat_figure_title" class="form-label">Custom Figure Title (Optional):</label>
-                            <input type="text" id="cat_figure_title" name="figure_title" class="form-control form-control-sm">
-                        </div>
+                                <label class="form-label">Variable 2 (e.g., Brands):</label>
+                                <select name="comp_multi_cat_var2" class="form-select form-select-sm mb-2">
+                                    {% for var in variables.categorical %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                
+                                <div class="mb-3 mt-3">
+                                    <label for="comp_multi_figure_title" class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" id="comp_multi_figure_title" name="figure_title" class="form-control form-control-sm">
+                                </div>
 
-                        <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
-                    </form>
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
+                            </form>
+                            <!--  Descriptive Ranking Form -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="descriptive_ranking">
+                                <h6>Descriptive Ranking (by Consensus)</h6>
+                                <p class="small text-muted">Rank Likert/scale items by consensus using the Coefficient of Variation (CV).</p>
+                                
+                                <label class="form-label">Select Variables to Rank:</label>
+                                <select name="ranking_vars" class="form-select form-select-sm mb-2" multiple required size="8">
+                                    <!-- Best to use numeric variables for this -->
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run Ranking</button>
+                            </form>
                             <!-- Numeric -->
                             <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
                                 <input type="hidden" name="study_id" value="{{ study.id }}">
@@ -109,7 +165,7 @@
                                 </select>
                                 <div class="mb-3">
                                     <label for="num_figure_title" class="form-label">Custom Figure Title (Optional):</label>
-                                    <input type="text" id="num_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Correlation of Age and Salary">
+                                    <input type="text" id="num_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: numerical distribution">
                                 </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
@@ -123,7 +179,7 @@
                                 </select>
                                 <div class="mb-3">
                                     <label for="mult_figure_title" class="form-label">Custom Figure Title (Optional):</label>
-                                    <input type="text" id="mult_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: Correlation of Age and Salary">
+                                    <input type="text" id="mult_figure_title" name="figure_title" class="form-control form-control-sm" placeholder="e.g., Figure 2: multi descriptive">
                                 </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>

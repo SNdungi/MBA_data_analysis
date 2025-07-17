@@ -162,22 +162,86 @@ class AnalysisManager:
         
 
     def run_descriptive_analysis(self, column: str, figure_title: str = None):
-            series = self.data[column].dropna()
-            # Step 1: Get the data
-            stats_df = utils.get_descriptives(series)
-            # Step 2: Generate the styled HTML from the data
-            stats_table_html = utils.generate_styled_html_table(stats_df)
-            
-            final_plot_title = figure_title if figure_title else f'Distribution of {column}'
-            plot_url = utils.generate_histogram(series, title=final_plot_title)
-            
-            return {
-                'title': f'Descriptive Statistics for {column}',
-                'stats_table_html': stats_table_html, # Use the new styled HTML
-                'plot_url': plot_url,
-                'figure_title': final_plot_title,
-                'interpretation': f"The table shows key statistical metrics for the variable '{column}'. The histogram visualizes its distribution."
-            }
+        series = self.data[column].dropna()
+        # Step 1: Get the data
+        stats_df = utils.get_descriptives(series)
+        # Step 2: Generate the styled HTML from the data
+        stats_table_html = utils.generate_styled_html_table(stats_df)
+        
+        final_plot_title = figure_title if figure_title else f'Distribution of {column}'
+        plot_url = utils.generate_histogram(series, title=final_plot_title)
+        
+        return {
+            'title': f'Descriptive Statistics for {column}',
+            'stats_table_html': stats_table_html, # Use the new styled HTML
+            'plot_url': plot_url,
+            'figure_title': final_plot_title,
+            'interpretation': f"The table shows key statistical metrics for the variable '{column}'. The histogram visualizes its distribution."
+        }
+    def run_multi_category_descriptives(self, column: str, figure_title: str = None):
+        """
+        Runs descriptive analysis for a multi-select (comma-separated) column.
+        Data cleaning now happens once in this method.
+        """
+        series = self.data[column].dropna()
+        if series.empty:
+            raise ValueError(f"The column '{column}' contains no data.")
+
+        # --- FIX 2: CENTRALIZED DATA PREPARATION ---
+        # 1. Split, explode, trim, and filter the data ONCE.
+        cleaned_items_series = series.str.split(',').explode().str.strip()
+        cleaned_items_series = cleaned_items_series[cleaned_items_series != '']
+        
+        if cleaned_items_series.empty:
+            raise ValueError(f"The column '{column}' contains no valid items after processing.")
+
+        # 2. Pass the CLEANED series to the table generator.
+        table_html = utils.generate_multicategory_frequency_table(cleaned_items_series)
+
+        # 3. Pass the EXACT SAME CLEANED series to the plot generator.
+        final_plot_title = figure_title if figure_title else f'Frequencies of Items in {column}'
+        plot_url = utils.generate_barchart(cleaned_items_series, title=final_plot_title)
+
+        return {
+            'title': f'Multi-Category Analysis for {column}',
+            'stats_table_html': table_html,
+            'plot_url': plot_url,
+            'figure_title': final_plot_title,
+            'interpretation': (
+                "The table and chart show the frequency of each individual item chosen in this 'select all that apply' question. "
+                "Percentages are now calculated based on the **total number of selections made**, so they will sum to 100%."
+            )
+        }
+    
+    def run_comparative_multi_category(self, var1_key: str, var2_key: str, figure_title: str = None):
+        """
+        Runs a comparative analysis between two multi-category columns.
+        """
+        series1 = self.data[var1_key].dropna()
+        series2 = self.data[var2_key].dropna()
+
+        if series1.empty or series2.empty:
+            raise ValueError("One or both selected columns contain no data.")
+
+        # --- Generate the Combined Table ---
+        combined_table_html = utils.generate_combined_frequency_table(series1, series2)
+        V1="Brand Category"
+        v2="Brands"
+        title = "Brand Portfolio"
+        # --- Generate the Dual Bar Chart ---
+        final_plot_title = figure_title if figure_title else f"Frequency Comparison: {var1_key} vs. {var2_key}"
+        plot_url = utils.generate_dual_barchart(series1, series2, title1=var1_key, title2=var2_key)
+
+        return {
+            'title': f'Comparative Analysis: {var1_key} and {var2_key}',
+            'stats_table_html': combined_table_html, # Re-using this key for the combined table
+            'plot_url': plot_url,
+            'figure_title': final_plot_title,
+            'interpretation': (
+                f"The table and figure below provide a side-by-side comparison of the frequencies for items selected in '{var1_key}' and '{var2_key}'. "
+                "The table allows for direct comparison of counts for shared items, while the dual bar chart provides a clear visual representation of the distribution for each variable independently."
+            )
+        }
 
     def run_multi_descriptives(self, columns: list):
         if not columns:
@@ -191,6 +255,49 @@ class AnalysisManager:
             'title': 'Descriptive Statistics for Selected Variables',
             'stats_table_html': stats_table_html, # Use the new styled HTML
             'interpretation': "This table summarizes key statistics for the selected variables."
+        }
+    
+    def run_descriptive_ranking(self, columns: list):
+        """
+        Orchestrates a descriptive ranking analysis and formats the output table.
+        """
+        if not columns:
+            raise ValueError("Please select at least one variable for ranking.")
+
+        # 1. Perform the core statistical analysis
+        ranked_df = utils.perform_descriptive_ranking(self.data, columns)
+
+        # 2. Get the full question text for each column key
+        enc_manager = EncodingConfigManager()
+        column_map = enc_manager.get_column_map(self.study.id)
+        
+        # Add the full "Statement" text to the DataFrame
+        ranked_df['Statement'] = ranked_df.index.map(column_map)
+        
+        # Make the Statement the first column for better readability
+        ranked_df = ranked_df.reset_index().rename(columns={'index': 'Variable'})
+        final_cols = ['Statement', 'Variable', 'N', 'Mean', 'Std Dev', 'CV', 'Ranking']
+        ranked_df = ranked_df[final_cols]
+
+        # 3. Format the numbers for presentation
+        # We can't use style.format here as it returns a Styler object, not a DataFrame
+        # So we'll apply string formatting directly.
+        for col in ['Mean', 'Std Dev', 'CV']:
+            ranked_df[col] = ranked_df[col].apply(lambda x: f'{x:.2f}')
+        
+        # 4. Generate the final styled HTML table
+        # We'll tell it to wrap the long 'Statement' column
+        final_table_html = utils.generate_styled_html_table(ranked_df, wrap_column='Statement')
+
+        return {
+            'title': 'Descriptive Ranking Analysis by Consensus (Coefficient of Variation)',
+            'stats_table_html': final_table_html,
+            'interpretation': (
+                "This table ranks the selected items based on the level of consensus among respondents. The 'Ranking' is determined by the "
+                "Coefficient of Variation (CV), calculated as (Standard Deviation / Mean). A lower CV indicates less relative variability and therefore "
+                "stronger consensus. The item ranked #1 is the statement that respondents agreed on the most, regardless of whether the "
+                "mean score was high or low."
+            )
         }
         
     def run_anova(self, dependent: str, independent: str, figure_title: str = None):
