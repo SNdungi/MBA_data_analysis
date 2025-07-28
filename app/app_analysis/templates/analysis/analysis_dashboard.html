@@ -35,8 +35,35 @@
                                 </div>
                                 <button type="submit" class="btn btn-fluid-orange btn-sm w-100">Create Variable</button>
                             </form>
+                            <!-- NEW: Data Tampering Form -->
+                            <form action="{{ url_for('analysis.tamper_data') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <h6 class="mt-3">Data Tampering Tool (Experimental)</h6>
+                                <p class="small text-muted">Randomly change values in a column to test sensitivity. This creates a temporary dataset.</p>
+                                
+                                <div class="mb-2">
+                                    <label class="form-label">Variable to Change:</label>
+                                    <select name="tamper_col" class="form-select form-select-sm">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label">New Value:</label>
+                                    <input type="number" name="tamper_value" class="form-control form-control-sm" required value="4">
+                                    <div class="form-text small">For a 5-point Likert, 4 is 'Agree'.</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Number of Rows to Change:</label>
+                                    <input type="number" name="tamper_num_rows" class="form-control form-control-sm" required value="10">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning btn-sm w-100">Apply Tampering</button>
+                            </form>
                         </div>
                     </div>
+                    
                 </div>
 
                 <!-- Section 2: Descriptive Analysis -->
@@ -243,6 +270,52 @@
                                 </div>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
+                            <!-- NEW: Correlation Matrix Form -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="correlation_matrix">
+                                <h6>Correlation Matrix (SPSS Style)</h6>
+                                <p class="small text-muted">Generate a publication-ready correlation table.</p>
+                                
+                                <div class="mb-2">
+                                    <label class="form-label">Row Variables:</label>
+                                    <select name="corr_matrix_rows" class="form-select form-select-sm" multiple required size="5">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Column Variables:</label>
+                                    <select name="corr_matrix_cols" class="form-select form-select-sm" multiple required size="5">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-data btn-sm w-100">Generate Matrix</button>
+                            </form>
+                            <!--  Bivariate Correlation Form -->
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="bivariate_correlation">
+                                <h6>Bivariate Correlation Matrix</h6>
+                                <p class="small text-muted">Correlate multiple independent variables against a single dependent (outcome) variable.</p>
+                                
+                                <div class="mb-2">
+                                    <label class="form-label">Independent Variables (X):</label>
+                                    <select name="bivar_x_vars" class="form-select form-select-sm" multiple required size="6">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Dependent Variable (Y):</label>
+                                    <select name="bivar_y_var" class="form-select form-select-sm">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run Correlations</button>
+                            </form>
                             <!-- T-Test -->
                             <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
                                  <input type="hidden" name="study_id" value="{{ study.id }}">
@@ -301,9 +374,89 @@
                                 </select>
                                 <button type="submit" class="btn btn-data btn-sm w-100">Run</button>
                             </form>
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="linear_regression">
+                                <h6>Linear Regression</h6>
+                                <p class="small text-muted">Model the relationship between multiple predictors and a single outcome.</p>
+                                
+                                <div class="mb-2">
+                                    <label class="form-label">Predictor Variables (X):</label>
+                                    <select name="reg_x_vars" class="form-select form-select-sm" multiple required size="6">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Outcome Variable (Y):</label>
+                                    <select name="reg_y_var" class="form-select form-select-sm">
+                                        {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-data btn-sm w-100">Run Regression</button>
+                            </form>
                         </div>
                     </div>
                 </div>
+                <!-- NEW: Section for Distribution Visuals -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingVisuals">
+                        <button class="accordion-button {% if selected_analysis != 'likert_distribution' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVisuals">
+                            <i class="fas fa-chart-bar fa-fw me-3"></i>Distribution Visuals
+                        </button>
+                    </h6>
+                    <div id="collapseVisuals" class="accordion-collapse collapse {% if selected_analysis == 'likert_distribution' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="likert_distribution">
+                                <h6>Diverging Stacked Bar Chart</h6>
+                                <p class="small text-muted">Visually compare the distribution of multiple Likert scale items.</p>
+                                
+                                <label class="form-label">Select Likert Variables:</label>
+                                <select name="likert_vars" class="form-select form-select-sm mb-2" multiple required size="8">
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Custom Figure Title (Optional):</label>
+                                    <input type="text" name="figure_title" class="form-control form-control-sm">
+                                </div>
+                    
+                                <button type="submit" class="btn btn-data btn-sm w-100">Generate Chart</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Section for Scale Reliability -->
+                <div class="accordion-item">
+                    <h6 class="accordion-header" id="headingReliability">
+                        <button class="accordion-button {% if selected_analysis != 'cronbach_alpha' %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReliability">
+                            <i class="fas fa-check-double fa-fw me-3"></i>Scale Reliability
+                        </button>
+                    </h6>
+                    <div id="collapseReliability" class="accordion-collapse collapse {% if selected_analysis == 'cronbach_alpha' %}show{% endif %}" data-bs-parent="#analysis-sidebar">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('analysis.run_analysis') }}" method="POST">
+                                <input type="hidden" name="study_id" value="{{ study.id }}">
+                                <input type="hidden" name="analysis_type" value="cronbach_alpha">
+                                <h6>Cronbach's Alpha</h6>
+                                <p class="small text-muted">Test the internal consistency of a composite scale.</p>
+                                
+                                <label class="form-label">Select Source Variables:</label>
+                                <select name="alpha_vars" class="form-select form-select-sm mb-2" multiple required size="8">
+                                    <!-- The new composite variable will automatically appear here because it's numeric -->
+                                    {% for var in variables.numeric %}<option value="{{ var }}">{{ var }}</option>{% endfor %}
+                                </select>
+                                
+                                <button type="submit" class="btn btn-data btn-sm w-100">Calculate Alpha</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section 4: Comparative Analysis -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingComparison">
@@ -330,6 +483,7 @@
                         </div>
                     </div>
                 </div>
+                
 
             </div>
         </div>
@@ -349,6 +503,23 @@
                         {% if result %}
                             <h5 >{{ result.title }}</h5>
                             <hr class="mb-4">
+
+                            {% if result.coeffs_table %}
+                                <h6 class="mt-4">Model Summary</h6>
+                                <div class="table-responsive mb-4">
+                                    {{ result.model_summary_table | safe }}
+                                </div>
+                                
+                                <h6 class="mt-4">ANOVA</h6>
+                                <div class="table-responsive mb-4">
+                                    {{ result.anova_table | safe }}
+                                </div>
+
+                                <h6 class="mt-4">Coefficients</h6>
+                                <div class="table-responsive mb-4">
+                                    {{ result.coeffs_table | safe }}
+                                </div>
+                            {% endif %}
                             
                             {% if result.stats_table_html %}
                                 <h6>Statistical Summary</h6>

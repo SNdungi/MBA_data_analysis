@@ -125,6 +125,30 @@ def run_analysis():
         elif analysis_type == 'comparison_plot':
             col_key = request.form.get('comparison_var')
             result = manager.run_comparison_plot(col_key)
+            
+        elif analysis_type == 'cronbach_alpha':
+            cols = request.form.getlist('alpha_vars')
+            result = manager.run_cronbach_alpha(cols)
+            
+        elif analysis_type == 'bivariate_correlation':
+            x_vars = request.form.getlist('bivar_x_vars')
+            y_var = request.form.get('bivar_y_var')
+            result = manager.run_bivariate_correlation(x_vars, y_var)
+            
+        elif analysis_type == 'linear_regression':
+            x_vars = request.form.getlist('reg_x_vars')
+            y_var = request.form.get('reg_y_var')
+            result = manager.run_linear_regression(x_vars, y_var)
+            
+        elif analysis_type == 'correlation_matrix':
+            row_vars = request.form.getlist('corr_matrix_rows')
+            col_vars = request.form.getlist('corr_matrix_cols')
+            result = manager.run_correlation_matrix(row_vars, col_vars)
+            
+        elif analysis_type == 'likert_distribution':
+            cols = request.form.getlist('likert_vars')
+            figure_title = request.form.get('figure_title')
+            result = manager.run_likert_distribution_chart(cols, figure_title)
         
         else:
             flash("Invalid analysis type selected.", "danger")
@@ -148,3 +172,27 @@ def run_analysis():
 def analysis_documentation():
     """Renders the static documentation page for Chapter 4."""
     return render_template('analysis_docs.html', title='Analysis Documentation')
+
+
+
+# === NEW DEDICATED ROUTE FOR TAMPERING ===
+@analysis_bp.route('/tamper_data', methods=['POST'])
+def tamper_data():
+    """Handles the form submission for the data tampering tool."""
+    study_id = request.form.get('study_id')
+    try:
+        manager = AnalysisManager(int(study_id))
+        
+        col = request.form.get('tamper_col')
+        new_val = int(request.form.get('tamper_value'))
+        num_rows = int(request.form.get('tamper_num_rows'))
+        
+        # The manager will handle the logic and save the new file
+        message = manager.run_data_tampering(col, new_val, num_rows)
+        flash(message, 'success')
+
+    except Exception as e:
+        flash(f"An error occurred during data tampering: {e}", "danger")
+        
+    # Redirect back to the dashboard. The manager will now load the tampered file.
+    return redirect(url_for('analysis.dashboard', study_id=study_id))

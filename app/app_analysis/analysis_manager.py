@@ -14,34 +14,89 @@ class AnalysisManager:
 
     def __init__(self, study_id: int):
         self.study = Study.query.get_or_404(study_id)
-        self.session_key = f"analysis_data_{study_id}"
-        self.data = self._load_data()
+        # The session key now points to a list of operations, not the dataframe
+        self.ops_session_key = f"analysis_ops_{study_id}"
+        self.data = self._load_and_process_data()
         if self.data is None:
             raise FileNotFoundError("Encoded data file not found for this study.")
 
-    def _load_data(self) -> pd.DataFrame | None:
-        if self.session_key in session:
-            return pd.read_json(session[self.session_key], orient='split')
+    def _load_and_process_data(self) -> pd.DataFrame | None:
+        """
+        Loads the base encoded data from the CSV file and then applies any
+        user-defined operations (like creating composite variables) from the session.
+        """
         base_name = self.study.map_filename.replace('.json', '')
         encoded_filename = f"{base_name}_encoded.csv"
         file_path = os.path.join(current_app.config['GENERATED_FOLDER'], encoded_filename)
-        if os.path.exists(file_path):
-            df = pd.read_csv(file_path)
-            for col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='ignore')
-            session[self.session_key] = df.to_json(orient='split')
-            return df
-        return None
+        
+        if not os.path.exists(file_path):
+            return None
 
-    def _save_data(self):
-        session[self.session_key] = self.data.to_json(orient='split')
+        # 1. Load the base DataFrame from the CSV every time
+        df = pd.read_csv(file_path)
+        # Fix for FutureWarning and ensures numeric types
+        for col in df.columns:
+            try:
+                df[col] = pd.to_numeric(df[col])
+            except (ValueError, TypeError):
+                # This column is not numeric, which is fine
+                pass
+
+        # 2. Get the list of operations from the session
+        operations = session.get(self.ops_session_key, [])
+        
+        # 3. Re-apply each operation to the DataFrame
+        for op in operations:
+            if op.get('type') == 'create_composite':
+                name = op.get('name')
+                sources = op.get('sources')
+                if name and sources and all(s in df.columns for s in sources):
+                    df[name] = df[sources].mean(axis=1)
+        
+        return df
 
     def reset_data(self):
-        if self.session_key in session:
-            session.pop(self.session_key)
+        """Resets the data by simply clearing the operations from the session."""
+        if self.ops_session_key in session:
+            session.pop(self.ops_session_key)
 
+    def create_composite_variable(self, new_var_name: str, source_vars: list):
+        """
+        Creates a new composite variable by adding an 'operation' to the session,
+        NOT by saving the entire DataFrame.
+        """
+        if not new_var_name or not new_var_name.strip():
+            raise ValueError("New variable name cannot be empty.")
+        if new_var_name in self.data.columns: # self.data is already processed
+            raise ValueError(f"Variable '{new_var_name}' already exists.")
+        if not source_vars:
+            raise ValueError("You must select at least one source variable.")
+        
+        # Get the current list of operations, or an empty list if none exists
+        operations = session.get(self.ops_session_key, [])
+        
+        # Define the new operation
+        new_op = {
+            'type': 'create_composite',
+            'name': new_var_name,
+            'sources': source_vars
+        }
+        
+        # Add the new operation to the list
+        operations.append(new_op)
+        
+        # Save the updated list of operations back to the session.
+        # This keeps the session cookie very small.
+        session[self.ops_session_key] = operations
+        
+        return f"Successfully created composite variable '{new_var_name}'."
+    
+    # --- ALL OTHER METHODS (get_variable_types, _apply_value_labels, all run_* methods) ARE UNCHANGED ---
+    # They will now operate on the `self.data` DataFrame which is correctly
+    # loaded and processed by the new `_load_and_process_data` method on initialization.
     def get_variable_types(self) -> dict:
-        numeric_vars, categorical_vars = [], []
+        numeric_vars = []
+        categorical_vars = []
         if self.data is not None:
             for col in self.data.columns:
                 is_numeric = pd.api.types.is_numeric_dtype(self.data[col])
@@ -50,17 +105,6 @@ class AnalysisManager:
                 if not is_numeric or (is_numeric and self.data[col].nunique() <= 10):
                     categorical_vars.append(col)
         return {'numeric': sorted(numeric_vars), 'categorical': sorted(categorical_vars)}
-
-    def create_composite_variable(self, new_var_name: str, source_vars: list):
-        if not new_var_name or not new_var_name.strip(): raise ValueError("New variable name cannot be empty.")
-        if new_var_name in self.data.columns: raise ValueError(f"Variable '{new_var_name}' already exists.")
-        if not source_vars: raise ValueError("You must select at least one source variable.")
-        for var in source_vars:
-            if not pd.api.types.is_numeric_dtype(self.data[var]):
-                raise TypeError(f"Source variable '{var}' must be numeric.")
-        self.data[new_var_name] = self.data[source_vars].mean(axis=1)
-        self._save_data()
-        return f"Successfully created composite variable '{new_var_name}'."
 
     def _apply_value_labels(self, series: pd.Series) -> pd.Series:
         column_key = series.name
@@ -72,7 +116,7 @@ class AnalysisManager:
         if prototype_type == 'Likert': reverse_map = {v: k for k, v in config.get('map', {}).items()}
         elif prototype_type == 'Ordinal': reverse_map = {i: val for i, val in enumerate(config.get('order', []))}
         elif prototype_type == 'Binary': reverse_map = {1: 'Yes/True', 0: 'No/False'}
-        elif prototype_type == 'Nominal':
+        elif prototype_type == 'Nominal (Factorized)':
             raw_map = config.get('value_map', {})
             try: reverse_map = {int(k): v for k, v in raw_map.items()}
             except (ValueError, TypeError): return series
@@ -425,3 +469,199 @@ class AnalysisManager:
         return {'title': f'One-Sample T-Test for {column}', 
                 'stats_table_html': pd.DataFrame([{'Test Value': popmean, 'T-statistic': f'{t_stat:.2f}', 'p-value': f'{p_val:.4f}'}]).to_html(classes='table table-sm', index=False), 
                 'interpretation': interp}
+        
+    def run_cronbach_alpha(self, columns: list):
+        """
+        Orchestrates a Cronbach's Alpha reliability test and formats the output.
+        """
+        # 1. Perform the core statistical analysis
+        alpha_df = utils.calculate_cronbach_alpha(self.data, columns)       
+        # 2. Generate the styled HTML table
+        alpha_table_html = utils.generate_styled_html_table(alpha_df)
+        # 3. Provide a standard interpretation guide
+        interpretation = """
+        <p>Cronbach's Alpha is a measure of internal consistency (reliability) for a set of scale items. It is not a measure of unidimensionality.</p>
+        <strong>General Rules of Thumb for Interpretation:</strong>
+        <ul>
+            <li><strong>α > 0.9:</strong> Excellent</li>
+            <li><strong>0.8 < α ≤ 0.9:</strong> Good</li>
+            <li><strong>0.7 < α ≤ 0.8:</strong> Acceptable</li>
+            <li><strong>0.6 < α ≤ 0.7:</strong> Questionable</li>
+            <li><strong>0.5 < α ≤ 0.6:</strong> Poor</li>
+            <li><strong>α < 0.5:</strong> Unacceptable</li>
+        </ul>
+        <p>A high alpha suggests that the items in your scale are reliably measuring the same underlying latent construct.</p>
+        """
+
+        return {
+            'title': "Cronbach's Alpha Reliability Analysis",
+            'stats_table_html': alpha_table_html,
+            'interpretation': interpretation
+        }
+    def run_bivariate_correlation(self, x_vars: list, y_var: str):
+        """
+        Orchestrates a bivariate correlation analysis and formats the output table.
+        """
+        # 1. Perform the core statistical analysis
+        results_df = utils.perform_bivariate_correlations(self.data, x_vars, y_var)
+
+        # 2. Get the full question text for each variable key to make the table readable
+        enc_manager = EncodingConfigManager()
+        column_map = enc_manager.get_column_map(self.study.id)
+        
+        # Replace the short keys with the full question "Statement"
+        results_df['Independent Variable'] = results_df['Independent Variable'].map(column_map)
+        
+        # Format the numeric columns for presentation
+        results_df['Pearson r'] = pd.to_numeric(results_df['Pearson r'], errors='coerce').map('{:.3f}'.format)
+        results_df['p-value'] = pd.to_numeric(results_df['p-value'], errors='coerce').map('{:.4f}'.format)
+        
+        # 3. Generate the final styled HTML table
+        final_table_html = utils.generate_styled_html_table(results_df, wrap_column='Independent Variable')
+
+        y_var_text = column_map.get(y_var, y_var)
+
+        return {
+            'title': f"Bivariate Correlations with '{y_var_text}'",
+            'stats_table_html': final_table_html,
+            'interpretation': (
+                f"This table shows the results of Pearson correlations between several independent variables and the single dependent variable: '{y_var_text}'. "
+                "The 'Pearson r' value indicates the strength and direction of the linear relationship (-1 to +1). "
+                "The 'Significance' column indicates if the relationship is statistically significant (typically p < .05). "
+                "This analysis is useful for examining the individual impact of several factors on a single outcome."
+            )
+        }
+
+
+    def run_linear_regression(self, x_vars: list, y_var: str):
+        """
+        Orchestrates a linear regression analysis and provides interpretation
+        based on the new SPSS-style output.
+        """
+        enc_manager = EncodingConfigManager()
+        column_map = enc_manager.get_column_map(self.study.id)
+
+        # Create a temporary dataframe with readable names for the table
+        df_for_reg = self.data.rename(columns=column_map)
+        
+        x_vars_full = [column_map.get(v, v) for v in x_vars]
+        y_var_full = column_map.get(y_var, y_var)
+        
+        # 1. Perform the core statistical analysis
+        regression_results = utils.perform_linear_regression(df_for_reg, x_vars_full, y_var_full)
+
+        # 2. Provide a detailed interpretation guide
+        f_pvalue_num = float(regression_results['f_pvalue'])
+        adj_r_sq_num = float(regression_results['adj_r_squared'])
+        
+        model_sig_text = "statistically significant" if f_pvalue_num < 0.05 else "not statistically significant"
+
+        interpretation = f"""
+        <p>A multiple linear regression was run to predict <strong>{y_var_full}</strong> from the predictor variables.</p>
+        <p>The overall regression model was <strong>{model_sig_text}</strong> (p = {f_pvalue_num:.3f}), explaining <strong>{adj_r_sq_num*100:.1f}%</strong> of the variance in the outcome (Adjusted R² = {adj_r_sq_num:.3f}).</p>
+        <strong>Coefficients Table Interpretation:</strong>
+        <ul>
+            <li><strong>B (Unstandardized Coefficient):</strong> For a one-unit increase in the predictor, the outcome is predicted to change by this amount, holding other predictors constant.</li>
+            <li><strong>Sig. (p-value):</strong> If this value is less than 0.05, the predictor is considered to have a statistically significant unique contribution to the model.</li>
+        </ul>
+        """
+
+        return {
+            'title': f'Linear Regression Predicting "{y_var_full}"',
+            'model_summary_table': regression_results['model_summary_table'],
+            'anova_table': regression_results['anova_table'],
+            'coeffs_table': regression_results['coeffs_table'],
+            'interpretation': interpretation
+        }
+        
+
+    # --- NEW METHOD ---
+    def run_correlation_matrix(self, row_vars: list, col_vars: list):
+        """
+        Orchestrates the generation of an SPSS-style correlation matrix.
+        """
+        # 1. Generate the styled HTML table
+        # We need to replace the short keys with full text for the final table.
+        enc_manager = EncodingConfigManager()
+        column_map = enc_manager.get_column_map(self.study.id)
+        
+        # Create a temporary dataframe with readable names for the function
+        df_for_corr = self.data.rename(columns=column_map)
+        
+        # Map the selected short keys to their full text names
+        row_vars_full = [column_map.get(v, v) for v in row_vars]
+        col_vars_full = [column_map.get(v, v) for v in col_vars]
+        
+        matrix_html = utils.generate_spss_correlation_matrix(df_for_corr, row_vars_full, col_vars_full)
+
+        return {
+            'title': 'Pearson Correlation Matrix',
+            'stats_table_html': matrix_html, # Re-use the stats_table_html key
+            'interpretation': (
+                "The table displays the Pearson correlation coefficient (r), the p-value (Sig. 2-tailed), and the sample size (N) for each pair of variables. "
+                "The asterisks indicate the level of statistical significance, which shows whether the observed relationship is likely due to chance. "
+                "This format is standard for reporting correlations in academic research."
+            )
+        }
+    
+
+
+    # === THIS IS THE CORRECTED AND FINAL METHOD ===
+    def run_likert_distribution_chart(self, columns: list, figure_title: str = None):
+        """
+        Prepares data for a diverging stacked bar chart, using short keys on the
+        y-axis and providing a full question map for a detailed legend.
+        """
+        if not columns:
+            raise ValueError("Please select at least one variable.")
+        
+        likert_df = self.data[columns]
+        
+        first_col_encoding = ColumnEncoding.query.filter_by(study_id=self.study.id, column_key=columns[0]).first()
+        if not first_col_encoding or not first_col_encoding.encoder_definition:
+            raise ValueError(f"Could not find a valid encoder definition for '{columns[0]}'.")
+        
+        raw_map = first_col_encoding.encoder_definition.configuration.get('map', {})
+        if not raw_map:
+             raise ValueError(f"The encoder definition for '{columns[0]}' does not contain a valid 'map'.")
+
+        sorted_items = sorted(raw_map.items(), key=lambda item: item[1])
+        category_order = [str(item[0]) for item in sorted_items]
+
+        freq_data = []
+        for col in likert_df.columns:
+            counts = self._apply_value_labels(likert_df[col]).value_counts(normalize=True) * 100
+            freq_data.append(counts)
+        
+        freq_df = pd.DataFrame(freq_data, index=columns)
+        freq_df = freq_df.reindex(columns=category_order, fill_value=0)
+        
+        # --- KEY CHANGE: Do NOT replace the index with full text ---
+        # The index should remain as the short keys ('q30', 'q31', etc.) for the plot y-axis.
+        
+        # 1. Get the full question map
+        enc_manager = EncodingConfigManager()
+        full_column_map = enc_manager.get_column_map(self.study.id)
+        
+        # 2. Create a specific map only for the questions being plotted
+        legend_question_map = {key: full_column_map.get(key, "N/A") for key in columns}
+        
+        # 3. For the HTML table, we still want the full text.
+        table_df = freq_df.copy()
+        table_df['Statement'] = table_df.index.map(full_column_map)
+        table_df = table_df.set_index('Statement')
+        table_df = table_df.round(1).reset_index()
+        table_html = utils.generate_styled_html_table(table_df, wrap_column='Statement')
+
+        # --- Generate Plot ---
+        final_plot_title = figure_title if figure_title else "Distribution of Responses for Likert Scale Items"
+        # Pass both the data (indexed by short keys) and the new legend map to the plotter
+        plot_url = utils.generate_diverging_stacked_bar(freq_df, title=final_plot_title)
+
+        return {
+            'title': 'Likert Scale Distribution Analysis',
+            'stats_table_html': table_html,
+            'plot_url': plot_url,
+            'figure_title': final_plot_title, # This can now be the caption for the whole figure
+            'interpretation': "..."
+        }

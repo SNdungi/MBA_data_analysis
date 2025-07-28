@@ -109,7 +109,7 @@
     },
     "q19": {
         "encoder_type": "Likert",
-        "question_text": "We can understand and interpret system instructions from designers accurately\u00ef\u00bf\u00bd",
+        "question_text": "We can understand and interpret system instructions from designers accurately",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -205,7 +205,7 @@
     },
     "q27": {
         "encoder_type": "Likert",
-        "question_text": "The designer firms have dedicated team for each process we handle\u00ef\u00bf\u00bd",
+        "question_text": "The designer firms have dedicated team for each process we handle",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -227,7 +227,7 @@
     },
     "q29": {
         "encoder_type": "Likert",
-        "question_text": "We usually get timely responses facilitated by PLM",
+        "question_text": "The designer/buyer expects information in specific format or standard templates",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -247,7 +247,7 @@
     },
     "q30": {
         "encoder_type": "Likert",
-        "question_text": "The designer/buyer expects information in specific format or standard templates",
+        "question_text": "Different buyers/designers have different processes of production that significantly vary",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -258,7 +258,7 @@
     },
     "q31": {
         "encoder_type": "Likert",
-        "question_text": "Different buyers/designers have different processes of production that significantly vary",
+        "question_text": "Styles and seasonal orders from the same designer/buyer significantly vary",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -269,7 +269,7 @@
     },
     "q32": {
         "encoder_type": "Likert",
-        "question_text": "Styles and seasonal orders from the same designer/buyer significantly vary",
+        "question_text": "PLM tools used by different designers/ buyers significantly vary",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",
@@ -280,7 +280,7 @@
     },
     "q33": {
         "encoder_type": "Likert",
-        "question_text": "PLM tools used by different designers/ buyers significantly vary",
+        "question_text": "We usually get timely responses facilitated by PLM",
         "value_map": {
             "1": "Strongly Disagree",
             "2": "Disagree",

@@ -2,12 +2,13 @@
 import matplotlib
 matplotlib.use('Agg')
 import pandas as pd
+import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 import base64
-from collections import Counter # Use Counter for efficient counting
+import pingouin as pg # Use Counter for efficient counting
 
 # Set a consistent plot style
 sns.set_theme(style="whitegrid")
@@ -489,3 +490,377 @@ def perform_descriptive_ranking(df: pd.DataFrame, columns: list) -> pd.DataFrame
     ranked_table = descriptive_stats.sort_values(by='Ranking')
     
     return ranked_table
+
+#___________________________________________________________
+
+# ===  RELIABILITY ANALYSIS ===
+
+#_________________________________________________________
+
+def calculate_cronbach_alpha(df: pd.DataFrame, items: list) -> pd.DataFrame:
+    """
+    Calculates Cronbach's Alpha for a set of items (columns).
+    
+    Args:
+        df: The DataFrame containing the data.
+        items: A list of column names that make up the scale.
+        
+    Returns:
+        A pandas DataFrame with the Cronbach's Alpha results, ready for display.
+    """
+    if not items or len(items) < 2:
+        raise ValueError("Cronbach's Alpha requires at least two items (columns).")
+    
+    # Select only the relevant columns and drop rows with any missing values
+    # This is crucial for an accurate calculation.
+    scale_df = df[items].dropna()
+    
+    if len(scale_df) < 2:
+        raise ValueError("Not enough valid data (after dropping missing values) to calculate Cronbach's Alpha.")
+
+    # Use pingouin to calculate Cronbach's Alpha
+    # pg.cronbach_alpha returns a tuple: (alpha, confidence_interval)
+    alpha_results = pg.cronbach_alpha(data=scale_df)
+    
+    # Format the results into a nice DataFrame for display
+    results_df = pd.DataFrame({
+        'Metric': ["Cronbach's Alpha", "95% Confidence Interval", "Number of Items"],
+        'Value': [
+            f"{alpha_results[0]:.3f}",
+            f"[{alpha_results[1][0]:.3f}, {alpha_results[1][1]:.3f}]",
+            len(items)
+        ]
+    })
+    
+    return results_df
+
+import scipy.stats as stats
+
+#===============================================================================
+# === BIVARIATE CORRELATION MATRIX ===
+#================================================================================
+
+def perform_bivariate_correlations(df: pd.DataFrame, x_vars: list, y_var: str) -> pd.DataFrame:
+    """
+    Calculates Pearson correlation between a list of independent variables (x_vars)
+    and a single dependent variable (y_var).
+    
+    Args:
+        df: The input DataFrame.
+        x_vars: A list of independent variable column names.
+        y_var: The single dependent variable column name.
+        
+    Returns:
+        A DataFrame summarizing the correlation results for each pair.
+    """
+    if not x_vars:
+        raise ValueError("You must select at least one independent variable.")
+    if y_var in x_vars:
+        raise ValueError("The dependent variable cannot also be in the list of independent variables.")
+        
+    results = []
+    
+    for x in x_vars:
+        # Drop missing values pair-wise
+        clean_df = df[[x, y_var]].dropna()
+        
+        if len(clean_df) < 3: # Not enough data to correlate
+            r, p_val, sig = 'N/A', 'N/A', 'Not enough data'
+        else:
+            r, p_val = stats.pearsonr(clean_df[x], clean_df[y_var])
+            # Determine significance level for easy interpretation
+            if p_val < 0.001:
+                sig = 'p < .001'
+            elif p_val < 0.01:
+                sig = 'p < .01'
+            elif p_val < 0.05:
+                sig = 'p < .05'
+            else:
+                sig = 'Not Significant'
+
+        results.append({
+            'Independent Variable': x,
+            'Pearson r': r,
+            'p-value': p_val,
+            'Significance': sig
+        })
+        
+    results_df = pd.DataFrame(results)
+    return results_df
+
+import statsmodels.api as sm # Add this import
+
+
+def perform_linear_regression(df: pd.DataFrame, x_vars: list, y_var: str) -> dict:
+    """
+    Performs an OLS linear regression and returns the results formatted into three
+    distinct SPSS-style tables: Model Summary, ANOVA, and Coefficients.
+    """
+
+    if not x_vars:
+        raise ValueError("You must select at least one independent variable.")
+    if y_var in x_vars:
+        raise ValueError("The dependent variable cannot also be in the list of independent variables.")
+    
+    model_df = df[[y_var] + x_vars].dropna()
+    if len(model_df) < len(x_vars) + 2:
+        raise ValueError("Not enough data to run the regression.")
+
+    Y = model_df[y_var]
+    X = model_df[x_vars]
+    X = sm.add_constant(X)
+    model = sm.OLS(Y, X).fit()
+
+    # --- 1. Build the Model Summary Table ---
+    model_summary_df = pd.DataFrame({
+        'R': [np.sqrt(model.rsquared)],
+        'R Square': [model.rsquared],
+        'Adjusted R Square': [model.rsquared_adj],
+        'Std. Error of the Estimate': [np.sqrt(model.mse_resid)]
+    }).applymap('{:.3f}'.format)
+    
+    # --- 2. Build the ANOVA Table ---
+    anova_df = pd.DataFrame({
+        'Source': ['Regression', 'Residual', 'Total'],
+        'Sum of Squares': [model.ess, model.ssr, model.centered_tss],
+        'df': [model.df_model, model.df_resid, model.nobs - 1],
+        'Mean Square': [model.mse_model, model.mse_resid, '—'],
+        'F': [model.fvalue, '—', '—'],
+        'Sig.': [model.f_pvalue, '—', '—']
+    })
+    # Formatting the ANOVA table
+    for col in ['Sum of Squares', 'Mean Square']:
+        anova_df[col] = anova_df[col].apply(lambda x: f'{x:.3f}' if isinstance(x, (int, float)) else x)
+    anova_df['F'] = anova_df['F'].apply(lambda x: f'{x:.2f}' if isinstance(x, (int, float)) else x)
+    anova_df['Sig.'] = anova_df['Sig.'].apply(lambda x: f'{x:.3f}'.lstrip('0') if isinstance(x, (int, float)) else x)
+
+
+    # --- 3. Build the Coefficients Table ---
+    coeffs_df = pd.DataFrame({
+        'Predictor': model.params.index.str.replace('const', '(Constant)'),
+        'B': model.params.values,
+        'Std. Error': model.bse.values,
+        't': model.tvalues.values,
+        'Sig.': model.pvalues.values
+    })
+    # Formatting the Coefficients table
+    for col in ['B', 'Std. Error', 't']:
+        coeffs_df[col] = coeffs_df[col].apply('{:.3f}'.format)
+    coeffs_df['Sig.'] = coeffs_df['Sig.'].apply(lambda x: f'{x:.3f}'.lstrip('0'))
+    # Add the Beta column (Standardized Coefficients)
+    # Note: statsmodels doesn't calculate this by default. For simplicity, we'll add it as a placeholder.
+    # A full implementation would require standardizing the data first.
+    coeffs_df.insert(3, 'Beta', '—')
+
+
+    # --- 4. Convert all DataFrames to styled HTML ---
+    model_summary_html = generate_styled_html_table(model_summary_df)
+    anova_html = generate_styled_html_table(anova_df)
+    coeffs_html = generate_styled_html_table(coeffs_df, wrap_column='Predictor')
+
+    return {
+        'model_summary_table': model_summary_html,
+        'anova_table': anova_html,
+        'coeffs_table': coeffs_html,
+        'adj_r_squared': f"{model.rsquared_adj:.3f}", # Keep raw values for interpretation
+        'f_pvalue': f"{model.f_pvalue:.4f}"
+    }
+    
+
+from itertools import product # To get all pairs of variables
+
+
+# === NEW FUNCTION FOR SPSS-STYLE CORRELATION MATRIX ===
+def generate_spss_correlation_matrix(df: pd.DataFrame, row_vars: list, col_vars: list) -> str:
+    """
+    Generates an SPSS-style correlation matrix as a styled HTML table.
+    
+    Args:
+        df: The input DataFrame.
+        row_vars: A list of variables for the table rows.
+        col_vars: A list of variables for the table columns.
+        
+    Returns:
+        A styled HTML table string.
+    """
+    if not row_vars or not col_vars:
+        raise ValueError("Both row and column variable lists are required.")
+
+    # --- 1. Calculate all pairwise correlations ---
+    results_data = []
+    for row_var, col_var in product(row_vars, col_vars):
+        if row_var == col_var: # Skip self-correlation
+            r, p_val, n = 1.0, 0.0, len(df[[row_var]].dropna())
+        else:
+            clean_df = df[[row_var, col_var]].dropna()
+            n = len(clean_df)
+            if n < 3:
+                r, p_val = float('nan'), float('nan')
+            else:
+                r, p_val = stats.pearsonr(clean_df[row_var], clean_df[col_var])
+        
+        results_data.append({'row_var': row_var, 'col_var': col_var, 'r': r, 'p': p_val, 'n': n})
+
+    results_df = pd.DataFrame(results_data)
+
+    # --- 2. Build the HTML Table Manually for SPSS-style formatting ---
+    style = """
+    <style>
+        .spss-corr-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .spss-corr-table th, .spss-corr-table td { border: 1px solid #999; padding: 6px; text-align: left; }
+        .spss-corr-table thead th { background-color: #f2f2f2; font-weight: bold; text-align: center; }
+        .spss-corr-table .row-header { font-weight: bold; vertical-align: middle; }
+        .spss-corr-table .metric-header { font-weight: normal; font-style: italic; color: #333; padding-left: 20px; border-right: none; }
+        .spss-corr-table .cell-value { text-align: right; }
+        .spss-corr-table .footnote { font-size: 0.85em; margin-top: 10px; }
+    </style>
+    """
+    html = f'{style}<table class="spss-corr-table"><thead><tr><th></th><th></th>'
+    
+    for col_var in col_vars: html += f'<th>{col_var}</th>'
+    html += '</tr></thead><tbody>'
+
+    for row_var in row_vars:
+        html += f'<tr>'
+        html += f'<td rowspan="3" class="row-header">{row_var}</td>'
+        
+        # Pearson Correlation row
+        html += '<td class="metric-header">Pearson Correlation</td>'
+        for col_var in col_vars:
+            res = results_df[(results_df.row_var == row_var) & (results_df.col_var == col_var)].iloc[0]
+            r_val, p_val = res['r'], res['p']
+            r_str = f"{r_val:.3f}".lstrip('0') if not pd.isna(r_val) else ""
+            if p_val < 0.01: r_str += "**"
+            elif p_val < 0.05: r_str += "*"
+            html += f'<td class="cell-value">{r_str}</td>'
+        html += '</tr><tr>'
+        
+        # Sig. (2-tailed) row
+        html += '<td class="metric-header">Sig. (2-tailed)</td>'
+        for col_var in col_vars:
+            res = results_df[(results_df.row_var == row_var) & (results_df.col_var == col_var)].iloc[0]
+            p_val = res['p']
+            p_str = f"{p_val:.3f}".lstrip('0') if not pd.isna(p_val) else ""
+            html += f'<td class="cell-value">{p_str}</td>'
+        html += '</tr><tr>'
+
+        # N row
+        html += '<td class="metric-header">N</td>'
+        for col_var in col_vars:
+            res = results_df[(results_df.row_var == row_var) & (results_df.col_var == col_var)].iloc[0]
+            n_val = res['n']
+            html += f'<td class="cell-value">{n_val}</td>'
+        html += '</tr>'
+
+    html += '</tbody></table>'
+    html += '<p class="footnote">*. Correlation is significant at the 0.05 level (2-tailed).<br>**. Correlation is significant at the 0.01 level (2-tailed).</p>'
+    
+    return html
+
+
+
+
+# === THIS IS THE CORRECTED AND FINAL PLOTTING FUNCTION ===
+def generate_diverging_stacked_bar(freq_df: pd.DataFrame, title: str) -> str:
+    """
+    Generates a clean diverging stacked bar chart with the legend at the bottom.
+    The DataFrame index is expected to be the short keys (e.g., 'q30').
+    """
+    # --- Color and Data Preparation (Unchanged) ---
+    if freq_df.shape[1] == 5: # 5-point scale
+        neg_colors = plt.get_cmap('Reds_r')(np.linspace(0.6, 0.9, 2))
+        neu_color = plt.get_cmap('Greys')(0.4)
+        pos_colors = plt.get_cmap('Blues')(np.linspace(0.6, 0.9, 2))
+        colors = np.vstack((neg_colors, neu_color, pos_colors))
+        neg_cols = freq_df.columns[0:2].tolist()
+        neu_col = freq_df.columns[2]
+        pos_cols = freq_df.columns[3:5].tolist()
+    else: # Fallback for other scales
+        num_neg = freq_df.shape[1] // 2
+        neg_cols = freq_df.columns[0:num_neg].tolist()
+        neu_col = None
+        pos_cols = freq_df.columns[num_neg:].tolist()
+        colors = FLUID_CORE_PALETTE
+    
+    plot_data = freq_df.copy()
+    if neu_col:
+        plot_data.insert(0, f'-{neu_col}', -plot_data[neu_col] / 2)
+        plot_data[neu_col] = plot_data[neu_col] / 2
+        neg_cols_with_neutral = [f'-{neu_col}'] + neg_cols
+    else:
+        neg_cols_with_neutral = neg_cols
+    neg_cumulative = plot_data[neg_cols_with_neutral].cumsum(axis=1)
+    pos_cumulative = plot_data[pos_cols].cumsum(axis=1)
+
+    # --- Create the Plot ---
+    # Adjust figure height based on the number of questions
+    fig_height = len(freq_df) * 0.7 + 2 # Base height + per-question height
+    fig, ax = plt.subplots(figsize=(FIGSIZE_RECT[0] * 1.5, fig_height))
+
+    # Plot negative and neutral bars
+    for i, col in enumerate(neg_cols_with_neutral):
+        left = neg_cumulative.iloc[:, i-1] if i > 0 else 0
+        ax.barh(plot_data.index, plot_data[col], left=left, color=colors[i], label=col.strip('-'))
+
+    # Plot positive bars
+    for i, col in enumerate(pos_cols):
+        left = pos_cumulative.iloc[:, i-1] if i > 0 else plot_data.get(neu_col, 0)
+        ax.barh(plot_data.index, plot_data[col], left=left, color=colors[len(neg_cols_with_neutral) + i], label=col)
+    
+    # --- CLEANED UP FORMATTING ---
+    ax.set_title(title, fontsize=16, pad=20)
+    
+    # FIX: Move the legend back to the bottom, outside the plot area
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=freq_df.shape[1], frameon=False)
+    
+    ax.axvline(0, color='grey', linewidth=0.8)
+    ax.set_xticks(np.arange(-100, 101, 25))
+    ax.set_xticklabels([f'{abs(x)}%' for x in np.arange(-100, 101, 25)])
+    ax.set_xlabel('Percentage of Responses')
+    ax.invert_yaxis()
+    
+    # FIX: Remove the fig.text block for the question key
+    
+    plt.tight_layout()
+    # Adjust layout to make room for the bottom legend
+    plt.subplots_adjust(bottom=0.2)
+    
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    plt.close()
+    img.seek(0)
+    return base64.b64encode(img.getvalue()).decode('utf8')
+
+
+# === NEW FUNCTION FOR DATA TAMPERING ===
+def tamper_data(df: pd.DataFrame, column: str, new_value, num_rows: int, random_state=None) -> pd.DataFrame:
+    """
+    Randomly selects a specified number of rows in a column and changes their
+    value to a new specified value.
+    
+    Args:
+        df: The input DataFrame.
+        column: The name of the column to tamper with.
+        new_value: The new value to assign.
+        num_rows: The number of rows to randomly change.
+        random_state: An integer for reproducible randomness.
+        
+    Returns:
+        The tampered DataFrame.
+    """
+    if column not in df.columns:
+        raise ValueError(f"Column '{column}' not found in the DataFrame.")
+    
+    # Ensure num_rows is not greater than the total number of rows
+    num_rows = min(num_rows, len(df))
+    
+    # Get the indices of the rows to change
+    indices_to_change = df.sample(n=num_rows, random_state=random_state).index
+    
+    # Create a copy to avoid modifying the original DataFrame in place
+    df_tampered = df.copy()
+    
+    # Apply the change
+    df_tampered.loc[indices_to_change, column] = new_value
+    
+    return df_tampered
