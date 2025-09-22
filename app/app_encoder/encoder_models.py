@@ -1,29 +1,57 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.types import JSON
 from sqlalchemy.sql import func
-import json
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin 
 
 db = SQLAlchemy()
 
-# -----------------------------------------------------------------------------
-# 1. The Study: The top-level container for a project.
-# -----------------------------------------------------------------------------
-class Study(db.Model):
-    __tablename__ = 'studies'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), unique=True, nullable=False)
-    topic = db.Column(db.String(255))
-    description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    map_filename = db.Column(db.String(255), unique=True, nullable=False)
+# -----------------------------------------------------------------------------  
+# User model  
+# -----------------------------------------------------------------------------  
+class User(UserMixin, db.Model):  
+    __tablename__ = 'users'  
+    id = db.Column(db.Integer, primary_key=True)  
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)  
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)  
+    password_hash = db.Column(db.String(256))  
 
-    # RELATIONSHIPS: A Study has many EncoderDefinitions and many ColumnEncodings.
-    # If a study is deleted, all its children definitions and column configs are also deleted.
-    definitions = db.relationship('EncoderDefinition', back_populates='study', cascade='all, delete-orphan')
-    column_encodings = db.relationship('ColumnEncoding', back_populates='study', cascade='all, delete-orphan')
+    # A user can have many studies  
+    studies = db.relationship('Study', back_populates='user', lazy='dynamic', cascade='all, delete-orphan')  
 
-    def __repr__(self):
-        return f"<Study(id={self.id}, name='{self.name}')>"
+    def set_password(self, password):  
+        self.password_hash = generate_password_hash(password)  
+
+    def check_password(self, password):  
+        return check_password_hash(self.password_hash, password)  
+
+    def __repr__(self):  
+        return f'<User {self.username}>'  
+
+
+# -----------------------------------------------------------------------------  
+# Study model  
+# -----------------------------------------------------------------------------  
+class Study(db.Model):  
+    __tablename__ = 'studies'  
+    id = db.Column(db.Integer, primary_key=True)  
+    name = db.Column(db.String(255), unique=True, nullable=False)  
+    topic = db.Column(db.String(255))  
+    description = db.Column(db.Text)  
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())  
+    map_filename = db.Column(db.String(255), unique=True, nullable=False)  
+
+    # Foreign key to User  
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  
+
+    # Relationships  
+    user = db.relationship('User', back_populates='studies')  
+    definitions = db.relationship('EncoderDefinition', back_populates='study', cascade='all, delete-orphan')  
+    column_encodings = db.relationship('ColumnEncoding', back_populates='study', cascade='all, delete-orphan')  
+
+    def __repr__(self):  
+        return f"<Study(id={self.id}, name='{self.name}')>"  
+
 
 # -----------------------------------------------------------------------------
 # 2. Encoder Prototype: The "Dimension Table" of available encoder types.

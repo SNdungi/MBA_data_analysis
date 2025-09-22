@@ -2,7 +2,7 @@
 import os
 import json
 import pandas as pd
-from flask import current_app, render_template, request, redirect, url_for, session, jsonify, flash, send_from_directory, Blueprint
+from flask import current_app, render_template, request, redirect, url_for, session, jsonify, flash, send_from_directory, Blueprint, send_file
 from .ops_bootstrap import DataBootstrapper # Relative import
 from app.app_encoder.encoder_models import Study
 from app.app_encoder.encoder_manager import EncodingConfigManager
@@ -455,3 +455,65 @@ def perform_cleanup():
         flash(f"An error occurred during cleanup: {e}", "danger")
 
     return redirect(url_for('ops.housekeeping'))
+
+# In app/ops_routes.py, add these imports at the top
+import io
+import zipfile
+
+# ... (keep all existing routes) ...
+
+# =============================================================================
+# NEW EXPORT/IMPORT ROUTES
+# =============================================================================
+
+@ops_bp.route('/export_study/<int:study_id>')
+def export_study(study_id):
+    """
+    Finds a study, gathers all its associated files, zips them in memory,
+    and sends the zip file to the user for download.
+    """
+    try:
+        study = Study.query.get_or_404(study_id)
+        
+        # --- 1. Define file paths based on study data ---
+        base_name = study.map_filename.replace('.json', '')
+        secure_zip_name = f"{secure_filename(study.name.lower().replace(' ', '_'))}.zip"
+
+        files_to_zip = {
+            # "filename_in_zip": "full_path_on_server"
+            f"{base_name}.csv": os.path.join(current_app.config['UPLOADS_FOLDER'], f"{base_name}.csv"),
+            study.map_filename: os.path.join(current_app.config['GENERATED_FOLDER'], study.map_filename),
+            f"simulated_{base_name}.csv": os.path.join(current_app.config['GENERATED_FOLDER'], f"simulated_{base_name}.csv"),
+            # You could add logic here to find and include graph files too
+        }
+
+        # --- 2. Create a zip file in memory ---
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for filename_in_zip, full_path in files_to_zip.items():
+                if os.path.exists(full_path):
+                    # zf.write adds the file from full_path into the zip
+                    # using the name specified by filename_in_zip
+                    zf.write(full_path, arcname=filename_in_zip)
+                else:
+                    print(f"Warning: File not found and will be skipped in export: {full_path}")
+        
+        memory_file.seek(0) # Rewind the buffer to the beginning
+
+        # In the export_study route...
+
+        # --- 3. Send the in-memory zip file to the user ---
+        # The send_file function is perfect for this.
+        return send_file(
+            memory_file,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=secure_zip_name
+        )
+
+    except NotFound:
+        flash("The study you tried to export could not be found.", "danger")
+        return redirect(url_for('ops.housekeeping'))
+    except Exception as e:
+        flash(f"An error occurred during the export process: {e}", "danger")
+        return redirect(url_for('ops.housekeeping'))

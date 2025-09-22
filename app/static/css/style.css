@@ -405,3 +405,72 @@ min-height: 100vh;
 background: #f8f8f8;
 
 }
+
+
+/* ==========================================================================
+ROBOT ANIMATION STYLES
+========================================================================== */
+
+
+    /* --- STYLES FOR THE FOOTER ROBOT ANIMATION --- */
+    #animation-container {
+        position: relative; /* Establishes a coordinate system */
+        width: 100%;
+        min-height: 200px; /* Give it enough space */
+        margin: 0 auto;
+        overflow: hidden; /* Important for positioning */
+    }
+
+    .robot {
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        background-color: var(--fluidcore-coffee); /* Green robot */
+        border: 2px solid var( --fluidcore-orange);
+        will-change: transform;
+        
+        /* --- NEW CSS FOR CONCENTRIC EYES --- */
+        /* Make the robot a positioning context */
+        position: relative; 
+        /* THE KEY: Clip anything that sticks out, creating the semi-circle illusion */
+        overflow: hidden; 
+    }
+    
+    .robot-trail {
+        stroke: var(--fluidcore-gold); /* Lighter green trail color */
+        stroke-width: 2px;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.8; /* The "faded" effect */
+        fill: none;
+
+    }
+
+
+/* Shared styles for both eye layers */
+    .robot::before,
+    .robot::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 50%; /* Both are drawn as full circles */
+    }
+
+    /* Outer, larger circle (the border) */
+    .robot::before {
+        width: 16px;
+        height: 16px;
+        /* Position the circle's center on the robot's top edge */
+        top: -6px; 
+        border: 1px solid var(--fluidcore-orange);
+    }
+
+    /* Inner, smaller circle (the black fill) */
+    .robot::after {
+        width: 10px;
+        height: 11px;
+        /* Position this circle's center on the robot's top edge */
+        top: -4px; 
+        background-color: var(--fluidcore-orange);
+    }

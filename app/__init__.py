@@ -7,6 +7,10 @@ from flask import Flask
 from app.app_encoder.encoder_models import db 
 from datetime import datetime
 from dotenv import load_dotenv
+from flask_migrate import Migrate
+
+load_dotenv()
+
 
 
 
@@ -29,6 +33,8 @@ def create_app():
 
     # --- 4. Initialize Extensions (like SQLAlchemy) ---
     db.init_app(app)
+    migrate = Migrate(app, db)
+    
     
     @app.context_processor
     def inject_now():
