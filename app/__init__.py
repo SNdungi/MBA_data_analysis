@@ -5,7 +5,7 @@ import secrets
 from flask import Flask
 from flask_migrate import Migrate
 # Import the db object from where you defined it (assuming app/models.py)
-from app.app_encoder.encoder_model import db 
+from app.app_encoder.encoder_models import db 
 from datetime import datetime
 
 def create_app():
@@ -55,10 +55,5 @@ def create_app():
         from app.app_encoder.encoder_manager import EncodingConfigManager
         EncodingConfigManager.seed_prototypes()
         
-        
-        
-        
-        
-        
-        
+          
     return app

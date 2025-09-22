@@ -1,47 +1,6 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<<<<<<< HEAD
-<div class="p-5 mb-4 bg-fluid-cream rounded-3 text-center shadow-sm">
-    <div class="container-fluid py-5">
-        <h1 class="display-5 fw-bold"><i class="fas fa-check-circle me-3 text-fluid-teal"></i>Encoding Process Complete</h1>
-        <p class="fs-4">Your data has been successfully encoded and the artifacts have been saved.</p>
-    </div>
-</div>
-
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header fw-bold">
-                <h4>Generated Files</h4>
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="{{ url_for('ops.view_df', filename=encoded_csv, type='generated') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-file-csv me-2 text-fluid-teal"></i>
-                        <strong>Encoded Data File:</strong>
-                        <code>{{ encoded_csv }}</code>
-                    </div>
-                    <span class="badge bg-secondary rounded-pill">View Table</span>
-                </a>
-                <a href="{{ url_for('ops.view_file', filename=codebook, type='generated') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-book-open me-2 text-fluid-teal"></i>
-                        <strong>Codebook File:</strong>
-                        <code>{{ codebook }}</code>
-                    </div>
-                    <span class="badge bg-secondary rounded-pill">View Codebook</span>
-                </a>
-            </div>
-        </div>
-        <div class="mt-4 text-center">
-             <a href="{{ url_for('encoding.configure', csv_filename=encoded_csv.replace('_encoded.csv', '.csv')) }}" class="btn btn-outline-dark">
-                 <i class="fas fa-arrow-left me-1"></i> Back to Configuration
-             </a>
-             <a href="{{ url_for('ops.index') }}" class="btn btn-fluid-orange">
-                Proceed to Analysis <i class="fas fa-arrow-right ms-1"></i>
-             </a>
-=======
 <div div class="container">
 
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-fluid">
@@ -110,7 +69,6 @@
                     <strong>No Graphs Generated.</strong> This can happen if the selected columns for comparison were not numeric.
                 </div>
             {% endif %}
->>>>>>> main
         </div>
     </div>
 </div>
