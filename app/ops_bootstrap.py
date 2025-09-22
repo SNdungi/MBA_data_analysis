@@ -1,23 +1,10 @@
 # File: app/ops_bootstrap.py
-<<<<<<< HEAD
-# --- COMPLETE AND CORRECTED VERSION ---
-
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import json
-import textwrap
-import os
-from typing import Optional, Dict, List
-=======
 import pandas as pd
 import numpy as np
 import json
 
 import os
 from typing import Optional, Dict
->>>>>>> main
 
 class DataBootstrapper:
     """
@@ -85,10 +72,6 @@ class DataBootstrapper:
         print("✅ Standard bootstrap complete.")
         return self.simulated_df
 
-<<<<<<< HEAD
-    # --- FIX: The bootstrap_remix method signature and logic are now correct ---
-=======
->>>>>>> main
     def bootstrap_remix(self,
                         new_size: int,
                         start_remix_col: str,
@@ -110,10 +93,6 @@ class DataBootstrapper:
         if start_index > end_index:
             raise ValueError("The 'start' remix column must come before the 'end' column.")
 
-<<<<<<< HEAD
-        # --- FIX: Logic updated to handle a slice from start to end ---
-=======
->>>>>>> main
         remix_cols = all_cols[start_index : end_index + 1]
         fixed_cols = all_cols[:start_index] + all_cols[end_index + 1:]
         
@@ -122,10 +101,6 @@ class DataBootstrapper:
         
         if random_state: np.random.seed(random_state)
         
-<<<<<<< HEAD
-        # Handle cases where there are no fixed columns
-=======
->>>>>>> main
         if fixed_cols:
             fixed_part = self.original_df[fixed_cols].sample(n=new_size, replace=True, random_state=random_state)
         else:
@@ -138,40 +113,6 @@ class DataBootstrapper:
         print("✅ Remix bootstrap complete.")
         return self.simulated_df
 
-<<<<<<< HEAD
-    # --- FIX: The plot_comparison method now correctly saves the file ---
-    def plot_comparison(self, column_name: str, save_path: Optional[str] = None):
-        """Visualizes and saves the comparison plot to a file."""
-        if self.original_df is None or self.simulated_df is None:
-            raise ValueError("Both original and simulated data must be available.")
-        if column_name not in self.original_df.columns:
-            raise ValueError(f"Column '{column_name}' not found.")
-
-        if not pd.api.types.is_numeric_dtype(self.original_df[column_name]):
-            print(f"⚠️ Plotting skipped: Column '{column_name}' is not numeric.")
-            return
-
-        print(f"\n📊 Plotting comparison for column: '{column_name}'...")
-        
-        full_question = self.get_question_text(column_name)
-        plot_title = textwrap.fill(full_question, width=60)
-        
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.kdeplot(data=self.original_df, x=column_name, ax=ax, label='Original Data', color='blue', fill=True, alpha=0.1)
-        sns.kdeplot(data=self.simulated_df, x=column_name, ax=ax, label='Simulated Data', color='red', linestyle='--')
-        ax.set_title(f'Distribution Comparison\n{plot_title}', fontsize=14)
-        ax.set_xlabel(column_name)
-        ax.legend()
-        plt.tight_layout()
-
-        if save_path:
-            plt.savefig(save_path)
-            plt.close(fig)
-            print(f"   - Plot saved to '{save_path}'")
-        else:
-            # This part should not be used in the web app context
-            plt.show()
-=======
     # =============================================================================
     # NEW DEEP REMIX SAMPLER
     # =============================================================================
@@ -205,7 +146,6 @@ class DataBootstrapper:
         print("✅ Deep Remix bootstrap complete.")
         return self.simulated_df
 
->>>>>>> main
 
     def save_simulated_data(self, output_path: str):
         if self.simulated_df is None:

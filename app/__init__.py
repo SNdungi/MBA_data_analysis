@@ -3,40 +3,21 @@
 import os
 import secrets
 from flask import Flask
+from flask_migrate import Migrate
 # Import the db object from where you defined it (assuming app/models.py)
-<<<<<<< HEAD
 from app.app_encoder.encoder_model import db 
 from datetime import datetime
-=======
-from app.app_encoder.encoder_models import db 
-from datetime import datetime
-from dotenv import load_dotenv
-from flask_migrate import Migrate
-
-load_dotenv()
-
-
-
->>>>>>> main
 
 def create_app():
     """Application Factory Function"""
     app = Flask(__name__)
     
     # --- 1. Basic App Configuration ---
-<<<<<<< HEAD
     app.secret_key = secrets.token_hex(16)
     
     # --- 2. Database Configuration ---
     basedir = os.path.abspath(os.path.dirname(__file__))
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '..', 'TXdata.db')
-=======
-    app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(16)
-    
-    # --- 2. Database Configuration ---
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///TXdata.db'
->>>>>>> main
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # --- 3. Other File Path Configurations ---
@@ -46,11 +27,8 @@ def create_app():
 
     # --- 4. Initialize Extensions (like SQLAlchemy) ---
     db.init_app(app)
-<<<<<<< HEAD
-=======
     migrate = Migrate(app, db)
     
->>>>>>> main
     
     @app.context_processor
     def inject_now():
@@ -71,8 +49,6 @@ def create_app():
         from app.app_encoder.encoder_routes import encoding_bp
         app.register_blueprint(encoding_bp)
         
-<<<<<<< HEAD
-=======
         from app.app_analysis.analysis_routes import analysis_bp
         app.register_blueprint(analysis_bp)
         
@@ -85,5 +61,4 @@ def create_app():
         
         
         
->>>>>>> main
     return app

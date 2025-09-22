@@ -13,8 +13,6 @@ random_state = 42
 [remix_config]
 start_of_remix_section = "q6" 
 
-<<<<<<< HEAD
-=======
 # ==========================================================
 # Default Encoder Prototypes
 # This file defines the standard, built-in encoder types
@@ -57,7 +55,6 @@ name = "Binary (Yes/No)"
 encoder_type = "Binary"
 description = "For simple Yes/No, True/False, or 0/1 responses."
 
->>>>>>> main
 # ===================================================================
 # SECTION FOR YOUR FUTURE DATA ENCODER
 # This section is not used by the current script, but is structured
