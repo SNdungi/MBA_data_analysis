@@ -1,6 +1,7 @@
 # File: app/analysis_manager.py
 # --- COMPLETE AND CORRECTED VERSION ---
 
+from typing import Optional
 import pandas as pd
 import numpy as np
 import os
@@ -20,7 +21,7 @@ class AnalysisManager:
         if self.data is None:
             raise FileNotFoundError("Encoded data file not found for this study.")
 
-    def _load_and_process_data(self) -> pd.DataFrame | None:
+    def _load_and_process_data(self) -> Optional[pd.DataFrame]:
         """
         Loads the base encoded data from the CSV file and then applies any
         user-defined operations (like creating composite variables) from the session.
