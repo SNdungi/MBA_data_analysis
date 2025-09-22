@@ -1,4 +1,5 @@
 # File: app/ops_bootstrap.py
+<<<<<<< HEAD
 # --- COMPLETE AND CORRECTED VERSION ---
 
 import pandas as pd
@@ -9,6 +10,14 @@ import json
 import textwrap
 import os
 from typing import Optional, Dict, List
+=======
+import pandas as pd
+import numpy as np
+import json
+
+import os
+from typing import Optional, Dict
+>>>>>>> main
 
 class DataBootstrapper:
     """
@@ -76,7 +85,10 @@ class DataBootstrapper:
         print("✅ Standard bootstrap complete.")
         return self.simulated_df
 
+<<<<<<< HEAD
     # --- FIX: The bootstrap_remix method signature and logic are now correct ---
+=======
+>>>>>>> main
     def bootstrap_remix(self,
                         new_size: int,
                         start_remix_col: str,
@@ -98,7 +110,10 @@ class DataBootstrapper:
         if start_index > end_index:
             raise ValueError("The 'start' remix column must come before the 'end' column.")
 
+<<<<<<< HEAD
         # --- FIX: Logic updated to handle a slice from start to end ---
+=======
+>>>>>>> main
         remix_cols = all_cols[start_index : end_index + 1]
         fixed_cols = all_cols[:start_index] + all_cols[end_index + 1:]
         
@@ -107,7 +122,10 @@ class DataBootstrapper:
         
         if random_state: np.random.seed(random_state)
         
+<<<<<<< HEAD
         # Handle cases where there are no fixed columns
+=======
+>>>>>>> main
         if fixed_cols:
             fixed_part = self.original_df[fixed_cols].sample(n=new_size, replace=True, random_state=random_state)
         else:
@@ -120,6 +138,7 @@ class DataBootstrapper:
         print("✅ Remix bootstrap complete.")
         return self.simulated_df
 
+<<<<<<< HEAD
     # --- FIX: The plot_comparison method now correctly saves the file ---
     def plot_comparison(self, column_name: str, save_path: Optional[str] = None):
         """Visualizes and saves the comparison plot to a file."""
@@ -152,6 +171,41 @@ class DataBootstrapper:
         else:
             # This part should not be used in the web app context
             plt.show()
+=======
+    # =============================================================================
+    # NEW DEEP REMIX SAMPLER
+    # =============================================================================
+    def bootstrap_deep_remix(self, new_size: int, random_state: Optional[int] = None) -> pd.DataFrame:
+        """
+        Performs a 'deep remix' bootstrap, shuffling each column independently
+        to create completely new, decorrelated rows.
+        """
+        if self.original_df is None:
+            raise ValueError("Original data not loaded.")
+
+        print("\n🔄 Performing DEEP REMIX (cell-level) bootstrap...")
+        
+        new_data = {}
+        
+        rng = np.random.default_rng(random_state)
+        num_cols = len(self.original_df.columns)
+        column_seeds = rng.integers(low=0, high=10**6, size=num_cols)
+        
+        for i, col in enumerate(self.original_df.columns):
+            # Sample `new_size` values from the current column, with replacement.
+            # Use the unique seed generated for this specific column.
+            col_seed = column_seeds[i]
+            new_data[col] = self.original_df[col].sample(
+                n=new_size, 
+                replace=True, 
+                random_state=col_seed, 
+                ignore_index=True)
+        
+        self.simulated_df = pd.DataFrame(new_data)
+        print("✅ Deep Remix bootstrap complete.")
+        return self.simulated_df
+
+>>>>>>> main
 
     def save_simulated_data(self, output_path: str):
         if self.simulated_df is None:

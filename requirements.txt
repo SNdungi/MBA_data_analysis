@@ -1,0 +1,12 @@
+flask
+flask_migrate
+dotenv
+pandas
+sqlalchemy
+flask_sqlalchemy
+flask_login
+numpy
+pingouin
+scipy
+matplotlib
+seaborn

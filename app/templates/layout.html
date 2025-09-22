@@ -10,12 +10,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
+<<<<<<< HEAD
          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+=======
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"> <!-- Place in <head> -->
+>>>>>>> main
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Link to your custom stylesheet -->
+<<<<<<< HEAD
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -23,20 +29,113 @@
     <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('ops.index') }}">{{ title|default('Data Bootstrapper & Remix Tool') }}</a>
+=======
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .nav-container {
+            width: 50%;
+            margin: 0 auto;
+            border-top: 3px solid #ccc; /* "hinge" line */
+            display: flex;
+            justify-content: center;
+            }
+
+            /* Style the nav tabs */
+            .study-nav {
+            border: none;
+            width: 100%;
+            gap: 0.1rem;
+            justify-content: center;
+            }
+
+            .study-nav .nav-link {
+            border: none;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1.2rem;
+            color: #555;
+            }
+        /* Custom style for the active tab in our new study header */
+        .study-nav .nav-link.active {
+            background-color: var(--fluidcore-cream) !important;
+            color: var(--fluidcore-teal) !important;
+            border-bottom: 5px solid var(--fluidcore-gold) !important;
+        }
+    </style>
+
+</head>
+<body>
+    <!-- Apply the custom navbar class -->
+
+    <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top ">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('ops.index') }}"><small>TXdata</small></a>
+>>>>>>> main
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+<<<<<<< HEAD
                         <a class="nav-link" href="{{ url_for('ops.documentation') }}">Encoding Methodology</a>
+=======
+                        <!-- === THIS IS THE ONLY LINK NEEDED === -->
+                        <a class="nav-link" href="{{ url_for('ops.guide') }}">Guide</a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- === THIS IS THE ONLY LINK NEEDED === -->
+                        <a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a>
+>>>>>>> main
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
+<<<<<<< HEAD
 
     <main class="container">
+=======
+    <header class="study-header bg-white"> 
+        {% if study %}
+        <div class=" shadow-sm study-header">
+            <div class="d-flex justify-content-center align-items-center p-1">
+                <div>
+                    <h5 class="mb-3">
+                        <i class="fas fa-flask-vial text-fluid-red me-2"></i>
+                         <strong >{{ study.name }}</strong>
+                    </h5>
+                </div>
+
+            </div>
+            <div class="nav-container text-center">
+                <ul class="nav nav-tabs nav-fill study-nav">
+                    <li class="nav-item">
+                    <a class="nav-link text-muted {% if request.blueprint == 'encoding' %}active{% endif %}" 
+                        href="{{ url_for('encoding.definitions', study_id=study.id) }}">
+                        <i class="fas fa-cogs me-2"></i>1. Encoding Workflow
+                    </a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link text-muted {% if request.blueprint == 'analysis' %}active{% endif %}" 
+                        href="{{ url_for('analysis.dashboard', study_id=study.id) }}">
+                        <i class="fas fa-chart-line me-2"></i>2. Analysis Workbench
+                    </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </header>
+    
+    <main class="container-fluid ">
+        
+>>>>>>> main
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -54,10 +153,22 @@
             <div class="row">
                 <!-- Column 1: About the Tool -->
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+<<<<<<< HEAD
                     <h5>About This Tool</h5>
                     <p>
                         This application provides a suite of tools for data simulation and preparation, including bootstrapping, data remixing, and a robust encoding engine for survey data.
                     </p>
+=======
+    <div class="container text-center">
+
+        <div id="animation-container">
+            <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                <path id="robot-trail-path" class="robot-trail" d=""></path>
+            </svg>
+            <div class="robot" id="robot"></div>
+        </div>
+    </div>
+>>>>>>> main
                 </div>
 
                 <!-- Column 2: Quick Links -->
@@ -75,9 +186,18 @@
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
                     <h5>Connect</h5>
                     <div class="social-icons">
+<<<<<<< HEAD
                         <a href="#" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
                         <a href="#" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
                         <a href="#" target="_blank" title="Twitter/X"><i class="fab fa-twitter"></i></a>
+=======
+                        <a href="https://github.com/SNdungi/MBA_data_analysis" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="https://www.linkedin.com/in/stephen-musyoka-3105141b3/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://wa.me/254102965704?text=Hello%2C%20I%27Im%20interested%20in%20Analytical%20services" 
+                            target="_blank" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+>>>>>>> main
                     </div>
                 </div>
 
@@ -89,12 +209,104 @@
             </div>
 
             <div class="footer-bottom">
+<<<<<<< HEAD
                 © {{ now().year }} TXDataLab. All Rights Reserved.
+=======
+                © {{ now().year }} TXdata. All Rights Reserved.
+>>>>>>> main
             </div>
         </div>
     </footer>
 
+<<<<<<< HEAD
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+=======
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Guard clause to ensure the animation elements exist on the page
+        const robot = document.getElementById('robot');
+        const trailPath = document.getElementById('robot-trail-path');
+        const container = document.getElementById('animation-container');
+
+        if (!robot || !trailPath || !container) {
+            console.warn("Robot animation elements not found on this page.");
+            return; // Exit if the elements aren't here
+        }
+
+        // --- Animation Settings - RE-CALIBRATED FOR SMALL CONTAINER ---
+        const SCALE = 32; // ADJUSTED: Smaller scale to fit in the footer column
+        const DURATION_PER_SEGMENT = 800; // milliseconds
+
+        // The robot's path, point by point (unchanged)
+        const pathPoints = [
+            [0, 0], [2, 0], [2, 2], [4, 2], [4, 4],
+            [2, 4], [2, 5], [0, 5], [0, 3], [-2, 3],
+            [-2, 1], [0, 1], [0, 0]
+        ];
+
+        const TOTAL_SEGMENTS = pathPoints.length - 1;
+        const TOTAL_DURATION = TOTAL_SEGMENTS * DURATION_PER_SEGMENT;
+
+        let startTime = null;
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+
+            const elapsedTime = (timestamp - startTime) % TOTAL_DURATION;
+            const currentSegmentIndex = Math.floor(elapsedTime / DURATION_PER_SEGMENT);
+            const timeIntoSegment = elapsedTime % DURATION_PER_SEGMENT;
+            const progress = timeIntoSegment / DURATION_PER_SEGMENT;
+
+            const startPoint = pathPoints[currentSegmentIndex];
+            const endPoint = pathPoints[currentSegmentIndex + 1];
+
+            // Linear interpolation to find the current position
+            const currentX = startPoint[0] + (endPoint[0] - startPoint[0]) * progress;
+            const currentY = startPoint[1] + (endPoint[1] - startPoint[1]) * progress;
+            
+            // ADJUSTED: Define the origin point to center the drawing in the new smaller container
+            const originX = container.offsetWidth * 0.5;
+            const originY = container.offsetHeight - 25; // Anchor near the bottom
+
+            // Apply scaling and offset from new origin
+            // Note: We flip the Y-axis because screen Y is top-down
+            const displayX = originX + currentX * SCALE;
+            const displayY = originY - currentY * SCALE;
+            
+            // ADJUSTED: Center the 20x20 robot by subtracting half its size (10px)
+            robot.style.transform = `translate(${displayX - 10}px, ${displayY - 10}px)`;
+
+            // --- Draw the trail ---
+            let pathD = "";
+            for (let i = 0; i <= currentSegmentIndex; i++) {
+                const point = pathPoints[i];
+                const pX = originX + point[0] * SCALE;
+                const pY = originY - point[1] * SCALE; // Flip Y-axis here too
+                if (i === 0) pathD += `M ${pX} ${pY}`;
+                else pathD += ` L ${pX} ${pY}`;
+            }
+            if (currentSegmentIndex < TOTAL_SEGMENTS) {
+               pathD += ` L ${displayX} ${displayY}`;
+            }
+            
+            trailPath.setAttribute('d', pathD);
+
+            requestAnimationFrame(animate);
+        }
+
+        // Only start the animation if the container has a size
+        if (container.offsetWidth > 0) {
+            requestAnimationFrame(animate);
+        }
+    });
+    </script>
+    
+>>>>>>> main
     {% block scripts %}{% endblock %}
 </body>
 </html>

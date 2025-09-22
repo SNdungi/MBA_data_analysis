@@ -13,6 +13,51 @@ random_state = 42
 [remix_config]
 start_of_remix_section = "q6" 
 
+<<<<<<< HEAD
+=======
+# ==========================================================
+# Default Encoder Prototypes
+# This file defines the standard, built-in encoder types
+# that are available to users when they configure a new study.
+# The application will read this file to seed the database.
+# ==========================================================
+
+[[prototypes]]
+name = "5-Point Likert"
+encoder_type = "Likert"
+description = "Standard 5-point satisfaction/agreement scale (e.g., Strongly Disagree to Strongly Agree)."
+
+[[prototypes]]
+name = "7-Point Likert"
+encoder_type = "Likert"
+description = "A 7-point scale for more granular attitude or opinion responses."
+
+[[prototypes]]
+name = "Custom Ordinal"
+encoder_type = "Ordinal"
+description = "For variables with a clear, user-defined order (e.g., experience levels, education)."
+
+[[prototypes]]
+name = "Nominal (Simple Categorical)"
+encoder_type = "Nominal"
+description = "For single-answer, mutually exclusive categories (e.g., 'Role in Company'). Creates one column with integer codes."
+
+[[prototypes]]
+name = "Nominal (Multi-Response)"
+encoder_type = "NominalMulti" # Use a new, distinct internal type
+description = "For 'check-all-that-apply' questions (e.g., 'Countries'). Creates multiple new 0/1 columns."
+
+[[prototypes]]
+name = "Qualitative (Do Not Encode)"
+encoder_type = "Qualitative" # A new type to signal "pass-through"
+description = "For open-ended text. This column will be ignored by the encoder and passed through as-is."
+
+[[prototypes]]
+name = "Binary (Yes/No)"
+encoder_type = "Binary"
+description = "For simple Yes/No, True/False, or 0/1 responses."
+
+>>>>>>> main
 # ===================================================================
 # SECTION FOR YOUR FUTURE DATA ENCODER
 # This section is not used by the current script, but is structured

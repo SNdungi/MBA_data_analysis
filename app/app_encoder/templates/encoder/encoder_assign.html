@@ -1,0 +1,80 @@
+{% extends "encoder_base.html" %}
+
+{% block encoder_content %}
+
+    
+
+        <form action="{{ url_for('encoding.assign_definition') }}" method="post">
+            <input type="hidden" name="study_id" value="{{ study.id }}">
+            
+            {% if definitions %}
+            <div class="row g-3 align-items-end p-3 m-1 bg-light rounded border">
+                <div class="col-md-5">
+                    <label for="definition_id" class="form-label fw-bold">1. Select a Definition to Apply</label>
+                    <select id="definition_id" name="definition_id" class="form-select" required>
+                        <option value="" disabled selected>-- Choose from your Library --</option>
+                        {% for def in definitions %}<option value="{{ def.id }}">{{ def.name }} ({{ def.prototype.name }})</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">2. Select Columns Below</label>
+                    <div class="form-text">Use the checkboxes in the table to select one or more columns.</div>
+                </div>
+                <div class="col-md-2">
+                     <button type="submit" class="btn btn-dark w-100">Assign</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <strong>No Definitions Found!</strong> You must first <a href="{{ url_for('encoding.definitions', study_id=study.id) }}">create an Encoder Definition</a> before you can assign one.
+            </div>
+            {% endif %}
+
+            <div class="table-responsive preview-container" style="font-size: 0.8rem; max-height: 600px;">
+                <table class="table table-bordered table-hover">
+                    <thead class=" sticky-top">
+                        <tr>
+                            <th class="text-center"><input type="checkbox" id="select-all-cols" title="Select/Deselect All" {% if not definitions %}disabled{% endif %}></th>
+                            <th>Key</th>
+                            <th>Question</th>
+                            <th>Current Assignment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for config in configs %}
+                        <tr>
+                            <td class="text-center"><input type="checkbox" name="column_ids" value="{{ config.id }}" class="col-checkbox" {% if not definitions %}disabled{% endif %}></td>
+                            <td><code>{{ config.column_key }}</code></td>
+                            <td><small>{{ config.original_name }}</small></td>
+                            <td>
+                                {% if config.encoder_definition %}
+                                    <span class="badge" style="background-color: var(--fluidcore-dark-brown);">{{ config.encoder_definition.name }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    
+
+{% endblock %}
+
+{% block encoder_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Logic for the "Select All" checkbox in the assignment table
+    const selectAllCheckbox = document.getElementById('select-all-cols');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function(e) {
+            document.querySelectorAll('.col-checkbox').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

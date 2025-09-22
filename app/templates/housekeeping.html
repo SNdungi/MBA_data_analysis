@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+
+            <div class="text-center mb-5">
+                <i class="fas fa-broom fa-3x text-primary mb-3"></i>
+                <h2>Housekeeping & Data Management</h2>
+                <p class="lead text-muted">Manage individual studies or perform bulk data cleanup. Actions in red are permanent and cannot be undone.</p>
+            </div>
+
+            {% include '_messages.html' %}
+
+            <div class="row">
+                <!-- Main Card for Managing Individual Studies -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Manage Individual Studies</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if studies %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">Study Name</th>
+                                            <th scope="col">Topic</th>
+                                            <th scope="col">Created</th>
+                                            <th scope="col" class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for study in studies %}
+                                        <tr>
+                                            <td class="fw-bold">{{ study.name }}</td>
+                                            <td>{{ study.topic if study.topic else 'N/A' }}</td>
+                                            <td><small class="text-muted">{{ study.created_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group" aria-label="Study Actions for {{ study.name }}">
+                                                    
+                                                    <!-- View Results Button -->
+                                                    <a href="{{ url_for('ops.view_study_results', study_id=study.id) }}" class="btn btn-sm btn-outline-primary" title="View Results">
+                                                        <i class="fas fa-chart-bar me-1"></i> View
+                                                    </a>
+
+                                                    <!-- Export Button (NEW) -->
+                                                    <a href="{{ url_for('ops.export_study', study_id=study.id) }}" class="btn btn-sm btn-outline-success" title="Export Study as .zip">
+                                                        <i class="fas fa-download me-1"></i> Export
+                                                    </a>
+
+                                                    <!-- Delete Button (within a form for security) -->
+                                                    <form action="{{ url_for('ops.perform_cleanup') }}" method="POST" class="d-inline">
+                                                        <input type="hidden" name="action" value="delete_one">
+                                                        <input type="hidden" name="study_id" value="{{ study.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Study" onclick="return confirm('Are you sure you want to permanently delete the study \'{{ study.name }}\' and all its data? This cannot be undone.');">
+                                                            <i class="fas fa-trash-alt me-1"></i> Delete
+                                                        </button>
+                                                    </form>
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                                <div class="alert alert-info">No studies found in the database. You can create one on the main page.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div> <!-- End Manage Studies Card -->
+
+                <!-- Card for Deleting ALL Data -->
+                <div class="col-12 mt-5">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="fas fa-skull-crossbones me-2"></i>Purge All Studies & Data</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">This will completely wipe all studies, definitions, and encodings from the database. It will also delete ALL files in the uploads, generated, and graphs folders.</p>
+                            <div class="alert alert-danger mt-3">
+                                <h4 class="alert-heading">Extreme Danger Zone!</h4>
+                                <p>This is a master reset. There is no confirmation beyond the next click.</p>
+                                <hr>
+                                <form action="{{ url_for('ops.perform_cleanup') }}" method="POST" class="mt-2">
+                                    <input type="hidden" name="action" value="delete_all">
+                                    <button type="submit" class="btn btn-danger w-100 fw-bold" onclick="return confirm('ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete ALL studies, ALL files, and ALL configurations. This action cannot be undone.')">
+                                        PURGE ALL DATA
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
