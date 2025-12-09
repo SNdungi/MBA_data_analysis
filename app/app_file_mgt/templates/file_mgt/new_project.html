@@ -1,0 +1,63 @@
+{% extends "base_file_mgt.html" %}
+
+{% block file_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4"><i class="fas fa-plus-circle text-muted me-2"></i>Start New Study</h2>
+        
+        <form action="{{ url_for('file_mgt.new_project') }}" method="post" enctype="multipart/form-data">
+            
+            <div class="card mb-4 border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-fluid-teal mb-3">1. Basic Details</h5>
+                    <div class="mb-3">
+                        <label for="study_name" class="form-label fw-bold">Study Name</label>
+                        <input type="text" class="form-control form-control-lg" id="study_name" name="study_name" placeholder="e.g. Q3 Customer Satisfaction" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="study_topic" class="form-label">Research Topic (Optional)</label>
+                        <input type="text" class="form-control" id="study_topic" name="study_topic">
+                    </div>
+                    <div class="mb-3">
+                        <label for="study_description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="study_description" name="study_description" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-fluid-teal mb-3">2. Data Source</h5>
+                    <div class="mb-3">
+                        <label for="source_csv" class="form-label fw-bold">Upload CSV File</label>
+                        <input class="form-control" type="file" id="source_csv" name="source_csv" accept=".csv" required>
+                        <div class="form-text">Must be a standard .csv file with headers in the first row.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-0 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-fluid-teal mb-3">3. Configuration (Optional)</h5>
+                    <div class="mb-3">
+                        <label for="clone_from" class="form-label">Clone Definitions From Existing Study</label>
+                        <select class="form-select" name="clone_from_study_id" id="clone_from">
+                            <option value="">-- Start Fresh --</option>
+                            {% for s in existing_studies %}
+                                <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">This will copy all Encoder Definitions from the selected study to the new one.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-fluid-orange btn-lg text-white">Create Study & Go to Admin</button>
+                <a href="{{ url_for('file_mgt.list_projects') }}" class="btn btn-link text-muted">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

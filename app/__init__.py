@@ -1,11 +1,9 @@
-# File: app/__init__.py
-
 import os
 import secrets
 from flask import Flask
 from flask_migrate import Migrate
-# Import the db object from where you defined it (assuming app/models.py)
-from app.app_encoder.encoder_models import db 
+from flask_login import LoginManager # Import LoginManager
+from app.app_encoder.encoder_models import db, User # Import User model
 from datetime import datetime
 
 def create_app():
@@ -25,16 +23,25 @@ def create_app():
     app.config['GENERATED_FOLDER'] = os.path.join(app.static_folder, 'generated')
     app.config['GRAPHS_FOLDER'] = os.path.join(app.static_folder, 'graphs')
 
-    # --- 4. Initialize Extensions (like SQLAlchemy) ---
+    # --- 4. Initialize Extensions ---
     db.init_app(app)
     migrate = Migrate(app, db)
     
+    # --- Initialize Login Manager ---
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login' # Where to redirect if user isn't logged in
+    login_manager.login_message_category = 'info'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
     
     @app.context_processor
     def inject_now():
         return {'now': datetime.utcnow}
 
-    # --- 5. Create the database tables if they don't exist ---
+    # --- 5. Create DB and Register Blueprints ---
     with app.app_context():
         db.create_all()
 
@@ -42,9 +49,12 @@ def create_app():
         os.makedirs(app.config['GENERATED_FOLDER'], exist_ok=True)
         os.makedirs(app.config['GRAPHS_FOLDER'], exist_ok=True)
 
-        # --- NOW it is safe to import and register the blueprints ---
+        # Register Auth Blueprint
+        from app.app_auth.auth_routes import auth_bp
+        app.register_blueprint(auth_bp)
+
         from app.ops_routes import ops_bp
-        app.register_blueprint(ops_bp) # url_prefix defaults to '/'
+        app.register_blueprint(ops_bp) 
 
         from app.app_encoder.encoder_routes import encoding_bp
         app.register_blueprint(encoding_bp)
@@ -55,5 +65,10 @@ def create_app():
         from app.app_encoder.encoder_manager import EncodingConfigManager
         EncodingConfigManager.seed_prototypes()
         
-          
+        from app.app_file_mgt.file_mgt import file_mgt_bp
+        app.register_blueprint(file_mgt_bp)
+        
+        from app.app_tutorials.tutorials import tutorials_bp
+        app.register_blueprint(tutorials_bp)
+        
     return app

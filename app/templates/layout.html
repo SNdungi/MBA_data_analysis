@@ -59,57 +59,64 @@
 <body>
     <!-- Apply the custom navbar class -->
 
-    <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top ">
+<!-- TOP NAVBAR -->
+    <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('ops.index') }}"><small>TXdata</small></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" href="{{ url_for('file_mgt.list_projects') }}">
+                <small>TXDataLab</small>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
+                    {% if study %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.guide') }}">Guide</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
+                </ul>
+                {% endif %}
+
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <!-- === THIS IS THE ONLY LINK NEEDED === -->
-                        <a class="nav-link" href="{{ url_for('ops.guide') }}">Guide</a>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item me-2">
+                            <span class="nav-link text-white small">Hi, {{ current_user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm px-3" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light btn-sm px-3" href="#">
+                            Ask for Support
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <!-- === THIS IS THE ONLY LINK NEEDED === -->
-                        <a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a>
+                        <a class="btn btn-warning btn-sm px-3"
+                        style="background: var(--fluidcore-orange); border: none; color: var(--fluidcore-white);"
+                        href="#">
+                            Donate
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    <header class="study-header bg-white"> 
-        {% if study %}
-        <div class=" shadow-sm study-header">
-            <div class="d-flex justify-content-center align-items-center p-1">
-                <div>
-                    <h5 class="mb-3">
-                        <i class="fas fa-flask-vial text-fluid-red me-2"></i>
-                         <strong >{{ study.name }}</strong>
-                    </h5>
-                </div>
-
-            </div>
-            <div class="nav-container text-center">
-                <ul class="nav nav-tabs nav-fill study-nav">
-                    <li class="nav-item">
-                    <a class="nav-link text-muted {% if request.blueprint == 'encoding' %}active{% endif %}" 
-                        href="{{ url_for('encoding.definitions', study_id=study.id) }}">
-                        <i class="fas fa-cogs me-2"></i>1. Encoding Workflow
-                    </a>
-                    </li>
-                    <li class="nav-item">
-                    <a class="nav-link text-muted {% if request.blueprint == 'analysis' %}active{% endif %}" 
-                        href="{{ url_for('analysis.dashboard', study_id=study.id) }}">
-                        <i class="fas fa-chart-line me-2"></i>2. Analysis Workbench
-                    </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-    </header>
     
     <main class="container-fluid ">
         

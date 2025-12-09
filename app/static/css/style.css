@@ -1,508 +1,400 @@
+/* --- START OF FILE style.css --- */
+
 :root {
-  /* Primary Colors */
-  --fluidcore-red: #ec340b;       /* Logo Red */
-<<<<<<< HEAD
-  --fluidcore-teal: #23797c;      /* Tagline Teal */
-  --fluidcore-cream: #eee4d3;     /* Background Cream for accents */
-=======
-  --fluidcore-teal: #23797c; 
-  --fluid-core-cyan: rgb(6, 209, 209);     /* Tagline Teal */
-  --fluidcore-cream: #f0e6d3;     /* Background Cream for accents */
-  --fluidcore-coffee: #f7f1ee;
-  --fluidcore-salmon: salmon;
->>>>>>> main
-
-  /* Secondary Colors */
-  --fluidcore-orange: #ff5e00;    /* Primary Action Orange */
-  --fluidcore-dark-brown: #271209; /* Deep Shadow Brown for Text */
-  --fluidcore-gold: Gold;      /* Light Tan/Gold for highlights */
-  --fluidcore-white: #ffffff;     /* Pure White for main background */
-
-  /* Utility Colors */
-  --fluidcore-shadow: rgba(22, 10, 5, 0.1);
-  --fluidcore-border: #e9e2d7;
-
+  /* --- BRAND PALETTE (Highlights Only) --- */
+  --fluidcore-teal: #23797c;
+  --fluidcore-orange: #ff5e00;
+  --fluidcore-red: #ec340b;
+  --fluidcore-gold: #c5a017;
+  
+  /* --- APPLICATION PALETTE (Structural) --- */
+  --app-bg: #ffffff;
+  --app-sidebar-bg: #f8f9fa;      /* Very light grey for sidebars */
+  --app-panel-bg: #ffffff;
+  --app-header-bg: #e9ecef;       /* Darker grey for card headers */
+  --app-border: #ced4da;          /* Standard input border color */
+  --app-text-main: #212529;
+  --app-text-muted: #6c757d;
+  
+  /* --- DIMENSIONS & SPACING --- */
+  --radius-sm: 2px;               /* Sharper corners for "software" feel */
+  --radius-md: 4px;
+  --font-xs: 0.75rem;
+  --font-sm: 0.8125rem;           /* 13px */
+  --font-base: 0.875rem;          /* 14px */
+  
   /* Typography */
-  --fluidcore-heading-font: 'DM Serif Text', serif;
-  --fluidcore-body-font: 'JetBrains Mono', monospace;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
 }
+
+/* ==========================================================================
+   GLOBAL RESET & TYPOGRAPHY
+   ========================================================================== */
 
 body {
-  font-family: var(--fluidcore-body-font);
-  font-size: 0.85rem; /* A slightly more readable default */
-  color: var(--fluidcore-dark-brown);
-  background-color: var(--fluidcore-white); /* --- SET TO WHITE AS REQUESTED --- */
-  padding-top: 5rem;
-  line-height: 1.6;
+  font-family: var(--font-ui);
+  font-size: var(--font-base);
+  color: var(--app-text-main);
+  background-color: var(--app-bg);
+  padding-top: 3.5rem; /* Reduced from 5rem for compact navbar */
+  line-height: 1.4;    /* Tighter line height */
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--fluidcore-heading-font);
-  font-weight: normal;
-<<<<<<< HEAD
-  margin-top: 1.2em;
-  margin-bottom: 0.5em;
-}
-h1, .display-5 {
-    color: var(--fluidcore-orange);
-}
-h2, h3, h4, h5, h6 {
-=======
-  margin-top: 0.3em;
-  margin-bottom: 0.3em;
-}
-h1, .display-5, h2 {
-    color: var(--fluidcore-orange);
-}
- h3, h4, h5, h6 {
->>>>>>> main
-    color: var(--fluidcore-teal);
+/* Compact Headers */
+h1, h2, h3, h4, h5, h6, .display-5 {
+  font-family: var(--font-ui); /* Switched to Sans-serif for cleanliness */
+  font-weight: 600;
+  color: var(--fluidcore-teal);
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
 }
 
-h1, .display-5 { font-size: 2.5rem; }
-h2 { font-size: 1.8rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.2rem; }
+h1, .display-5 { font-size: 1.5rem; color: var(--app-text-main); }
+h2 { font-size: 1.25rem; border-bottom: 1px solid var(--app-border); padding-bottom: 0.25rem; }
+h3 { font-size: 1.1rem; }
+h4 { font-size: 1rem; font-weight: bold; }
+h5, h6 { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: var(--app-text-muted); }
 
-code, pre {
-  font-family: var(--fluidcore-body-font);
-<<<<<<< HEAD
-  background-color: var(--fluidcore-border);
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+p { margin-bottom: 0.75rem; }
+hr { margin: 0.75rem 0; opacity: 0.15; }
+
+/* Data Text */
+code, pre, .table-data {
+  font-family: var(--font-mono);
+  font-size: var(--font-xs) !important;
 }
 
 pre {
-  overflow-x: auto;
-  padding: 1rem;
+  background: #f1f3f5;
+  border: 1px solid var(--app-border);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
 }
 
-=======
-  font-size: 0.7rem !important;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  white-space: pre-wrap;       /* allows wrapping */
-  word-break: break-word;      /* breaks long strings */
-  overflow-wrap: anywhere;     /* aggressive fallback */
-  display: inline-block;       /* important in <td> to allow width-based wrapping */
-  max-width: 100%;             /* restrict to cell/container */
-  box-sizing: border-box;
-}
-
-pre {
-  overflow-x: auto;            /* keeps scroll for multiline blocks */
-  white-space: pre-wrap;       /* wraps if needed */
-}
-
-
-.text-fluid-red {
-  color: var(--fluidcore-red);
-}
-.text-fluid-orange {
-  color: var(--fluidcore-orange);
-}
-.text-fluid-cyan {
-  color: var(--fluid-core-cyan);
-}
-
-
-
-
->>>>>>> main
-/* Custom Component Styles */
+/* ==========================================================================
+   NAVBAR (Compact & Professional)
+   ========================================================================== */
 .navbar-custom {
-    background-color: var(--fluidcore-dark-brown);
+    background-color: #2c3e50; /* Professional Dark Blue-Grey */
+    padding: 0.25rem 1rem;     /* Very slim navbar */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.navbar-custom .navbar-brand,
+
+.navbar-custom .navbar-brand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+}
+
 .navbar-custom .nav-link {
-    color: var(--fluidcore-cream);
-}
-.navbar-custom .nav-link:hover {
-    color: var(--fluidcore-gold);
-}
-
-.card {
-    border-color: var(--fluidcore-border);
+    font-size: 0.85rem;
+    color: #dcdcdc;
+    padding: 0.4rem 0.8rem !important;
 }
 
-.bg-fluid-cream {
-    background-color: var(--fluidcore-cream) !important;
+.navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
+    color: #fff;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: var(--radius-sm);
 }
 
-.alert-fluid-info {
-    color: var(--fluidcore-dark-brown);
-    background-color: #f7f1e5; /* A lighter version of cream for alerts */
-    border-color: var(--fluidcore-border);
+/* ==========================================================================
+   BUTTONS & INPUTS (Small & Statistical)
+   ========================================================================== */
+
+/* Override Bootstrap Buttons to be smaller/sharper */
+.btn {
+    padding: 0.25rem 0.75rem;
+    font-size: var(--font-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
 }
 
-.btn-fluid-orange {
+.btn-lg { padding: 0.4rem 1rem; font-size: 0.9rem; }
+.btn-sm { padding: 0.15rem 0.5rem; font-size: var(--font-xs); }
+
+/* Primary Action */
+.btn-fluid-orange, .btn-primary {
     background-color: var(--fluidcore-orange);
     border-color: var(--fluidcore-orange);
-    color: var(--fluidcore-white);
-    font-weight: bold;
+    color: #fff;
 }
-.btn-fluid-orange:hover {
-    background-color: #d13f1a;
-    border-color: #be3917;
-    color: var(--fluidcore-white);
+.btn-fluid-orange:hover, .btn-primary:hover {
+    background-color: #e65100;
+    border-color: #e65100;
 }
 
-/* Updated Preview Container Styles */
-.preview-container {
-	max-height: 400px;
-	overflow: auto;
-	font-family: var(--fluidcore-body-font); /* Use theme font */
-	font-size: 0.75rem;
-    border: 1px solid var(--fluidcore-border);
-    border-radius: .25rem;
+/* Secondary/Utility Actions */
+.btn-outline-secondary, .btn-light {
+    background-color: #fff;
+    border-color: var(--app-border);
+    color: var(--app-text-main);
 }
-.preview-container .table {
-	white-space: nowrap;
-	margin-bottom: 0;
-}
-.preview-container pre {
-	margin: 0;
-	padding: 1rem;
-	background-color: var(--fluidcore-cream); /* Use theme color */
-}
-.btn-data{
-	background-color: var(--fluidcore-dark-brown);
-	color: var(--fluidcore-gold);
+.btn-outline-secondary:hover {
+    background-color: #e9ecef;
+    color: #000;
 }
 
-/* ==========================================================================
-   Footer Styles
-   ========================================================================== */
-.footer-custom {
-    background-color: var(--fluidcore-dark-brown);
-    color: var(--fluidcore-cream);
-    padding: 3rem 0;
-    margin-top: 5rem;
-    font-size: 0.9rem;
+/* Form Controls */
+.form-control, .form-select {
+    padding: 0.3rem 0.6rem;
+    font-size: var(--font-sm);
+    border-radius: var(--radius-sm);
+    border-color: var(--app-border);
+    background-color: #fff;
 }
 
-.footer-custom h5 {
-    font-family: var(--fluidcore-heading-font);
-    color: var(--fluidcore-orange);
-    margin-bottom: 1rem;
-    letter-spacing: 1px;
+.form-control:focus, .form-select:focus {
+    box-shadow: none;
+    border-color: var(--fluidcore-teal);
 }
 
-.footer-custom .footer-links {
-    list-style: none;
-    padding-left: 0;
+.form-label {
+    margin-bottom: 0.2rem;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    color: var(--app-text-muted);
 }
-
-.footer-custom .footer-links li {
-    margin-bottom: 0.5rem;
-}
-
-.footer-custom .footer-links a {
-    color: var(--fluidcore-cream);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer-custom .footer-links a:hover {
-    color: var(--fluidcore-gold);
-    text-decoration: underline;
-}
-
-.footer-custom .social-icons a {
-    color: var(--fluidcore-cream);
-    font-size: 1.5rem;
-    margin-right: 1rem;
-    transition: color 0.3s ease;
-}
-
-.footer-custom .social-icons a:hover {
-    color: var(--fluidcore-orange);
-}
-
-.footer-custom .footer-bottom {
-    border-top: 1px solid #4d3e38; /* A slightly lighter brown for the divider */
-    padding-top: 1.5rem;
-    margin-top: 2rem;
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--fluidcore-gold);
-}
-
-/* ... (all your existing CSS) ... */
 
 /* ==========================================================================
-   Header with Background Image
+   CARDS & PANELS (Flat & Dense)
    ========================================================================== */
-.hero-header {
-    /* The background image URL will be set inline in the HTML */
-    background-position: right center; /* Aligns the image to the right, centered vertically */
-    background-size: contain;          /* Scales the image to fit without being cropped */
-    background-repeat: no-repeat;      /* Prevents the image from tiling */
-    position: relative; /* Needed for any potential pseudo-elements if added later */
-}
-
-/* Responsive adjustment: Hide the background image on smaller screens */
-@media (max-width: 992px) {
-    .hero-header {
-        background-image: none !important; /* Hide the image on tablets and phones */
-    }
-    .hero-header .container-fluid {
-        text-align: center; /* Center the text when the image is gone */
-    }
-    .hero-header .container-fluid p {
-        margin-left: auto;
-        margin-right: auto;
-    }
-<<<<<<< HEAD
-}
-=======
-}
-
-#bootstrap-tool-wrapper.is-disabled {
-    opacity: 0.5;
-    pointer-events: none; /* Prevents clicks */
-    transition: opacity 0.3s ease-in-out;
-}
-
-.list-group-item.active {
-    background-color: var(--fluidcore-cream);
-    border-color: var(--fluidcore-border);
-    color: var(--fluidcore-red);
-
-}
-
-
-/* ==========================================================================
-   Encoder Definition Page Styles
-   ========================================================================== */
-.definition-card {
-    transition: all 0.2s ease-in-out;
-    border-left: 4px solid var(--fluidcore-teal);
-}
-
-.definition-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem var(--fluidcore-shadow) !important;
-}
-
-.definition-card .card-header {
-    border-bottom: 1px solid var(--fluidcore-border);
-}
-
-.config-display {
-    background-color: #f8f9fa; /* A very light grey */
-    border: 1px solid var(--fluidcore-border);
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-/* Styles for the "Smart" Modal */
-#newDefinitionModal h6 {
-    color: var(--fluidcore-red);
-    font-weight: bold;
-    border-bottom: 2px solid var(--fluidcore-cream);
-    padding-bottom: 0.5rem;
+.card {
+    border: 1px solid var(--app-border);
+    border-radius: var(--radius-md);
+    box-shadow: none !important; /* No shadows for app-feel */
     margin-bottom: 1rem;
 }
 
-.config-panel .table th {
-    font-weight: bold;
-    color: var(--fluidcore-dark-brown);
+.card-header {
+    padding: 0.5rem 0.8rem;
+    background-color: var(--app-header-bg);
+    border-bottom: 1px solid var(--app-border);
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--app-text-main);
 }
 
-.input-group-text {
-    background-color: var(--fluidcore-cream);
-    border-color: var(--fluidcore-border);
-    cursor: grab;
+.card-body {
+    padding: 0.8rem; /* Tighter padding */
+    background-color: var(--app-panel-bg);
 }
 
-.config-cell pre {
-    background-color: #f8f9fa; /* A light grey background */
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 0.8rem; /* Smaller font for compactness */
-    white-space: pre-wrap;   /* Allows wrapping */
-    word-break: break-all;   /* Breaks long strings to prevent overflow */
-    margin-bottom: 0;        /* Remove default margin */
-    max-height: 150px;       /* Limit height and add scroll for very long configs */
-    overflow-y: auto;
+.card-footer {
+    padding: 0.5rem 0.8rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--app-border);
 }
-.action-icons a, .action-icons button {
-    color: #6c757d; /* Muted grey for icons */
-    transition: color 0.2s ease-in-out;
-    padding: 0.2rem 0.5rem;
-}
-.action-icons a:hover, .action-icons button:hover {
-    color: #0d6efd; /* Bootstrap primary blue on hover */
-}
-.action-icons .text-danger:hover {
-    color: #dc3545 !important; /* Bootstrap danger red on hover */
-}
-.action-icons .disabled {
-    color: #adb5bd;
-    pointer-events: none;
-}
-
-.preview-container thead th {
-    background-color: var(--fluidcore-coffee); /* Light gray Bootstrap-like */
-    color: var(--fluidcore-dark-brown); /* Optional: header text color */
-}
-
 
 /* ==========================================================================
-   Analysis Dashboard Sidebar Styles
+   SIDEBARS (Uniform & Technical)
    ========================================================================== */
-#analysis-sidebar .accordion-button {
-    font-family: var(--fluidcore-heading-font);
-    font-size: 0.9rem;
-    background-color: var(--fluidcore-cream);
+.sidebar {
+    background-color: var(--app-sidebar-bg);
+    border-right: 1px solid var(--app-border);
+    padding: 1rem 0.5rem;
+    height: 100%;
+}
+
+.sidebar .nav-link {
+    color: var(--app-text-main);
+    padding: 0.4rem 0.8rem;
+    font-size: var(--font-sm);
+    border-radius: var(--radius-sm);
+    margin-bottom: 2px;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #e9ecef;
+    color: #000;
+}
+
+.sidebar .nav-link.active {
+    background-color: #e2e6ea; /* Subtle active state */
     color: var(--fluidcore-teal);
-    border-radius: 0;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: 600;
+    border-left: 3px solid var(--fluidcore-teal); /* Technical marker */
 }
 
-#analysis-sidebar .accordion-button:not(.collapsed) {
-    background-color: var(--fluidcore-teal);
-    color: var(--fluidcore-white);
-    box-shadow: inset 0 -1px 0 var(--fluidcore-shadow);
+.sidebar-heading {
+    font-size: var(--font-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.8rem;
 }
 
-#analysis-sidebar .accordion-button:focus {
-    box-shadow: 0 0 0 0.25rem rgba(35, 121, 124, 0.25); /* Teal focus ring */
-}
-
-#analysis-sidebar .accordion-body {
-    padding: 0;
-    background-color: var(--fluidcore-white);
-}
-
-#analysis-sidebar form {
-    padding: 1rem;
-    border-bottom: 1px solid var(--fluidcore-border);
+/* ==========================================================================
+   TABLES (Data Density)
+   ========================================================================== */
+.table {
+    font-size: var(--font-sm);
     margin-bottom: 0;
 }
 
-#analysis-sidebar form:last-child {
-    border-bottom: none;
+.table th {
+    background-color: #f1f3f5;
+    font-weight: 600;
+    border-bottom: 2px solid var(--app-border);
+    padding: 0.4rem;
 }
 
-#analysis-sidebar form h6 {
-    font-family: var(--fluidcore-body-font);
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: var(--fluidcore-red);
-    margin-bottom: 0.75rem;
+.table td {
+    padding: 0.4rem;
+    vertical-align: middle;
 }
 
-#analysis-sidebar .form-label {
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
+.preview-container {
+    max-height: 350px;
+    overflow: auto;
+    border: 1px solid var(--app-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+
+/* ==========================================================================
+   COMPONENT: ENCODING / CONFIGURATION
+   ========================================================================== */
+.definition-card {
+    border-left: 3px solid var(--fluidcore-teal);
+}
+
+.config-display {
+    background-color: #fff;
+    border: 1px solid var(--app-border);
+    font-family: var(--font-mono);
+    font-size: var(--font-xs);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.input-group-text {
+    padding: 0.2rem 0.5rem;
+    font-size: var(--font-xs);
+    background-color: #f8f9fa;
+}
+
+/* ==========================================================================
+   COMPONENT: ANALYSIS DASHBOARD
+   ========================================================================== */
+.analysis-wrapper {
+    background-color: #f8f9fa; /* Whole page background grey */
+}
+
+#analysis-sidebar {
+    background-color: #fff;
+    border-left: 1px solid var(--app-border);
+}
+
+#analysis-sidebar .accordion-button {
+    padding: 0.5rem 1rem;
+    font-size: var(--font-sm);
+    background-color: #f8f9fa;
+    color: var(--app-text-main);
+    box-shadow: none;
+}
+
+#analysis-sidebar .accordion-button:not(.collapsed) {
+    background-color: #e9ecef;
+    color: var(--fluidcore-teal);
+    font-weight: 600;
 }
 
 #results-panel .card {
-    border-left: 4px solid var(--fluidcore-orange);
+    border: 1px solid var(--app-border);
+    border-top: 3px solid var(--fluidcore-orange); /* Top accent for results */
 }
-
-#results-panel .card-header {
-    background-color: var(--fluidcore-coffee);
-    border-bottom: 1px solid var(--fluidcore-border);
-}
-
-#results-panel h5 {
-    font-family: var(--fluidcore-heading-font);
-    color: var(--fluidcore-teal);
-}
-
-#results-panel .alert-light {
-    background-color: var(--fluidcore-cream);
-    border-color: var(--fluidcore-border);
-}
-
-#results-panel img {
-    border: 1px solid var(--fluidcore-border);
-}
-
-.analysis-wrapper {
-display: flex;
-flex-direction: row-reverse; /* Sidebar on right */
-min-height: 100vh;
-background: #f8f8f8;
-
-}
-.encoder-wrapper {
-display: flex;
-min-height: 100vh;
-background: #f8f8f8;
-
-}
-
 
 /* ==========================================================================
-ROBOT ANIMATION STYLES
-========================================================================== */
+   AUTH PAGES
+   ========================================================================== */
+.auth-wrapper {
+    background: #f0f2f5;
+    min-height: calc(100vh - 3.5rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border: 1px solid var(--app-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: var(--radius-md);
+}
 
-    /* --- STYLES FOR THE FOOTER ROBOT ANIMATION --- */
-    #animation-container {
-        position: relative; /* Establishes a coordinate system */
-        width: 100%;
-        min-height: 200px; /* Give it enough space */
-        margin: 0 auto;
-        overflow: hidden; /* Important for positioning */
-    }
+.auth-header {
+    background-color: var(--fluidcore-teal);
+    color: #fff;
+    padding: 1.5rem;
+    text-align: center;
+}
 
-    .robot {
-        position: absolute;
-        width: 25px;
-        height: 25px;
-        background-color: var(--fluidcore-coffee); /* Green robot */
-        border: 2px solid var( --fluidcore-orange);
-        will-change: transform;
-        
-        /* --- NEW CSS FOR CONCENTRIC EYES --- */
-        /* Make the robot a positioning context */
-        position: relative; 
-        /* THE KEY: Clip anything that sticks out, creating the semi-circle illusion */
-        overflow: hidden; 
-    }
-    
-    .robot-trail {
-        stroke: var(--fluidcore-gold); /* Lighter green trail color */
-        stroke-width: 2px;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        opacity: 0.8; /* The "faded" effect */
-        fill: none;
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+.footer-custom {
+    background-color: #343a40;
+    color: #adb5bd;
+    padding: 2rem 0;
+    font-size: var(--font-xs);
+    margin-top: 3rem;
+}
 
-    }
+.footer-custom h5 {
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
 
+.footer-custom a {
+    color: #ced4da;
+    text-decoration: none;
+}
+.footer-custom a:hover { color: #fff; }
 
-/* Shared styles for both eye layers */
-    .robot::before,
-    .robot::after {
-        content: '';
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 50%; /* Both are drawn as full circles */
-    }
+/* ==========================================================================
+   UTILITIES & ANIMATION
+   ========================================================================== */
+.text-fluid-teal { color: var(--fluidcore-teal) !important; }
+.text-fluid-orange { color: var(--fluidcore-orange) !important; }
+.bg-fluid-cream { background-color: #f8f9fa !important; } /* Replaced cream with standard grey */
 
-    /* Outer, larger circle (the border) */
-    .robot::before {
-        width: 16px;
-        height: 16px;
-        /* Position the circle's center on the robot's top edge */
-        top: -6px; 
-        border: 1px solid var(--fluidcore-orange);
-    }
+/* Robot Animation (Preserved but scaled down) */
+#animation-container {
+    width: 100%;
+    min-height: 120px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
 
-    /* Inner, smaller circle (the black fill) */
-    .robot::after {
-        width: 10px;
-        height: 11px;
-        /* Position this circle's center on the robot's top edge */
-        top: -4px; 
-        background-color: var(--fluidcore-orange);
-    }
->>>>>>> main
+.robot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: var(--fluidcore-teal);
+    border: 1px solid #fff;
+    overflow: hidden;
+}
+
+.robot-trail {
+    stroke: var(--fluidcore-orange);
+    stroke-width: 1px;
+    opacity: 0.5;
+    fill: none;
+}
+
+.robot::before, .robot::after {
+    content: ''; position: absolute; left: 50%; transform: translateX(-50%); border-radius: 50%;
+}
+.robot::before { width: 12px; height: 12px; top: -4px; border: 1px solid #fff; }
+.robot::after { width: 6px; height: 7px; top: -2px; background-color: #fff; }

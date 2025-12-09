@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    /* Custom CSS for Login Page - Scoped here or move to style.css */
+    .auth-wrapper {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fdfbf7 0%, #eef2f3 100%);
+    }
+    
+    .auth-card {
+        width: 100%;
+        max-width: 450px;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+    }
+
+    .auth-header {
+        background: var(--fluidcore-teal, #134f5c);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        position: relative;
+    }
+
+    .auth-header::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 10px 10px 0;
+        border-style: solid;
+        border-color: var(--fluidcore-teal, #134f5c) transparent transparent transparent;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: var(--fluidcore-teal, #134f5c);
+        transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+    }
+    
+    .form-control:focus {
+        border-color: var(--fluidcore-teal, #134f5c);
+        box-shadow: 0 0 0 0.25rem rgba(19, 79, 92, 0.25);
+    }
+
+    .btn-login {
+        background-color: var(--fluidcore-orange, #ff6b35);
+        border: none;
+        color: white;
+        padding: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-login:hover {
+        background-color: #e85a2d; /* Slightly darker orange */
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        color: white;
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card animate__animated animate__fadeInUp">
+        <div class="auth-header">
+            <h3 class="mb-0 fw-bold">TXDataLab</h3>
+            <small class="text-white-50">Secure Access</small>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+            
+            {% include '_messages.html' %}
+            
+            <h4 class="text-center mb-4 text-muted">Welcome Back</h4>
+
+            <form action="{{ url_for('auth.login') }}" method="post">
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                    <label for="email">Email Address</label>
+                </div>
+                
+                <div class="form-floating mb-4">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                    <label for="password">Password</label>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                        <label class="form-check-label small text-muted" for="remember">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="#" class="small text-muted text-decoration-none">Forgot password?</a>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-login btn-lg rounded-pill">
+                        Sign In <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card-footer text-center bg-white border-0 py-3">
+            <small class="text-muted">Don't have an account? <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none" style="color: var(--fluidcore-teal, #134f5c);">Register Here</a></small>
+        </div>
+    </div>
+</div>
+{% endblock %}

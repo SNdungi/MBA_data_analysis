@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse shadow-sm rounded-3 p-3">
+            <h5 class="text-fluid-teal mb-3"><i class="fas fa-folder-open me-2"></i>File Manager</h5>
+            
+            <div class="d-grid gap-2 mb-4">
+                <button class="btn btn-fluid-orange text-white" data-bs-toggle="modal" data-bs-target="#newStudyModal">
+                    <i class="fas fa-plus me-2"></i>New Study
+                </button>
+            </div>
+
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>Current View</span>
+            </h6>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('file_mgt.dashboard') }}">
+                        <i class="fas fa-list me-2"></i>My Projects
+                    </a>
+                </li>
+            </ul>
+
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                <span>Admin</span>
+            </h6>
+            <ul class="nav flex-column mb-2">
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#purgeModal">
+                        <i class="fas fa-trash-alt me-2"></i>Purge System
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Project Dashboard</h1>
+                {% if selected_study %}
+                    <span class="badge bg-secondary">Active Preview: {{ selected_study.name }}</span>
+                {% endif %}
+            </div>
+
+            {% include '_messages.html' %}
+
+            <!-- Projects Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <i class="fas fa-table me-1"></i> Available Studies
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Topic</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if studies %}
+                                {% for study in studies %}
+                                <tr class="{{ 'table-active' if selected_study and selected_study.id == study.id else '' }}">
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ study.name }}</div>
+                                        <small class="text-muted">{{ study.map_filename.replace('.json', '.csv') }}</small>
+                                    </td>
+                                    <td>{{ study.topic }}</td>
+                                    <td>{{ study.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <!-- Preview / Open -->
+                                            <a href="{{ url_for('file_mgt.dashboard', preview_id=study.id) }}" class="btn btn-outline-primary" title="Preview Data">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            <!-- Edit Modal Trigger -->
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal{{ study.id }}" title="Edit Details">
+                                                <i class="fas fa-pen"></i>
+                                            </button>
+                                            
+                                            <!-- Workflows -->
+                                            <a href="{{ url_for('encoding.assign', study_id=study.id) }}" class="btn btn-outline-success" title="Go to Encoding">
+                                                <i class="fas fa-sliders-h"></i>
+                                            </a>
+                                            
+                                            <!-- Legacy Simulation Redirect -->
+                                            <a href="{{ url_for('ops.view_study_results', study_id=study.id) }}" class="btn btn-outline-info" title="Legacy Simulation">
+                                                <i class="fas fa-random"></i>
+                                            </a>
+
+                                            <!-- Export -->
+                                            <a href="{{ url_for('file_mgt.export_study', study_id=study.id) }}" class="btn btn-outline-dark" title="Export Zip">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            
+                                            <!-- Delete -->
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ study.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Edit Modal per study -->
+                                <div class="modal fade" id="editModal{{ study.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form action="{{ url_for('file_mgt.edit_study', study_id=study.id) }}" method="POST">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit Project</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Name</label>
+                                                        <input type="text" class="form-control" name="study_name" value="{{ study.name }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Topic</label>
+                                                        <input type="text" class="form-control" name="study_topic" value="{{ study.topic }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Description</label>
+                                                        <textarea class="form-control" name="study_description">{{ study.description }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- Delete Modal per study -->
+                                <div class="modal fade" id="deleteModal{{ study.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete <strong>{{ study.name }}</strong>? This will remove all associated files and data.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <form action="{{ url_for('file_mgt.delete_study', study_id=study.id) }}" method="POST">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">Delete Permanently</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">No projects found. Create one to get started.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            {% if preview_html %}
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-file-csv me-1"></i> Data Preview: {{ selected_study.name }} (First 10 Rows)
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        {{ preview_html|safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Global Create Modal -->
+<div class="modal fade" id="newStudyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ url_for('file_mgt.create_study') }}" method="post" enctype="multipart/form-data">
+                <div class="modal-header bg-fluid-cream">
+                    <h5 class="modal-title text-fluid-teal">Create New Study</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="study_name" class="form-label">Study Name</label>
+                        <input type="text" class="form-control" name="study_name" placeholder="e.g. Q3 Analysis" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="study_topic" class="form-label">Research Topic</label>
+                        <input type="text" class="form-control" name="study_topic">
+                    </div>
+                    <div class="mb-3">
+                        <label for="source_csv" class="form-label">Source Data (CSV)</label>
+                        <input class="form-control" type="file" name="source_csv" accept=".csv" required>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Clone Encoders From (Optional)</label>
+                        <select class="form-select form-select-sm" name="clone_from_study_id">
+                            <option value="">-- Blank Slate --</option>
+                            {% for s in studies %}
+                                <option value="{{ s.id }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-fluid-orange text-white">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Global Purge Modal -->
+<div class="modal fade" id="purgeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">SYSTEM PURGE</h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>WARNING:</strong> This will delete ALL studies, ALL uploaded files, and ALL generated results.</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <form action="{{ url_for('file_mgt.purge_all') }}" method="POST">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-bold">Delete Everything</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

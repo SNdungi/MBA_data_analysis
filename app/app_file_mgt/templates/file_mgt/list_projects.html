@@ -1,0 +1,47 @@
+{% extends "base_file_mgt.html" %}
+
+{% block file_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-list text-muted me-2"></i>My Projects</h2>
+    <a href="{{ url_for('file_mgt.new_project') }}" class="btn btn-fluid-orange text-white">
+        <i class="fas fa-plus me-1"></i> Create New
+    </a>
+</div>
+
+{% if studies %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Study Name</th>
+                <th>Topic</th>
+                <th>Data File</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for study in studies %}
+            <tr style="cursor: pointer;" onclick="window.location='{{ url_for('file_mgt.project_admin', study_id=study.id) }}'">
+                <td class="fw-bold text-primary">{{ study.name }}</td>
+                <td>{{ study.topic or '-' }}</td>
+                <td class="text-muted small">{{ study.map_filename.replace('.json', '.csv') }}</td>
+                <td>{{ study.created_at.strftime('%Y-%m-%d') }}</td>
+                <td class="text-end" onclick="event.stopPropagation()">
+                    <a href="{{ url_for('file_mgt.project_admin', study_id=study.id) }}" class="btn btn-sm btn-outline-secondary">
+                        Manage <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+    <p class="lead">No projects found.</p>
+    <a href="{{ url_for('file_mgt.new_project') }}" class="btn btn-primary">Start your first Study</a>
+</div>
+{% endif %}
+{% endblock %}
