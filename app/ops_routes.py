@@ -18,9 +18,6 @@ def index():
 def documentation():
     return render_template('documentation.html', title="Encoding Methodology")
 
-@ops_bp.route('/guide')
-def guide():
-    return render_template('analysis_docs.html', title="Results and Summary")
 
 # --- Legacy Simulation Logic (Kept here for specific calculation operations) ---
 
@@ -50,7 +47,7 @@ def view_study_results(study_id):
         
     except Exception as e:
         flash(f"Error accessing simulation: {e}", "danger")
-        return redirect(url_for('file_mgt.dashboard'))
+        return redirect(url_for('file_mgt.list_projects'))
 
 @ops_bp.route('/run-bootstrap', methods=['POST'])
 def run_bootstrap():

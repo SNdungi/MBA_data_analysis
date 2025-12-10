@@ -4,56 +4,51 @@
 <div class="container-fluid mt-4 mb-5">
     <div class="row">
         
-        <!-- SIDEBAR -->
-        <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm rounded-3 p-3 h-100" style="min-height: 80vh;">
-            <div class="mb-4 text-center">
-                <h5 class="text-fluid-teal fw-bold"><i class="fas fa-folder-open me-2"></i>File Manager</h5>
-                <hr>
+        <!-- SIDEBAR: Compact List Group Style -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm sticky-top" style="top: 4rem;">
+                <div class="card-header bg-white fw-bold small text-muted text-uppercase">
+                    <i class="fas fa-folder-open me-2"></i>File Manager
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    <!-- 1. My Projects -->
+                    <a href="{{ url_for('file_mgt.list_projects') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small {% if active_page == 'list' %}active text-white bg-primary border-primary{% else %}text-dark{% endif %}">
+                        <i class="fas fa-list-ul fa-fw me-2 {% if active_page != 'list' %}text-muted{% endif %}"></i> 
+                        My Projects
+                    </a>
+                    
+                    <!-- 2. New Study -->
+                    <a href="{{ url_for('file_mgt.new_project') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small {% if active_page == 'new' %}active text-white bg-primary border-primary{% else %}text-dark{% endif %}">
+                        <i class="fas fa-plus-circle fa-fw me-2 {% if active_page != 'new' %}text-muted{% endif %}"></i> 
+                        New Study
+                    </a>
+
+                    <!-- 3. Project Admin (Contextual) -->
+                    <a href="{% if study %}{{ url_for('file_mgt.project_admin', study_id=study.id) }}{% else %}#{% endif %}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small 
+                       {% if active_page == 'admin' %}active text-white bg-primary border-primary{% elif not study %}disabled text-muted bg-light{% else %}text-dark{% endif %}">
+                        <i class="fas fa-cog fa-fw me-2 {% if active_page != 'admin' %}text-muted{% endif %}"></i> 
+                        Project Admin
+                    </a>
+                    
+                    <!-- 4. System Tools -->
+                    <a href="{{ url_for('file_mgt.system_tools') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small border-top {% if active_page == 'system' %}active text-white bg-danger border-danger{% else %}text-danger{% endif %}">
+                        <i class="fas fa-shield-alt fa-fw me-2"></i> 
+                        System Tools
+                    </a>
+                </div>
             </div>
-            
-            <ul class="nav flex-column nav-pills gap-2">
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'list' %}active bg-fluid-teal{% else %}text-dark{% endif %}" 
-                       href="{{ url_for('file_mgt.list_projects') }}">
-                        <i class="fas fa-list-ul me-2"></i> My Projects
-                    </a>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'new' %}active bg-fluid-teal{% else %}text-dark{% endif %}" 
-                       href="{{ url_for('file_mgt.new_project') }}">
-                        <i class="fas fa-plus-circle me-2"></i> New Study
-                    </a>
-                </li>
-                
-                <li class="nav-item mt-3">
-                    <span class="text-uppercase text-muted small fw-bold px-3">Current Project</span>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'admin' %}active bg-fluid-teal{% elif not study %}disabled text-muted{% else %}text-dark{% endif %}" 
-                       href="{% if study %}{{ url_for('file_mgt.project_admin', study_id=study.id) }}{% else %}#{% endif %}">
-                        <i class="fas fa-cog me-2"></i> Project Admin
-                    </a>
-                </li>
-                
-                <li class="nav-item mt-4">
-                     <span class="text-uppercase text-muted small fw-bold px-3">System</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'system' %}active bg-danger text-white{% else %}text-danger{% endif %}" 
-                       href="{{ url_for('file_mgt.system_tools') }}">
-                        <i class="fas fa-shield-alt me-2"></i> System Tools
-                    </a>
-                </li>
-            </ul>
         </div>
 
         <!-- MAIN CONTENT AREA -->
-        <div class="col-md-9 col-lg-10 ps-md-4">
+        <div class="col-md-9 col-lg-10">
             {% include '_messages.html' %}
             
-            <div class="bg-white p-4 rounded-3 shadow-sm" style="min-height: 80vh;">
+            <div class="bg-white p-4 border rounded-2 shadow-sm" style="min-height: 80vh;">
                 {% block file_content %}{% endblock %}
             </div>
         </div>

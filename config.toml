@@ -75,3 +75,81 @@ description = "For simple Yes/No, True/False, or 0/1 responses."
     "Neutral" = 3
     "Agree" = 4
     "Strongly Agree" = 5
+
+
+# =============================================
+# Tutorial Levels, Sections, Topics, Subtopics
+# =============================================
+
+[[levels]]
+title = "Elementary"
+description = "Pre-graduate statistical foundations."
+
+  [[levels.sections]]
+  title = "Foundations"
+  description = "Basic descriptive statistics."
+
+    [[levels.sections.topics]]
+    title = "Central Tendency"
+    description = "Measures of central values."
+
+      [[levels.sections.topics.subtopics]]
+      title = "Arithmetic Mean"
+      short_description = "Definition and computation of the arithmetic mean."
+      definition = "The arithmetic mean is the sum of observations divided by the number of observations."
+      video_url = "https://www.youtube.com/watch?v=mean_intro"
+      examples = [
+        "Mean of numbers: $\\bar{x} = \\frac{1}{n} \\sum x_i$",
+        "Real-world example: average rainfall, income distribution.",
+      ]
+      images = ["mean_example.png"]
+
+
+
+[[levels]]
+title = "Intermediate"
+description = "Graduate-level probability and inference."
+
+  [[levels.sections]]
+  title = "Probability Theory"
+  description = "Events, sample spaces, distributions."
+
+    [[levels.sections.topics]]
+    title = "Discrete Distributions"
+    description = "Probability mass functions."
+
+      [[levels.sections.topics.subtopics]]
+      title = "Binomial Distribution"
+      short_description = "Definition and examples of binomial random variables."
+      definition = "A distribution describing the number of successes in n Bernoulli trials."
+      video_url = "https://www.youtube.com/watch?v=binomial_intro"
+      examples = [
+        "PMF: $P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}$",
+        "Example: number of heads in 10 coin tosses."
+      ]
+      images = ["binomial_example.png"]
+
+
+
+[[levels]]
+title = "Advanced"
+description = "Postgraduate / PhD level statistical modeling."
+
+  [[levels.sections]]
+  title = "Bayesian Statistics"
+  description = "Inference using probabilities."
+
+    [[levels.sections.topics]]
+    title = "Bayesian Updating"
+    description = "Learning from data using Bayes’ theorem."
+
+      [[levels.sections.topics.subtopics]]
+      title = "Posterior Distribution"
+      short_description = "Definition of posterior probability."
+      definition = "The posterior is proportional to likelihood × prior."
+      video_url = "https://www.youtube.com/watch?v=bayes_posterior"
+      examples = [
+        "Posterior: $p(\\theta|x)\\propto p(x|\\theta)p(\\theta)$",
+        "Example: updating belief about probability of rain."
+      ]
+      images = ["posterior_example.png"]

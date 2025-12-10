@@ -3,19 +3,22 @@ import secrets
 from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager # Import LoginManager
-from app.app_encoder.encoder_models import db, User # Import User model
+from app.app_tutorials.tutorials_models import TutorialLevel
+from app.app_encoder.encoder_models import User # Import User model
 from datetime import datetime
 
 def create_app():
     """Application Factory Function"""
     app = Flask(__name__)
     
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    app.config['BASE_DIR'] = BASE_DIR
+
     # --- 1. Basic App Configuration ---
     app.secret_key = secrets.token_hex(16)
     
     # --- 2. Database Configuration ---
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '..', 'TXdata.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///TXdata.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # --- 3. Other File Path Configurations ---
@@ -24,6 +27,7 @@ def create_app():
     app.config['GRAPHS_FOLDER'] = os.path.join(app.static_folder, 'graphs')
 
     # --- 4. Initialize Extensions ---
+    from app.app_database.extensions import db
     db.init_app(app)
     migrate = Migrate(app, db)
     
@@ -40,6 +44,8 @@ def create_app():
     @app.context_processor
     def inject_now():
         return {'now': datetime.utcnow}
+    
+    
 
     # --- 5. Create DB and Register Blueprints ---
     with app.app_context():
@@ -70,5 +76,8 @@ def create_app():
         
         from app.app_tutorials.tutorials import tutorials_bp
         app.register_blueprint(tutorials_bp)
+        
+        from app.commands import seed_tutorials
+        app.cli.add_command(seed_tutorials)
         
     return app

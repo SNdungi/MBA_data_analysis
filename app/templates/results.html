@@ -36,21 +36,21 @@
                         <i class="fas fa-file-csv me-2 text-fluid-teal"></i>
                         Original Data: <strong>{{ session.filenames.original }}</strong>
                     </div>
-                    <a href="{{ url_for('ops.view_df', filename=session.filenames.original) }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                    <a href="{{ url_for('ops.preview_csv', filename=session.filenames.original) }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
                 </span>
                 <span class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-project-diagram me-2 text-fluid-teal"></i>
                         Question Map: <strong>{{ session.filenames.map }}</strong>
                     </div>
-                    <a href="{{ url_for('ops.view_file', type='generated', filename=session.filenames.map) }}" class="badge bg-secondary rounded-pill text-decoration-none">View JSON</a>
+                    <a href="{{ url_for('ops.preview_csv', type='generated', filename=session.filenames.map) }}" class="badge bg-secondary rounded-pill text-decoration-none">View JSON</a>
                 </span>
                 <span class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-file-invoice me-2 text-fluid-teal"></i>
                         Simulated Data: <strong>{{ session.filenames.output }}</strong>
                     </div>
-                    <a href="{{ url_for('ops.view_df', filename=session.filenames.output, type='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                    <a href="{{ url_for('ops.preview_csv', filename=session.filenames.output, type='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
                 </span>
             </div>
         </div>

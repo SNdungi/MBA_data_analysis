@@ -3,9 +3,11 @@
 :root {
   /* --- BRAND PALETTE (Highlights Only) --- */
   --fluidcore-teal: #23797c;
+  --fluidcore-accent: #5eff00;
   --fluidcore-orange: #ff5e00;
   --fluidcore-red: #ec340b;
   --fluidcore-gold: #c5a017;
+  --fluidcore-cream: #fff8e7;
   
   /* --- APPLICATION PALETTE (Structural) --- */
   --app-bg: #ffffff;
@@ -37,7 +39,7 @@ body {
   font-size: var(--font-base);
   color: var(--app-text-main);
   background-color: var(--app-bg);
-  padding-top: 3.5rem; /* Reduced from 5rem for compact navbar */
+  padding-top: 1rem; /* Reduced from 5rem for compact navbar */
   line-height: 1.4;    /* Tighter line height */
 }
 
@@ -96,7 +98,7 @@ pre {
 }
 
 .navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
-    color: #fff;
+    color: var(--fluidcore-cream);
     background-color: rgba(255,255,255,0.1);
     border-radius: var(--radius-sm);
 }
@@ -159,6 +161,31 @@ pre {
     color: var(--app-text-muted);
 }
 
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--fluidcore-teal, #134f5c);
+    transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+}
+
+.btn-login {
+    background-color: var(--fluidcore-orange, #ff6b35);
+    border: none;
+    color: white;
+    padding: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background-color: #e85a2d; /* Slightly darker orange */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+    color: white;
+}
+
+
+
 /* ==========================================================================
    CARDS & PANELS (Flat & Dense)
    ========================================================================== */
@@ -192,12 +219,14 @@ pre {
 /* ==========================================================================
    SIDEBARS (Uniform & Technical)
    ========================================================================== */
-.sidebar {
-    background-color: var(--app-sidebar-bg);
-    border-right: 1px solid var(--app-border);
-    padding: 1rem 0.5rem;
-    height: 100%;
-}
+  .sidebar {
+    width: 200px;
+    padding: 20px;
+    background-color: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
 
 .sidebar .nav-link {
     color: var(--app-text-main);
@@ -227,6 +256,61 @@ pre {
     margin-bottom: 0.5rem;
     padding-left: 0.8rem;
 }
+
+
+  .main-content {
+    flex: 1;
+    padding: 30px;
+  }
+
+  .tag-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    padding: 10px 36px 10px 18px;
+    color: #333;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 4px;
+    background-color: #dfefff;
+    clip-path: polygon(100% 0, 100% 100%, 10% 100%, 0% 50%, 10% 0);
+    transition: background-color 0.3s, color 0.3s;
+    text-align: right;
+  }
+
+  .tag-item::before {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: white;
+  }
+
+  .tag-green  { background-color: #dbf5c2; color: #2f7922; }
+  .tag-yellow { background-color: #f1eb97ff; color: #887a01ff; }
+  .tag-blue   { background-color: #bdeaff; color: #0077aa; }
+  .tag-pink   { background-color: #fcd1dc; color: #b92751; }
+  .tag-purple { background-color: #e5d5ff; color: #654ea3; }
+  .tag-orange { background-color: #ffe9d5ff; color: #a82200ff; }
+
+  .tag-item:hover {
+    filter: brightness(1.1);
+  }
+
+.list-group-item-action.active,
+.list-group-item-action:active,
+.nav-link.active,
+.nav-link:active {
+  background-color: var(--fluidcore-cream) !important;
+  color: var(--fluidcore-teal) !important;
+}
+
 
 /* ==========================================================================
    TABLES (Data Density)
@@ -341,25 +425,106 @@ pre {
 /* ==========================================================================
    FOOTER
    ========================================================================== */
+/* ==========================================================================
+   SOPHISTICATED FOOTER
+   ========================================================================== */
 .footer-custom {
-    background-color: #343a40;
-    color: #adb5bd;
-    padding: 2rem 0;
-    font-size: var(--font-xs);
-    margin-top: 3rem;
+    background-color: #212529; /* Deep, professional dark grey */
+    color: #8c959f;            /* Muted text for low visual noise */
+    padding-top: 4rem;
+    padding-bottom: 2rem;
+    margin-top: auto;          /* Pushes footer to bottom if flex container used */
+    border-top: 1px solid #373b3e;
+    font-size: 0.85rem;
 }
 
-.footer-custom h5 {
+/* Headings */
+.footer-heading {
     color: #fff;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 1.2rem;
 }
 
-.footer-custom a {
-    color: #ced4da;
-    text-decoration: none;
+/* Links */
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.footer-custom a:hover { color: #fff; }
+.footer-links li {
+    margin-bottom: 0.6rem;
+}
+.footer-links a {
+    color: #8c959f;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+.footer-links a:hover {
+    color: var(--fluidcore-gold);
+    transform: translateX(3px); /* Subtle shift on hover */
+}
+
+/* Brand Section */
+.footer-brand-text {
+    color: var(--fluidcore-gold);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Social Icons */
+.social-icons {
+    display: flex;
+    gap: 0.5rem;
+}
+.social-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%; /* Circle */
+    color: var(--fluidcore-orange);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.social-icon-btn:hover {
+    background-color: var(--fluidcore-gold);
+    border-color: var(--fluidcore-teal);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Bottom Bar */
+.footer-bottom {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+}
+
+/* Input Group for visual flair */
+.footer-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 0.8rem;
+}
+.footer-input:focus {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--fluidcore-teal);
+    color: #fff;
+    box-shadow: none;
+}
 
 /* ==========================================================================
    UTILITIES & ANIMATION
@@ -398,3 +563,96 @@ pre {
 }
 .robot::before { width: 12px; height: 12px; top: -4px; border: 1px solid #fff; }
 .robot::after { width: 6px; height: 7px; top: -2px; background-color: #fff; }
+
+/* ==========================================================================
+
+    TUTORIAL SIDEBAR CUSTOMIZATION
+
+========================================================================== */
+
+/* Local overrides to force the compact/flat aesthetic on the Accordion */
+.tutorial-sidebar .accordion-item {
+    border: none;
+    background: transparent;
+}
+.tutorial-sidebar .accordion-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background-color: white;
+    color: #575249ff;
+    border-radius: 0;
+    box-shadow: none;
+}
+.tutorial-sidebar .accordion-button:not(.collapsed) {
+    color: var(--fluidcore-teal);
+    background-color: #f8f9fa;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.125);
+}
+.tutorial-sidebar .accordion-button::after {
+    background-size: 0.8rem; /* Make the arrow smaller */
+}
+.tutorial-sidebar .accordion-body {
+    padding: 0;
+}
+.tutorial-sidebar .list-group-item {
+    padding-left: 1.5rem; /* Indent subtopics */
+    font-size: 0.75rem;
+    border: none;
+    border-left: 2px solid transparent;
+}
+.tutorial-sidebar .list-group-item.active {
+    background-color: #eef2f3;
+    color: var(--fluidcore-teal);
+    border-left-color: var(--fluidcore-orange);
+    border-top: none;
+    border-bottom: none;
+    font-weight: 600;
+}
+.sidebar-category-header {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #adb5bd;
+    padding: 1rem 0.75rem 0.25rem;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+    TUTORIAL_VIEW TABS CUSTOMIZATION
+========================================================================== */
+
+.tutorial-tabs {
+    border-bottom: 1px solid #dee2e6;
+}
+.tutorial-tabs .nav-link {
+    border-radius: 0;             
+    font-size: 0.75rem;           
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;               
+    background-color: #f8f9fa;    
+    padding: 0.4rem 1rem;         
+    border: 1px solid transparent;
+    margin-right: 2px;
+}
+
+.tutorial-tabs .nav-link:hover {
+    color: var(--fluidcore-teal);
+    background-color: #e9ecef;
+}
+
+.tutorial-tabs .nav-link.active {
+    color: var(--fluidcore-teal);
+    background-color: #ffffff;
+    border-color: #dee2e6 #dee2e6 #fff; 
+    border-top: 2px solid var(--fluidcore-orange); 
+}
+
+.tutorial-tabs .nav-link i {
+    color: #adb5bd;
+}
+.tutorial-tabs .nav-link.active i {
+    color: var(--fluidcore-teal);
+}

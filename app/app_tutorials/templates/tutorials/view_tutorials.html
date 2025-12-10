@@ -1,0 +1,165 @@
+{% extends "tutorials/base_tutorials.html" %}
+
+{% block tutorial_content %}
+
+<!-- Custom Styles for Technical Tabs -->
+<style>
+
+</style>
+
+{% if active_subtopic %}
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+        <div>
+            <!-- Breadcrumb-like category: Level > Section > Topic -->
+            <span class="badge bg-light text-dark border mb-1" style="font-weight: normal;">
+                {{ active_subtopic.topic.section.level.title }} / {{ active_subtopic.topic.section.title }}/{{ active_subtopic.title }}
+            </span>
+        </div>
+        <div class="text-end">
+            <!-- Navigation Logic could be added here later -->
+             <div class="btn-group btn-group-sm">
+                 <button class="btn btn-outline-secondary" disabled title="Previous"><i class="fas fa-chevron-left"></i></button>
+                 <button class="btn btn-outline-secondary" disabled title="Next"><i class="fas fa-chevron-right"></i></button>
+             </div>
+        </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <ul class="nav nav-tabs tutorial-tabs mb-4" id="tutorialTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab">
+                <i class="fas fa-book-open me-2"></i>Concept Notes
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="video-tab" data-bs-toggle="tab" data-bs-target="#video" type="button" role="tab">
+                <i class="fas fa-play-circle me-2"></i>Video Lecture
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="blackboard-tab" data-bs-toggle="tab" data-bs-target="#blackboard" type="button" role="tab">
+                <i class="fas fa-chalkboard me-2"></i>Example Blackboard
+            </button>
+        </li>
+    </ul>
+
+    <!-- TABS CONTENT -->
+    <div class="tab-content" id="tutorialTabsContent">
+        
+        <!-- 1. NOTES TAB -->
+        <div class="tab-pane fade show active" id="notes" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="prose" style="font-size: 0.9rem; line-height: 1.7;">
+                        {% if active_subtopic.short_description %}
+                            <p class="lead text-dark">{{ active_subtopic.short_description }}</p>
+                            <hr>
+                        {% endif %}
+                        
+                        {{ active_subtopic.definition_text | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. VIDEO TAB -->
+        <div class="tab-pane fade" id="video" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="ratio ratio-16x9 shadow-sm bg-dark border">
+                        {% if active_subtopic.video_url %}
+                            <iframe src="{{ active_subtopic.video_url }}" title="Video player" allowfullscreen></iframe>
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center text-white h-100">
+                                <div class="text-center">
+                                    <i class="fas fa-video-slash fa-2x mb-3 text-secondary"></i>
+                                    <p class="text-muted small">No video source provided for this topic.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if active_subtopic.video_url %}
+                    <div class="mt-2 text-muted small text-center">
+                        <i class="fas fa-info-circle me-1"></i> Content provided by external educational partners.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BLACKBOARD TAB -->
+        <div class="tab-pane fade" id="blackboard" role="tabpanel">
+            <div class="card bg-dark text-white border-secondary rounded-0">
+                <div class="card-header border-secondary bg-dark text-white-50 small text-uppercase fw-bold">
+                    <i class="fas fa-pen-fancy me-2"></i>Worked Example
+                </div>
+                <div class="card-body font-monospace" style="min-height: 400px; background-color: #212529; color: #e9ecef;">
+                    
+                    {# --- LOGIC TO HANDLE JSON EXAMPLES --- #}
+                    {% if active_subtopic.examples %}
+                        
+                        {# Case 1: Example is simple text/HTML in 'content' key #}
+                        {% if active_subtopic.examples.content %}
+                            {{ active_subtopic.examples.content | safe }}
+                        
+                        {# Case 2: Example is a list of lines in 'list_content' key #}
+                        {% elif active_subtopic.examples.list_content %}
+                            {% for line in active_subtopic.examples.list_content %}
+                                <p class="mb-1">{{ line | safe }}</p>
+                            {% endfor %}
+                            
+                        {# Case 3: Just dump the dict if structure is unknown #}
+                        {% else %}
+                             <pre class="text-white">{{ active_subtopic.examples | tojson(indent=2) }}</pre>
+                        {% endif %}
+
+                        {# Handle Images if present in JSON #}
+                        {% if active_subtopic.examples.images %}
+                            <hr class="border-secondary">
+                            <p class="text-muted small">Reference Figures:</p>
+                            {% for img in active_subtopic.examples.images %}
+                                <div class="mb-3 border border-secondary p-1">
+                                    <img src="{{ img }}" class="img-fluid" alt="Example Figure">
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center text-muted mt-5">
+                            <i class="fas fa-calculator fa-2x mb-3"></i>
+                            <p>No worked examples available.</p>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% else %}
+    <!-- EMPTY STATE (Welcome Screen) -->
+    <div class="text-center py-5">
+        <div class="mb-4 opacity-25">
+            <i class="fas fa-chalkboard-teacher fa-3x text-muted"></i>
+        </div>
+        <h4 class="text-muted fw-light">Welcome to the Tutorials Hub</h4>
+        <p class="small text-muted mb-0">Select a topic from the curriculum sidebar to begin.</p>
+        
+        <div class="row justify-content-center mt-5">
+            {% for level in levels %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 border bg-light shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-fluid-teal fw-bold">{{ level.title }}</h6>
+                        <p class="small text-muted">{{ level.description or 'Explore these topics.' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -2,11 +2,6 @@
 
 {% block file_content %}
 <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
-    <div>
-        <h2 class="mb-0 text-fluid-teal">{{ study.name }}</h2>
-        <span class="badge bg-light text-dark border">{{ study.topic or 'No Topic' }}</span>
-        <span class="text-muted small ms-2">Created: {{ study.created_at.strftime('%Y-%m-%d') }}</span>
-    </div>
     <div class="btn-group">
         <a href="{{ url_for('file_mgt.export_project', study_id=study.id) }}" class="btn btn-outline-dark">
             <i class="fas fa-download me-1"></i> Export Data
@@ -34,7 +29,7 @@
                     </div>
                     <i class="fas fa-chevron-right text-muted small"></i>
                 </a>
-                <a href="{{ url_for('ops.view_study_results', study_id=study.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('ops.results', study_id=study.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-random text-info me-2"></i> Legacy Simulation
                     </div>

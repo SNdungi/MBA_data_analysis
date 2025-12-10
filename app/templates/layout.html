@@ -21,44 +21,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <style>
-        .nav-container {
-            width: 50%;
-            margin: 0 auto;
-            border-top: 3px solid #ccc; /* "hinge" line */
-            display: flex;
-            justify-content: center;
-            }
 
-            /* Style the nav tabs */
-            .study-nav {
-            border: none;
-            width: 100%;
-            gap: 0.1rem;
-            justify-content: center;
-            }
-
-            .study-nav .nav-link {
-            border: none;
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-            background-color: #f9f9f9;
-            transition: all 0.3s ease;
-            padding: 0.75rem 1.2rem;
-            color: #555;
-            }
-        /* Custom style for the active tab in our new study header */
-        .study-nav .nav-link.active {
-            background-color: var(--fluidcore-cream) !important;
-            color: var(--fluidcore-teal) !important;
-            border-bottom: 5px solid var(--fluidcore-gold) !important;
-        }
-    </style>
 
 </head>
 <body>
-    <!-- Apply the custom navbar class -->
-
 <!-- TOP NAVBAR -->
     <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top">
         <div class="container-fluid">
@@ -76,34 +42,20 @@
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
                     {% if study %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data Encoder</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.guide') }}">Guide</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
                 </ul>
                 {% endif %}
 
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item me-2">
-                            <span class="nav-link text-white small">Hi, {{ current_user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-outline-light btn-sm px-3" href="{{ url_for('auth.logout') }}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                        </li>
-                    {% endif %}
-                </ul>
+
 
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-light btn-sm px-3" href="#">
-                            Ask for Support
+                        <a class="btn btn-outline-light btn-sm px-3 rounded-5" href="#">
+                            <i class="fas fa-hand-paper me-2"></i> ?
                         </a>
                     </li>
                     <li class="nav-item">
@@ -114,12 +66,28 @@
                         </a>
                     </li>
                 </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item me-2">
+                            <span class="nav-link text-white small">Hi, {{ current_user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a  href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-door-open text-white pt-2"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
     
-    <main class="container-fluid ">
-        
+    <main class="container-fluid ">      
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -134,142 +102,94 @@
     </main>
     <footer class="footer-custom">
         <div class="container">
-            <div class="row">
-                <!-- Column 1: About the Tool -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-    <div class="container text-center">
-
-        <div id="animation-container">
-            <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
-                <path id="robot-trail-path" class="robot-trail" d=""></path>
-            </svg>
-            <div class="robot" id="robot"></div>
-        </div>
-    </div>
-                </div>
-
-                <!-- Column 2: Quick Links -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5>Quick Links</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ url_for('ops.index') }}">Bootstrap Tool</a></li>
-                        <li><a href="#">Encoding Tool</a></li> {# Placeholder - Update when encoding has an index #}
-                        <li><a href="{{ url_for('ops.documentation') }}">Methodology</a></li>
-
-                    </ul>
-                </div>
-
-                <!-- Column 3: Contact & Socials -->
-                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <h5>Connect</h5>
-                    <div class="social-icons">
-                        <a href="https://github.com/SNdungi/MBA_data_analysis" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="https://www.linkedin.com/in/stephen-musyoka-3105141b3/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                        <a href="https://wa.me/254102965704?text=Hello%2C%20I%27Im%20interested%20in%20Analytical%20services" 
-                            target="_blank" title="WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
+            <div class="row g-5">
+                
+                <!-- COLUMN 1: BRANDING & MISSION -->
+                <div class="col-lg-4 col-md-12">
+                    <a href="{{ url_for('file_mgt.list_projects') }}" class="text-white text-decoration-none h5 fw-bold mb-3 d-block">
+                        TXDataLab
+                    </a>
+                    <p class="mb-4" style="max-width: 300px;">
+                        Advanced data encoding, statistical analysis, and interactive learning tools designed for modern research workflows.
+                    </p>
+                    <div class="footer-brand-text">
+                        <i class="fas fa-code-branch me-2"></i>v2.4.0 (Stable)
                     </div>
                 </div>
 
-                <!-- Column 4: Logo/Brand -->
-                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0 text-lg-end">
-                    <h5 class="navbar-brand m-0" style="font-size: 1.5rem; color: var(--fluidcore-cream);">TXDataLab</h5>
-                    <p class="mb-0" style="color: var(--fluidcore-gold);">Innovate. Analyze. Discover.</p>
+                <!-- COLUMN 2: PRODUCT LINKS -->
+                <div class="col-lg-2 col-6">
+                    <div class="footer-heading">Product</div>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('file_mgt.list_projects') }}">Project Manager</a></li>
+                        {% if study %}
+                            <li><a href="{{ url_for('encoding.definitions', study_id=study.id) }}">Encoding Engine</a></li>
+                            <li><a href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis Workbench</a></li>
+                        {% else %}
+                            <li><span class="text-muted" style="cursor: not-allowed">Encoding Engine</span></li>
+                            <li><span class="text-muted" style="cursor: not-allowed">Analysis Workbench</span></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('ops.index') }}">Legacy Bootstrap</a></li>
+                    </ul>
+                </div>
+
+                <!-- COLUMN 3: RESOURCES -->
+                <div class="col-lg-2 col-6">
+                    <div class="footer-heading">Resources</div>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('tutorials.index') }}">Tutorials Hub</a></li>
+                        <li><a href="{{ url_for('ops.documentation') }}">Documentation</a></li>
+                        <li><a href="#">API Docs</a></li>
+                    </ul>
+                </div>
+
+                <!-- COLUMN 4: CONNECT & SUBSCRIBE -->
+                <div class="col-lg-4 col-md-12">
+                    <div class="footer-heading">Stay Connected</div>
+                    <p class="small mb-3">Join our community of researchers.</p>
+                    
+                    <!-- Social Icons -->
+                    <div class="social-icons mb-4">
+                        <a href="https://github.com/SNdungi/MBA_data_analysis" target="_blank" class="social-icon-btn" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/stephen-musyoka-3105141b3/" target="_blank" class="social-icon-btn" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://wa.me/254102965704" target="_blank" class="social-icon-btn" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="#" class="social-icon-btn" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+
+                    <!-- Visual Newsletter Input (Non-functional aesthetic) -->
+                    <form action="#" onsubmit="event.preventDefault();" class="d-flex gap-2">
+                        <input type="email" class="form-control footer-input form-control-sm" placeholder="Enter email for updates...">
+                        <button class="btn btn-primary btn-sm px-3" type="button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
 
+            <!-- BOTTOM BAR -->
             <div class="footer-bottom">
-                © {{ now().year }} TXdata. All Rights Reserved.
+                <div>
+                    &copy; {{ now().year }} TXDataLab. All Rights Reserved.
+                </div>
+                <div class="d-none d-md-block">
+                    <a href="#" class="text-muted text-decoration-none me-3 hover-white">Privacy Policy</a>
+                    <a href="#" class="text-muted text-decoration-none hover-white">Terms of Service</a>
+                </div>
             </div>
         </div>
     </footer>
-
-
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Guard clause to ensure the animation elements exist on the page
-        const robot = document.getElementById('robot');
-        const trailPath = document.getElementById('robot-trail-path');
-        const container = document.getElementById('animation-container');
-
-        if (!robot || !trailPath || !container) {
-            console.warn("Robot animation elements not found on this page.");
-            return; // Exit if the elements aren't here
-        }
-
-        // --- Animation Settings - RE-CALIBRATED FOR SMALL CONTAINER ---
-        const SCALE = 32; // ADJUSTED: Smaller scale to fit in the footer column
-        const DURATION_PER_SEGMENT = 800; // milliseconds
-
-        // The robot's path, point by point (unchanged)
-        const pathPoints = [
-            [0, 0], [2, 0], [2, 2], [4, 2], [4, 4],
-            [2, 4], [2, 5], [0, 5], [0, 3], [-2, 3],
-            [-2, 1], [0, 1], [0, 0]
-        ];
-
-        const TOTAL_SEGMENTS = pathPoints.length - 1;
-        const TOTAL_DURATION = TOTAL_SEGMENTS * DURATION_PER_SEGMENT;
-
-        let startTime = null;
-
-        function animate(timestamp) {
-            if (!startTime) startTime = timestamp;
-
-            const elapsedTime = (timestamp - startTime) % TOTAL_DURATION;
-            const currentSegmentIndex = Math.floor(elapsedTime / DURATION_PER_SEGMENT);
-            const timeIntoSegment = elapsedTime % DURATION_PER_SEGMENT;
-            const progress = timeIntoSegment / DURATION_PER_SEGMENT;
-
-            const startPoint = pathPoints[currentSegmentIndex];
-            const endPoint = pathPoints[currentSegmentIndex + 1];
-
-            // Linear interpolation to find the current position
-            const currentX = startPoint[0] + (endPoint[0] - startPoint[0]) * progress;
-            const currentY = startPoint[1] + (endPoint[1] - startPoint[1]) * progress;
-            
-            // ADJUSTED: Define the origin point to center the drawing in the new smaller container
-            const originX = container.offsetWidth * 0.5;
-            const originY = container.offsetHeight - 25; // Anchor near the bottom
-
-            // Apply scaling and offset from new origin
-            // Note: We flip the Y-axis because screen Y is top-down
-            const displayX = originX + currentX * SCALE;
-            const displayY = originY - currentY * SCALE;
-            
-            // ADJUSTED: Center the 20x20 robot by subtracting half its size (10px)
-            robot.style.transform = `translate(${displayX - 10}px, ${displayY - 10}px)`;
-
-            // --- Draw the trail ---
-            let pathD = "";
-            for (let i = 0; i <= currentSegmentIndex; i++) {
-                const point = pathPoints[i];
-                const pX = originX + point[0] * SCALE;
-                const pY = originY - point[1] * SCALE; // Flip Y-axis here too
-                if (i === 0) pathD += `M ${pX} ${pY}`;
-                else pathD += ` L ${pX} ${pY}`;
-            }
-            if (currentSegmentIndex < TOTAL_SEGMENTS) {
-               pathD += ` L ${displayX} ${displayY}`;
-            }
-            
-            trailPath.setAttribute('d', pathD);
-
-            requestAnimationFrame(animate);
-        }
-
-        // Only start the animation if the container has a size
-        if (container.offsetWidth > 0) {
-            requestAnimationFrame(animate);
-        }
-    });
-    </script>
-    
     {% block scripts %}{% endblock %}
 </body>
 </html>

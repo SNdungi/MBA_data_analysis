@@ -167,13 +167,6 @@ def run_analysis():
                            result=result,
                            selected_analysis=analysis_type)
     
-# Corrected the documentation route path
-@analysis_bp.route('/documentation')
-def analysis_documentation():
-    """Renders the static documentation page for Chapter 4."""
-    return render_template('analysis_docs.html', title='Analysis Documentation')
-
-
 
 # === NEW DEDICATED ROUTE FOR TAMPERING ===
 @analysis_bp.route('/tamper_data', methods=['POST'])
