@@ -29,9 +29,10 @@
                     </div>
                     <i class="fas fa-chevron-right text-muted small"></i>
                 </a>
-                <a href="{{ url_for('ops.results', study_id=study.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <!-- CORRECTED LINK HERE -->
+                <a href="{{ url_for('ops.view_study_results', study_id=study.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                     <div>
-                        <i class="fas fa-random text-info me-2"></i> Legacy Simulation
+                        <i class="fas fa-random text-info me-2"></i> Preview Preprocessed Data
                     </div>
                     <i class="fas fa-chevron-right text-muted small"></i>
                 </a>

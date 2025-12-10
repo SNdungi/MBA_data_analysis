@@ -7,7 +7,22 @@ from flask_login import UserMixin
 
 
 # -----------------------------------------------------------------------------  
-# User model  
+# Role model (NEW)
+# -----------------------------------------------------------------------------  
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    description = db.Column(db.String(255))
+    
+    # Relationship
+    users = db.relationship('User', back_populates='role', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Role {self.name}>'
+
+# -----------------------------------------------------------------------------  
+# User model (UPDATED)
 # -----------------------------------------------------------------------------  
 class User(UserMixin, db.Model):  
     __tablename__ = 'users'  
@@ -15,18 +30,26 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)  
     email = db.Column(db.String(120), index=True, unique=True, nullable=False)  
     password_hash = db.Column(db.String(256))  
+    
+    # Foreign Key to Role
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
-    # A user can have many studies  
+    # Relationships  
+    role = db.relationship('Role', back_populates='users')
     studies = db.relationship('Study', back_populates='user', lazy='dynamic', cascade='all, delete-orphan')  
 
     def set_password(self, password):  
         self.password_hash = generate_password_hash(password)  
 
     def check_password(self, password):  
-        return check_password_hash(self.password_hash, password)  
+        return check_password_hash(self.password_hash, password) 
+        
+    def has_role(self, role_name):
+        """Helper to check user role safely."""
+        return self.role and self.role.name == role_name 
 
     def __repr__(self):  
-        return f'<User {self.username}>'  
+        return f'<User {self.username}>' 
 
 
 # -----------------------------------------------------------------------------  

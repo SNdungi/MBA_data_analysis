@@ -87,7 +87,7 @@ description = "Pre-graduate statistical foundations."
 
   [[levels.sections]]
   title = "Foundations"
-  description = "Basic descriptive statistics."
+  description = "The building blocks of data analysis."
 
     [[levels.sections.topics]]
     title = "Central Tendency"
@@ -153,3 +153,308 @@ description = "Postgraduate / PhD level statistical modeling."
         "Example: updating belief about probability of rain."
       ]
       images = ["posterior_example.png"]
+
+# ==========================================
+# LEVEL: ELEMENTARY
+# ==========================================
+[[levels]]
+title = "Elementary / Foundations"
+description = "Core concepts for beginners and pre-graduates."
+
+  # ----------------------------------------
+  # SECTION: FOUNDATIONS
+  # ----------------------------------------
+  [[levels.sections]]
+  title = "Foundations"
+  description = "The building blocks of data analysis."
+
+    # TOPIC: DATA TYPES
+    [[levels.sections.topics]]
+    title = "Data Types & Measurement"
+    description = "Understanding variables and measurement scales."
+
+      # ------------------------------------
+      # 1. NOMINAL DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "1. Nominal Data"
+      description = "Categorical data without order."
+      definition = """
+      <p>Nominal data consists of categories or names that describe attributes of a subject. These categories have no inherent mathematical difference or rank order. They are strictly qualitative.</p>
+      <h6 class="text-fluid-teal mt-3">Key Characteristics</h6>
+      <ul>
+        <li><strong>Equality:</strong> You can only check if A = B or A ≠ B.</li>
+        <li><strong>No Order:</strong> 'Male' is not greater than 'Female'.</li>
+        <li><strong>Mode:</strong> The only measure of central tendency applicable.</li>
+      </ul>
+      <h6 class="text-fluid-teal mt-3">Encoding Strategy</h6>
+      <p>In data analysis, these are typically encoded as integers (e.g., 1, 2, 3) for processing efficiency, but the numbers hold no mathematical value.</p>
+      """
+      video_link = "" 
+      
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''') TO SUPPORT LATEX BACKSLASHES
+      content = '''
+      <p class="text-muted">Mathematical Representation:</p>
+      <p>Let $S$ be a set of categories:</p>
+      $$ S = \{ \text{Male}, \text{Female}, \text{Other} \} $$
+      <p>We define a mapping function $f(x)$ for encoding:</p>
+      $$ f(x) = \begin{cases} 1 & \text{if } x = \text{Male} \\ 2 & \text{if } x = \text{Female} \\ 3 & \text{if } x = \text{Other} \end{cases} $$
+      <hr class="border-secondary">
+      <p class="text-muted">Common Examples:</p>
+      <ul>
+        <li>Gender</li>
+        <li>Marital Status</li>
+        <li>Colors</li>
+        <li>Country of Origin</li>
+      </ul>
+      '''
+
+      # ------------------------------------
+      # 2. ORDINAL DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "2. Ordinal Data"
+      description = "Ranked categories with unequal intervals."
+      definition = """
+      <p>Ordinal data represents categories that have a clear, logical order or rank. However, the 'distance' or interval between the ranks is unknown or uneven.</p>
+      <h6 class="text-fluid-teal mt-3">Key Characteristics</h6>
+      <ul>
+        <li><strong>Order:</strong> $A > B > C$.</li>
+        <li><strong>Median:</strong> Can be calculated.</li>
+        <li><strong>No True Distance:</strong> The difference between 'Happy' and 'Neutral' may not be the same as 'Neutral' and 'Sad'.</li>
+      </ul>
+      """
+      video_link = ""
+      
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''')
+      content = '''
+      <p class="text-muted">Set Notation for Order:</p>
+      $$ \text{Primary} < \text{Secondary} < \text{Tertiary} $$
+      <br>
+      <p class="text-muted">Likert Scale Encoding Map:</p>
+      $$ \text{Strongly Disagree} \rightarrow 1 $$
+      $$ \text{Disagree} \rightarrow 2 $$
+      $$ \text{Neutral} \rightarrow 3 $$
+      $$ \text{Agree} \rightarrow 4 $$
+      $$ \text{Strongly Agree} \rightarrow 5 $$
+      '''
+
+      # ------------------------------------
+      # 3. INTERVAL DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "3. Interval Data"
+      description = "Numerical data with equal intervals but no true zero."
+      definition = """
+      <p>Interval data is numerical. The distance between two values is known and consistent (e.g., the difference between 10° and 20° is the same as 20° and 30°). However, it lacks a 'true zero' point, meaning zero does not indicate the total absence of the attribute.</p>
+      <h6 class="text-fluid-teal mt-3">Examples</h6>
+      <ul>
+        <li>Temperature (Celsius/Fahrenheit)</li>
+        <li>IQ Scores</li>
+        <li>Calendar Years</li>
+      </ul>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''')
+      content = '''
+      <p class="text-muted">Difference Operation:</p>
+      <p>We can meaningfuly calculate differences:</p>
+      $$ \Delta T = T_2 - T_1 $$
+      $$ 30^\circ C - 20^\circ C = 10^\circ C $$
+      <br>
+      <p class="text-danger small">Note: Ratios are invalid. $40^\circ$ is not "twice as hot" as $20^\circ$.</p>
+      '''
+
+      # ------------------------------------
+      # 4. RATIO DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "4. Ratio Data"
+      description = "Numerical data with equal intervals and true zero."
+      definition = """
+      <p>Ratio data is the highest level of measurement. It has all the properties of interval data, plus a meaningful absolute zero point. This allows for the calculation of ratios (e.g., 'twice as much').</p>
+      <h6 class="text-fluid-teal mt-3">Examples</h6>
+      <ul>
+        <li>Income / Currency</li>
+        <li>Height / Weight</li>
+        <li>Age</li>
+        <li>Counts (e.g., number of children)</li>
+      </ul>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''')
+      content = '''
+      <p class="text-muted">Ratio Operations:</p>
+      <p>Because zero exists ($x=0$ means absence), we can say:</p>
+      $$ \frac{\text{Income}_A}{\text{Income}_B} = 2 $$
+      <p>(Person A earns exactly twice as much as Person B).</p>
+      <br>
+      <p class="text-muted">Statistical Power:</p>
+      <p>Allows for all major statistical operations: Mean, Standard Deviation, Coefficient of Variation.</p>
+      $$ \mu = \frac{1}{N} \sum_{i=1}^N x_i $$
+      '''
+
+      # ------------------------------------
+      # 5. BINARY DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "5. Binary / Dichotomous"
+      description = "Variables with exactly two categories."
+      definition = """
+      <p>Binary data is a specific subset of nominal data where there are only two possible mutually exclusive outcomes.</p>
+      <h6 class="text-fluid-teal mt-3">Encoding</h6>
+      <p>Typically encoded as 0 and 1, which allows for special statistical properties (e.g., the mean of a binary 0/1 variable is equal to the proportion of '1's).</p>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''')
+      content = '''
+      <p class="text-muted">Bernoulli Trial:</p>
+      <p>A binary variable $X$ often follows a Bernoulli distribution:</p>
+      $$ X \sim \text{Bernoulli}(p) $$
+      $$ P(X=1) = p $$
+      $$ P(X=0) = 1-p $$
+      <br>
+      <p class="text-muted">Standard Encoding:</p>
+      <ul>
+        <li>No / Absent / Fail $\rightarrow 0$</li>
+        <li>Yes / Present / Pass $\rightarrow 1$</li>
+      </ul>
+      '''
+
+      # ------------------------------------
+      # 6. TEXT DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "6. Text / Open-ended"
+      description = "Unstructured string data."
+      definition = """
+      <p>Qualitative data provided as free text. It cannot be used directly in mathematical calculations without processing (e.g., encoding into themes or sentiment analysis).</p>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      # CHANGED TO LITERAL STRING (''')
+      content = '''
+      <p class="text-muted">Example Data Structure:</p>
+      <pre>
+      [
+        "The service was fast.",
+        "I did not like the food.",
+        "Excellent experience!"
+      ]
+      </pre>
+      <br>
+      <p class="text-muted">Analysis Approach:</p>
+      <p>Text $\rightarrow$ Tokenization $\rightarrow$ Sentiment Score (Numerical)</p>
+      $$ \text{Score}(\text{"Excellent"}) = +1.0 $$
+      '''
+
+      # ------------------------------------
+      # 7. DATE DATA
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "7. Date and Time"
+      description = "Temporal data points."
+      definition = """
+      <p>Variables recording specific points in time or duration.</p>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      content = """
+      <h5 class="text-fluid-teal">Examples</h5>
+      <ul>
+        <li>Date of birth</li>
+        <li>Survey timestamp</li>
+      </ul>
+
+      <h6 class="mt-4">Encoding</h6>
+      <p>Standard formats (ISO preferred for databases):</p>
+      <pre>2024-02-10
+10/02/2024</pre>
+      """
+
+      # ------------------------------------
+      # 8. MULTIPLE RESPONSE
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "8. Multiple Response Data"
+      description = "Questions where 'Select all that apply' is allowed."
+      definition = """
+      <p>Data generated when a respondent can select more than one option for a single question.</p>
+      """
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      content = """
+      <h5 class="text-fluid-teal">Example Question</h5>
+      <p>"Which sources of information do you use? (Select all that apply)"</p>
+      <ul><li>Internet</li><li>Radio</li><li>TV</li><li>Newspaper</li></ul>
+
+      <h6 class="mt-4">Option A: Binary Columns (Preferred)</h6>
+      <p>Create a separate column for each option (0=Unchecked, 1=Checked).</p>
+      <table class="table table-bordered table-sm text-center">
+        <thead class="table-light"><tr><th>ID</th><th>Source_Internet</th><th>Source_Radio</th><th>Source_TV</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+          <tr><td>2</td><td>0</td><td>1</td><td>1</td></tr>
+        </tbody>
+      </table>
+      """
+
+      # ------------------------------------
+      # 9. SUMMARY
+      # ------------------------------------
+      [[levels.sections.topics.subtopics]]
+      title = "Summary Reference"
+      description = "Quick comparison of data types."
+      definition = "A consolidated view of the four main levels of measurement and their allowable operations."
+      video_link = ""
+
+      [levels.sections.topics.subtopics.examples]
+      content = """
+      <table class="table table-dark table-bordered table-sm small">
+        <thead>
+            <tr>
+                <th class="text-info">Type</th>
+                <th>Order?</th>
+                <th>Distance?</th>
+                <th>True Zero?</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Nominal</strong></td>
+                <td><span class="text-danger">No</span></td>
+                <td><span class="text-danger">No</span></td>
+                <td><span class="text-danger">No</span></td>
+            </tr>
+            <tr>
+                <td><strong>Ordinal</strong></td>
+                <td><span class="text-success">Yes</span></td>
+                <td><span class="text-danger">No</span></td>
+                <td><span class="text-danger">No</span></td>
+            </tr>
+            <tr>
+                <td><strong>Interval</strong></td>
+                <td><span class="text-success">Yes</span></td>
+                <td><span class="text-success">Yes</span></td>
+                <td><span class="text-danger">No</span></td>
+            </tr>
+            <tr>
+                <td><strong>Ratio</strong></td>
+                <td><span class="text-success">Yes</span></td>
+                <td><span class="text-success">Yes</span></td>
+                <td><span class="text-success">Yes</span></td>
+            </tr>
+        </tbody>
+      </table>
+      """

@@ -13,13 +13,8 @@
 
 <div class="auth-wrapper">
     <div class="auth-card animate__animated animate__fadeInUp">
-        <div class="auth-header">
-            <h3 class="mb-0 fw-bold">TXDataLab</h3>
-            <small class="text-white-50">Create Account</small>
-        </div>
-        
         <div class="card-body p-4 p-md-5">
-            {% include '_messages.html' %}
+          
             
             <form action="{{ url_for('auth.register') }}" method="post">
                 <div class="form-floating mb-3">

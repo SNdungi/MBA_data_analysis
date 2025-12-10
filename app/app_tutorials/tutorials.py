@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort
-from app.app_tutorials.tutorials_models import TutorialLevel, TutorialSubtopic
+from app.app_database.tutorials_models import TutorialLevel, TutorialSubtopic
 
 tutorials_bp = Blueprint('tutorials', __name__, template_folder='templates', url_prefix='/tutorials')
 

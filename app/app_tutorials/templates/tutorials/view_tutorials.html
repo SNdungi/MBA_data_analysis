@@ -3,9 +3,48 @@
 {% block tutorial_content %}
 
 <!-- Custom Styles for Technical Tabs -->
+<!-- 1. Configure MathJax to recognize $ and $$ -->
+<!-- MATHJAX CONFIGURATION -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  options: {
+    ignoreHtmlClass: 'tex2jax_ignore',
+    processHtmlClass: 'tex2jax_process'
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+<!-- STYLES -->
 <style>
 
+    
+    /* BLACKBOARD SPECIFIC STYLES */
+    
+    /* 1. Apply the Custom Font */
+    .blackboard-font {
+        font-family:  'Comic Sans MS','Caveat Brush', cursive, sans-serif !important; 
+        font-size: 1rem !important; /* Handwriting needs to be slightly larger to be readable */
+        letter-spacing: 0.5px;
+        line-height: 1.5;
+    }
+
+    /* 2. Force MathJax to be white and slightly larger to match handwriting */
+    #blackboard mjx-container {
+        color: #e9ecef !important;
+        font-size: 1.1em !important; 
+    }
+    
+    /* 3. Ensure standard text is white */
+    #blackboard-content, #blackboard-content p {
+        color: #e9ecef !important;
+    }
 </style>
+
 
 {% if active_subtopic %}
     <!-- HEADER -->
@@ -88,45 +127,47 @@
             </div>
         </div>
 
+        
         <!-- 3. BLACKBOARD TAB -->
         <div class="tab-pane fade" id="blackboard" role="tabpanel">
             <div class="card bg-dark text-white border-secondary rounded-0">
                 <div class="card-header border-secondary bg-dark text-white-50 small text-uppercase fw-bold">
                     <i class="fas fa-pen-fancy me-2"></i>Worked Example
                 </div>
-                <div class="card-body font-monospace" style="min-height: 400px; background-color: #212529; color: #e9ecef;">
+                
+                <!-- APPLIED CLASS: .blackboard-font (uses Caveat Brush) -->
+                <div id="blackboard-content" class="card-body blackboard-font" style="min-height: 400px; background-color: #212529; color: #e9ecef;">
                     
-                    {# --- LOGIC TO HANDLE JSON EXAMPLES --- #}
                     {% if active_subtopic.examples %}
                         
-                        {# Case 1: Example is simple text/HTML in 'content' key #}
+                        {# Case 1: HTML Content #}
                         {% if active_subtopic.examples.content %}
                             {{ active_subtopic.examples.content | safe }}
                         
-                        {# Case 2: Example is a list of lines in 'list_content' key #}
+                        {# Case 2: List Content #}
                         {% elif active_subtopic.examples.list_content %}
                             {% for line in active_subtopic.examples.list_content %}
                                 <p class="mb-1">{{ line | safe }}</p>
                             {% endfor %}
                             
-                        {# Case 3: Just dump the dict if structure is unknown #}
+                        {# Case 3: Raw Dump #}
                         {% else %}
-                             <pre class="text-white">{{ active_subtopic.examples | tojson(indent=2) }}</pre>
+                             <pre class="text-white font-monospace">{{ active_subtopic.examples | tojson(indent=2) }}</pre>
                         {% endif %}
 
-                        {# Handle Images if present in JSON #}
+                        {# Images #}
                         {% if active_subtopic.examples.images %}
-                            <hr class="border-secondary">
-                            <p class="text-muted small">Reference Figures:</p>
+                            <hr class="border-secondary mt-4">
+                            <p class="text-muted small" style="font-family: sans-serif;">Reference Figures:</p>
                             {% for img in active_subtopic.examples.images %}
-                                <div class="mb-3 border border-secondary p-1">
+                                <div class="mb-3 border border-secondary p-1 bg-white d-inline-block">
                                     <img src="{{ img }}" class="img-fluid" alt="Example Figure">
                                 </div>
                             {% endfor %}
                         {% endif %}
 
                     {% else %}
-                        <div class="text-center text-muted mt-5">
+                        <div class="text-center text-muted mt-5" style="font-family: sans-serif;">
                             <i class="fas fa-calculator fa-2x mb-3"></i>
                             <p>No worked examples available.</p>
                         </div>
@@ -135,8 +176,6 @@
                 </div>
             </div>
         </div>
-
-    </div>
 
 {% else %}
     <!-- EMPTY STATE (Welcome Screen) -->

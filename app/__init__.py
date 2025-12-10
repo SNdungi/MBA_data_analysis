@@ -3,8 +3,8 @@ import secrets
 from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager # Import LoginManager
-from app.app_tutorials.tutorials_models import TutorialLevel
-from app.app_encoder.encoder_models import User # Import User model
+from app.app_database.tutorials_models import TutorialLevel
+from app.app_database.encoder_models import User # Import User model
 from datetime import datetime
 
 def create_app():
@@ -77,7 +77,11 @@ def create_app():
         from app.app_tutorials.tutorials import tutorials_bp
         app.register_blueprint(tutorials_bp)
         
-        from app.commands import seed_tutorials
+        from app.commands import seed_tutorials, create_admin
         app.cli.add_command(seed_tutorials)
+        app.cli.add_command(create_admin)
+        
+        from app.app_tuit_setup.tuit_setup import tuit_setup_bp
+        app.register_blueprint(tuit_setup_bp)
         
     return app

@@ -5,13 +5,87 @@ from flask.cli import with_appcontext
 from flask import current_app
 
 from app.app_database.extensions import db
-from app.app_tutorials.tutorials_models import (
+# Import User and Role models (Adjust path if your models are in encoder_models)
+from app.app_database.encoder_models import User, Role 
+from app.app_database.tutorials_models import (
     TutorialLevel,
     TutorialSection,
     TutorialTopic,
     TutorialSubtopic
 )
 
+# -----------------------------------------------------------------------------
+# COMMAND: CREATE ADMIN
+# -----------------------------------------------------------------------------
+@click.command("create_admin")
+@click.option("--email", prompt="Admin Email", help="The email address for the admin account.")
+@click.option("--username", prompt="Admin Username", help="The username for the admin account.")
+@click.password_option(help="The password for the admin account.")
+@with_appcontext
+def create_admin(email, username, password):
+    """
+    Create or promote a user to Admin privileges.
+    Requires the ADMIN_INIT_PW environment variable to be set and matched.
+    """
+    
+    # 1. SECURITY CHECK
+    # Check if the environment variable exists
+    env_key = os.environ.get("ADMIN_INIT_PW")
+    
+    if not env_key:
+        click.echo(click.style("CRITICAL ERROR: ADMIN_INIT_PW is not set in .env file.", fg="red", bold=True))
+        click.echo("This security variable is required to create administrative accounts.")
+        return
+
+    # Prompt user to prove they know the key
+    user_input_key = click.prompt("Enter the System Initialization Key (ADMIN_INIT_PW)", hide_input=True)
+
+    if user_input_key != env_key:
+        click.echo(click.style("ACCESS DENIED: Incorrect Initialization Key.", fg="red", bold=True))
+        return
+
+    # 2. ENSURE ROLE EXISTS
+    admin_role = Role.query.filter_by(name='Admin').first()
+    if not admin_role:
+        click.echo("Admin role missing. Creating 'Admin' role...")
+        admin_role = Role(name='Admin', description='System Administrator')
+        db.session.add(admin_role)
+        db.session.flush() # Flush to get ID
+
+    # 3. CHECK USER EXISTENCE
+    user = User.query.filter((User.email == email) | (User.username == username)).first()
+
+    if user:
+        if user.role and user.role.name == 'Admin':
+            click.echo(click.style(f"User '{user.username}' is already an Admin. Updating password...", fg="yellow"))
+        else:
+            click.echo(click.style(f"User '{user.username}' exists. Promoting to Admin...", fg="yellow"))
+        
+        # Update details
+        user.email = email
+        user.username = username
+        user.role = admin_role
+        user.set_password(password)
+    else:
+        # Create New User
+        click.echo(click.style(f"Creating new Admin user: {username}...", fg="green"))
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.role = admin_role
+        db.session.add(user)
+
+    # 4. COMMIT
+    try:
+        db.session.commit()
+        click.echo(click.style(f"✅ Success! User '{username}' is now an Administrator.", fg="green", bold=True))
+    except Exception as e:
+        db.session.rollback()
+        click.echo(click.style(f"❌ Database Error: {e}", fg="red"))
+
+
+# -----------------------------------------------------------------------------
+# COMMAND: SEED TUTORIALS
+# -----------------------------------------------------------------------------
 @click.command("seed_tutorials")
 @with_appcontext
 def seed_tutorials():
@@ -30,14 +104,6 @@ def seed_tutorials():
     try:
         data = toml.load(path)
         
-        # Optional: Clear existing tutorials to avoid duplicates
-        # Warning: This deletes everything in these tables. Uncomment if you want a fresh start every time.
-        # db.session.query(TutorialSubtopic).delete()
-        # db.session.query(TutorialTopic).delete()
-        # db.session.query(TutorialSection).delete()
-        # db.session.query(TutorialLevel).delete()
-        # db.session.commit()
-
         count = 0
         for level_data in data.get("levels", []):
             # Check if exists or create

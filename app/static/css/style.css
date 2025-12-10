@@ -5,9 +5,9 @@
   --fluidcore-teal: #23797c;
   --fluidcore-accent: #5eff00;
   --fluidcore-orange: #ff5e00;
-  --fluidcore-red: #ec340b;
+  --fluidcore-red: #ff947c;
   --fluidcore-gold: #c5a017;
-  --fluidcore-cream: #fff8e7;
+  --fluidcore-cream: #ffeed4;
   
   /* --- APPLICATION PALETTE (Structural) --- */
   --app-bg: #ffffff;
@@ -39,9 +39,10 @@ body {
   font-size: var(--font-base);
   color: var(--app-text-main);
   background-color: var(--app-bg);
-  padding-top: 1rem; /* Reduced from 5rem for compact navbar */
+  padding-top: 2.5rem; /* Reduced from 5rem for compact navbar */
   line-height: 1.4;    /* Tighter line height */
 }
+
 
 /* Compact Headers */
 h1, h2, h3, h4, h5, h6, .display-5 {
@@ -74,6 +75,7 @@ pre {
   padding: 0.5rem;
   border-radius: var(--radius-sm);
 }
+
 
 /* ==========================================================================
    NAVBAR (Compact & Professional)
@@ -114,6 +116,15 @@ pre {
     border-radius: var(--radius-sm);
     font-weight: 500;
 }
+.btn-data { padding: 0.2rem 0.5rem; 
+    font-size: var(--font-xs);
+    background-color: var(--fluidcore-cream);
+    margin-bottom:1rem;
+    color: var(--app-text-main);
+ }
+ .btn-data:hover {
+    background-color: var(--fluidcore-red);
+ }
 
 .btn-lg { padding: 0.4rem 1rem; font-size: 0.9rem; }
 .btn-sm { padding: 0.15rem 0.5rem; font-size: var(--font-xs); }
@@ -182,6 +193,35 @@ pre {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
     color: white;
+}
+
+/*==========================================================================
+   FLASH MESSAGES (Centered & Compact)
+   ========================================================================== */
+.flash-container {              /* spacing from navbar */
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.flash-alert {
+    width: 50%;                      /* tighten width */
+    text-align: center;              /* center text */
+    font-size: 0.85rem;              /* smaller text */
+    padding: 0.8rem 1rem;            /* cleaner spacing */
+    word-wrap: break-word;           /* ensure long text wraps */
+    white-space: normal;             /* allow wrapping */
+}
+.flash-close {
+    transform: scale(0.7);     /* reduce size */
+    margin-top: -4px;          /* adjust vertical alignment */
+    margin-right: -2px;        /* tuck it in slightly */
+    opacity: 0.7;              /* softer look */
+}
+
+.flash-close:hover {
+    opacity: 1;                /* normal opacity on hover */
+    transform: scale(0.8);     /* slightly bigger on hover */
 }
 
 
@@ -392,14 +432,13 @@ pre {
 
 #results-panel .card {
     border: 1px solid var(--app-border);
-    border-top: 3px solid var(--fluidcore-orange); /* Top accent for results */
+    border-left: 1px solid var(--fluidcore-teal); /* Top accent for results */
 }
 
 /* ==========================================================================
    AUTH PAGES
    ========================================================================== */
 .auth-wrapper {
-    background: #f0f2f5;
     min-height: calc(100vh - 3.5rem);
     display: flex;
     align-items: center;
@@ -425,9 +464,7 @@ pre {
 /* ==========================================================================
    FOOTER
    ========================================================================== */
-/* ==========================================================================
-   SOPHISTICATED FOOTER
-   ========================================================================== */
+
 .footer-custom {
     background-color: #212529; /* Deep, professional dark grey */
     color: #8c959f;            /* Muted text for low visual noise */

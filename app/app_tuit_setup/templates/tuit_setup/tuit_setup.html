@@ -1,0 +1,528 @@
+{% extends "base_setup.html" %}
+
+{% block file_content %}
+<style>
+    /* --- DASHBOARD THEME --- */
+    .control-panel {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1.5rem;
+    }
+    
+    /* Card Styles */
+    .step-card {
+        border: 1px solid #e9ecef;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        height: 100%;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .step-card.active-step {
+        border-color: var(--fluidcore-teal);
+        border-top-width: 3px;
+    }
+    .step-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #adb5bd;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Inputs & Selects */
+    .form-select-sm, .form-control-sm {
+        font-size: 0.8rem;
+        border-radius: 2px;
+        border-color: #ced4da;
+    }
+    .form-select-sm:focus, .form-control-sm:focus {
+        border-color: var(--fluidcore-teal);
+        box-shadow: 0 0 0 2px rgba(35, 121, 124, 0.1);
+    }
+
+    /* Subtopic List */
+    .subtopic-list-container {
+        height: 65vh;
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+        background-color: #fff;
+    }
+    .subtopic-item {
+        border: none;
+        border-bottom: 1px solid #f1f3f5;
+        font-size: 0.8rem;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .subtopic-item:hover { background-color: #f8f9fa; }
+    .subtopic-item.active {
+        background-color: #e6fcf5; /* Very light teal */
+        color: var(--fluidcore-teal);
+        font-weight: 600;
+        border-left: 3px solid var(--fluidcore-teal);
+    }
+
+    /* Editor Area */
+    .editor-container {
+        height: 65vh;
+        overflow-y: auto;
+        padding: 2rem;
+        background-color: #ffffff;
+    }
+    .editor-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+    .code-input {
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        font-size: 0.8rem;
+        color: #212529;
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="d-flex flex-column h-100">
+    
+    <!-- ROW 1: HIERARCHY SELECTORS -->
+    <div class="control-panel">
+        <div class="row g-3">
+            
+            <!-- 1. LEVEL -->
+            <div class="col-md-4">
+                <div class="step-card p-3 active-step">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="step-label">1. Education Level</div>
+                        <i class="fas fa-layer-group text-muted small"></i>
+                    </div>
+                    <select id="sel-level" class="form-select form-select-sm" onchange="loadSections()">
+                        <option value="" selected disabled>-- Select Level --</option>
+                        {% for level in levels %}
+                            <option value="{{ level.id }}">{{ level.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- 2. SECTION -->
+            <div class="col-md-4">
+                <div class="step-card p-3" id="card-section">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="step-label mb-0">2. Module / Section</div>
+                        <div>
+                            <button class="btn btn-sm btn-link text-success p-0 me-2" title="Add New" onclick="toggleAdd('section')"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-sm btn-link text-danger p-0" title="Delete Selected" onclick="deleteItem('section')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Select Mode -->
+                    <div id="view-section-select">
+                        <select id="sel-section" class="form-select form-select-sm" onchange="loadTopics()" disabled>
+                            <option value="">-- Select Level First --</option>
+                        </select>
+                    </div>
+
+                    <!-- Add Mode -->
+                    <div id="view-section-add" style="display:none;">
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="new-section-title" class="form-control" placeholder="New Section Name...">
+                            <button class="btn btn-outline-secondary" onclick="toggleAdd('section')"><i class="fas fa-times"></i></button>
+                            <button class="btn btn-success" onclick="addItem('section')"><i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TOPIC -->
+            <div class="col-md-4">
+                <div class="step-card p-3" id="card-topic">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="step-label mb-0">3. Topic</div>
+                        <div>
+                            <button class="btn btn-sm btn-link text-success p-0 me-2" title="Add New" onclick="toggleAdd('topic')"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-sm btn-link text-danger p-0" title="Delete Selected" onclick="deleteItem('topic')"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Select Mode -->
+                    <div id="view-topic-select">
+                        <select id="sel-topic" class="form-select form-select-sm" onchange="loadSubtopics()" disabled>
+                            <option value="">-- Select Section First --</option>
+                        </select>
+                    </div>
+
+                    <!-- Add Mode -->
+                    <div id="view-topic-add" style="display:none;">
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="new-topic-title" class="form-control" placeholder="New Topic Name...">
+                            <button class="btn btn-outline-secondary" onclick="toggleAdd('topic')"><i class="fas fa-times"></i></button>
+                            <button class="btn btn-success" onclick="addItem('topic')"><i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ROW 2: SUBTOPIC WORKSPACE -->
+    <div class="row g-0 flex-grow-1 border-top">
+        
+        <!-- LEFT: SUBTOPIC LIST -->
+        <div class="col-md-3 subtopic-list-container">
+            <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center sticky-top">
+                <span class="fw-bold small text-muted text-uppercase">Content Units</span>
+                <button class="btn btn-sm btn-fluid-orange text-white py-0" style="font-size: 0.75rem;" onclick="initNewSubtopic()">
+                    <i class="fas fa-plus me-1"></i> New
+                </button>
+            </div>
+            <div id="subtopic-list" class="list-group list-group-flush">
+                <div class="text-center text-muted small mt-5 p-4">
+                    <i class="fas fa-arrow-up mb-2"></i><br>
+                    Select a Topic above to manage content.
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: EDITOR FORM -->
+        <div class="col-md-9 editor-container position-relative">
+            
+            <!-- Overlay when no topic selected -->
+            <div id="editor-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white d-flex align-items-center justify-content-center" style="z-index: 10;">
+                <div class="text-center text-muted">
+                    <i class="fas fa-edit fa-3x mb-3 opacity-25"></i>
+                    <h5>Editor Locked</h5>
+                    <p class="small">Please select a Topic from the top panel to begin editing.</p>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="editor-form">
+                <input type="hidden" id="edit-subtopic-id" name="subtopic_id">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <h5 class="mb-0 text-fluid-teal" id="editor-header">New Subtopic</h5>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-sub" style="display:none;" onclick="deleteSubtopic()">
+                        <i class="fas fa-trash-alt me-1"></i> Delete Unit
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="editor-label">Title</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-title" name="title" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="editor-label">Video URL (Optional)</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-video" name="video_url" placeholder="https://...">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="editor-label">Short Summary</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-desc" name="short_description" placeholder="Brief overview shown at the top of notes...">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="editor-label">Definition / Concept Notes (HTML Support)</label>
+                        <textarea class="form-control code-input" id="edit-definition" name="definition_text" rows="8" placeholder="<p>Enter main content here...</p>"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="editor-label">Examples Data (JSON)</label>
+                        <textarea class="form-control code-input" id="edit-examples" name="examples" rows="6" placeholder='{ "content": "<p>Math here...</p>", "images": [] }'></textarea>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span class="form-text small text-muted">Must be valid JSON. Use triple quotes in TOML logic, but standard JSON here.</span>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="formatJSON()">Format JSON</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top text-end">
+                    <button type="button" class="btn btn-light me-2" onclick="loadSubtopics()">Cancel</button>
+                    <button type="button" class="btn btn-fluid-orange text-white" onclick="saveSubtopic()">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    const state = {
+        level: null,
+        section: null,
+        topic: null,
+        subtopic: null
+    };
+
+    // --- 1. CASCADING LOADERS ---
+
+    function loadSections() {
+        const levelId = document.getElementById('sel-level').value;
+        state.level = levelId;
+        resetDownstream('section');
+
+        fetch(`/tutorial_admin/api/sections/${levelId}`)
+            .then(r => r.json())
+            .then(data => {
+                const sel = document.getElementById('sel-section');
+                sel.innerHTML = '<option value="" selected disabled>-- Select Section --</option>';
+                data.forEach(item => {
+                    sel.innerHTML += `<option value="${item.id}">${item.title}</option>`;
+                });
+                sel.disabled = false;
+                document.getElementById('card-section').classList.add('active-step');
+            });
+    }
+
+    function loadTopics() {
+        const secId = document.getElementById('sel-section').value;
+        state.section = secId;
+        resetDownstream('topic');
+
+        fetch(`/tutorial_admin/api/topics/${secId}`)
+            .then(r => r.json())
+            .then(data => {
+                const sel = document.getElementById('sel-topic');
+                sel.innerHTML = '<option value="" selected disabled>-- Select Topic --</option>';
+                data.forEach(item => {
+                    sel.innerHTML += `<option value="${item.id}">${item.title}</option>`;
+                });
+                sel.disabled = false;
+                document.getElementById('card-topic').classList.add('active-step');
+            });
+    }
+
+    function loadSubtopics() {
+        const topicId = document.getElementById('sel-topic').value;
+        state.topic = topicId;
+        
+        // Enable Editor Overlay
+        document.getElementById('editor-overlay').style.display = 'none';
+        initNewSubtopic(); // Default to new form
+
+        fetch(`/tutorial_admin/api/subtopics/${topicId}`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('subtopic-list');
+                list.innerHTML = '';
+                if(data.length === 0) {
+                    list.innerHTML = '<div class="text-muted small p-3 text-center">No content yet. <br>Click "New" to add.</div>';
+                } else {
+                    data.forEach(item => {
+                        list.innerHTML += `
+                            <div class="subtopic-item" id="sub-${item.id}" onclick="loadSubtopicDetails(${item.id})">
+                                <span class="text-truncate">${item.title}</span>
+                                <i class="fas fa-chevron-right small text-muted"></i>
+                            </div>`;
+                    });
+                }
+            });
+    }
+
+    // --- 2. EDITOR LOGIC ---
+
+    function initNewSubtopic() {
+        state.subtopic = null;
+        document.getElementById('editor-form').reset();
+        document.getElementById('edit-subtopic-id').value = '';
+        document.getElementById('editor-header').innerText = 'New Subtopic';
+        document.getElementById('editor-header').className = 'mb-0 text-success';
+        document.getElementById('btn-delete-sub').style.display = 'none';
+        
+        // Clear active class from list
+        document.querySelectorAll('.subtopic-item').forEach(el => el.classList.remove('active'));
+    }
+
+    function loadSubtopicDetails(id) {
+        // UI Highlight
+        document.querySelectorAll('.subtopic-item').forEach(el => el.classList.remove('active'));
+        const activeItem = document.getElementById(`sub-${id}`);
+        if(activeItem) activeItem.classList.add('active');
+
+        fetch(`/tutorial_admin/api/subtopic_details/${id}`)
+            .then(r => r.json())
+            .then(data => {
+                state.subtopic = id;
+                document.getElementById('edit-subtopic-id').value = data.id;
+                document.getElementById('edit-title').value = data.title;
+                document.getElementById('edit-desc').value = data.short_description || '';
+                document.getElementById('edit-definition').value = data.definition_text || '';
+                document.getElementById('edit-video').value = data.video_url || '';
+                
+                // Handle JSON formatting for display
+                try {
+                    const jsonObj = JSON.parse(data.examples);
+                    document.getElementById('edit-examples').value = JSON.stringify(jsonObj, null, 4);
+                } catch(e) {
+                    document.getElementById('edit-examples').value = data.examples;
+                }
+
+                document.getElementById('editor-header').innerText = 'Editing: ' + data.title;
+                document.getElementById('editor-header').className = 'mb-0 text-fluid-teal';
+                document.getElementById('btn-delete-sub').style.display = 'block';
+            });
+    }
+
+    function saveSubtopic() {
+        if(!state.topic) return alert("No topic selected.");
+        
+        const form = document.getElementById('editor-form');
+        const formData = new FormData(form);
+        formData.append('topic_id', state.topic);
+
+        // Validate JSON
+        try {
+            const jsonStr = document.getElementById('edit-examples').value;
+            if(jsonStr.trim()) JSON.parse(jsonStr);
+        } catch(e) {
+            alert("Invalid JSON format in Examples field.");
+            return;
+        }
+
+        fetch('/tutorial_admin/action/save_subtopic', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.status === 'success') {
+                loadSubtopics(); // Refresh list
+                // If it was an update, reload details to keep focus? 
+                // For simplicity, we refresh the list which resets the form to new.
+                // Could optionally find the ID and re-click it.
+            } else {
+                alert("Error: " + data.message);
+            }
+        });
+    }
+
+    function deleteSubtopic() {
+        if(!state.subtopic || !confirm("Permanently delete this subtopic?")) return;
+        
+        fetch(`/tutorial_admin/action/delete_subtopic/${state.subtopic}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if(data.status === 'success') loadSubtopics();
+            });
+    }
+
+    // --- 3. HIERARCHY ADD/DELETE LOGIC ---
+
+    function toggleAdd(type) {
+        const viewDiv = document.getElementById(`view-${type}-select`);
+        const addDiv = document.getElementById(`view-${type}-add`);
+        
+        if (viewDiv.style.display === 'none') {
+            viewDiv.style.display = 'block';
+            addDiv.style.display = 'none';
+        } else {
+            viewDiv.style.display = 'none';
+            addDiv.style.display = 'flex'; // Input group needs flex
+            document.getElementById(`new-${type}-title`).focus();
+        }
+    }
+
+    function addItem(type) {
+        const title = document.getElementById(`new-${type}-title`).value;
+        if(!title.trim()) return;
+
+        let url = '', parentId = '';
+        const formData = new FormData();
+        formData.append('title', title);
+
+        if(type === 'section') {
+            url = '/tutorial_admin/action/add_section';
+            parentId = state.level;
+            formData.append('level_id', parentId);
+        } else if(type === 'topic') {
+            url = '/tutorial_admin/action/add_topic';
+            parentId = state.section;
+            formData.append('section_id', parentId);
+        }
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById(`new-${type}-title`).value = '';
+                    toggleAdd(type); // Switch back to select
+                    // Reload dropdown
+                    if(type === 'section') loadSections();
+                    if(type === 'topic') loadTopics();
+                } else {
+                    alert(data.message);
+                }
+            });
+    }
+
+    function deleteItem(type) {
+        let id;
+        if(type === 'section') id = document.getElementById('sel-section').value;
+        else if(type === 'topic') id = document.getElementById('sel-topic').value;
+
+        if(!id || !confirm(`Delete this ${type}? (Must be empty)`)) return;
+
+        fetch(`/tutorial_admin/action/delete_${type}/${id}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    if(type === 'section') loadSections();
+                    if(type === 'topic') loadTopics();
+                } else {
+                    alert(data.message);
+                }
+            });
+    }
+
+    // --- UTILS ---
+
+    function resetDownstream(fromType) {
+        if(fromType === 'section') {
+            // Clear Section and Topic
+            document.getElementById('sel-section').innerHTML = '<option>Loading...</option>';
+            document.getElementById('sel-section').disabled = true;
+            document.getElementById('card-section').classList.remove('active-step');
+            
+            document.getElementById('sel-topic').innerHTML = '<option value="">-- Select Section First --</option>';
+            document.getElementById('sel-topic').disabled = true;
+            document.getElementById('card-topic').classList.remove('active-step');
+            
+            resetEditorState();
+        }
+        else if(fromType === 'topic') {
+            // Clear Topic
+            document.getElementById('sel-topic').innerHTML = '<option>Loading...</option>';
+            document.getElementById('sel-topic').disabled = true;
+            document.getElementById('card-topic').classList.remove('active-step');
+            
+            resetEditorState();
+        }
+    }
+
+    function resetEditorState() {
+        document.getElementById('subtopic-list').innerHTML = '';
+        document.getElementById('editor-overlay').style.display = 'flex';
+        state.topic = null;
+    }
+
+    function formatJSON() {
+        const el = document.getElementById('edit-examples');
+        try {
+            const obj = JSON.parse(el.value);
+            el.value = JSON.stringify(obj, null, 4);
+        } catch(e) {
+            alert("Invalid JSON");
+        }
+    }
+</script>
+{% endblock %}

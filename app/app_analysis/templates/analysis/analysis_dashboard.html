@@ -492,11 +492,7 @@
            ANALYSIS RESULTS PANEL
         ========================================================================== -->
         <div class="col-lg-9">
-            <div class="d-flex justify-content-end align-items-end mb-4">
-                <div>
-                    <a href="{{ url_for('analysis.dashboard', study_id=study.id, reset=1) }}" class="btn btn-sm btn-outline-warning" title="Reset Data & Composite Variables"><i class="fas fa-sync-alt me-1"></i> </a>
-                </div>
-            </div>
+
             <div id="results-panel">
                 <div class="card shadow-sm">
                     <div class="card-body" style="min-height: 75vh;">
@@ -577,6 +573,11 @@
                             </div>
                         {% endif %}
                     </div>
+                </div>
+            </div>
+                    <div class="d-flex justify-content-end align-items-end mb-4">
+                <div>
+                    <a href="{{ url_for('analysis.dashboard', study_id=study.id, reset=1) }}" class="btn btn-sm btn-outline-warning" title="Reset Data & Composite Variables"><i class="fas fa-sync-alt me-1"></i> </a>
                 </div>
             </div>
         </div>

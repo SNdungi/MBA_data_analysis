@@ -1,29 +1,18 @@
 import os
 import io
-import shutil
 import zipfile
 import pandas as pd
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file, session
 from werkzeug.utils import secure_filename
 # Added User to imports
-from app.app_encoder.encoder_models import db, Study, EncoderDefinition, User
+from app.app_database.encoder_models import db, Study, EncoderDefinition, User
 from flask_login import login_required, current_user
 
 file_mgt_bp = Blueprint('file_mgt', __name__, template_folder='templates/file_mgt', url_prefix='/projects')
 
 # --- Helper Functions ---
 
-def _clear_folder_contents(folder_path):
-    """Deletes all files and folders inside a directory."""
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print(f'Failed to delete {file_path}. Reason: {e}')
+
 
 def _get_active_user_id():
     """
@@ -221,25 +210,34 @@ def export_project(study_id):
         flash(f"Export error: {e}", 'danger')
         return redirect(url_for('file_mgt.project_admin', study_id=study.id))
 
-@file_mgt_bp.route('/system')
-def system_tools():
-    """Sidebar: System Tools. Global housekeeping."""
-    return render_template('system_tools.html', active_page='system')
 
-@file_mgt_bp.route('/system/purge', methods=['POST'])
-def purge_system():
-    """Nuclear option: Delete everything."""
-    try:
-        db.session.query(Study).delete()
-        # Note: If you want to keep the admin user, don't delete from User table. 
-        # But if you want a full wipe:
-        # db.session.query(User).delete() 
-        db.session.commit()
-        _clear_folder_contents(current_app.config['UPLOADS_FOLDER'])
-        _clear_folder_contents(current_app.config['GENERATED_FOLDER'])
-        _clear_folder_contents(current_app.config['GRAPHS_FOLDER'])
-        flash("System completely purged.", 'warning')
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Purge failed: {e}", 'danger')
-    return redirect(url_for('file_mgt.list_projects'))
+
+
+#===========================================================
+
+#SIMULATION
+
+#========================================================
+@file_mgt_bp.route('/simulation/<int:study_id>')
+@login_required
+def simulation_setup(study_id):
+    """
+    Renders the Legacy Simulation Tool within the File Management context.
+    """
+    study = Study.query.get_or_404(study_id)
+    
+    # 1. Setup Session Data required by the tool/previews
+    # This mimics what ops_routes used to do so previews work immediately
+    base_name = study.map_filename.replace('.json', '')
+    simulated_csv = f"simulated_{base_name}.csv"
+    
+    session['filenames'] = {
+        'study_id': study.id,
+        'original': f"{base_name}.csv",
+        'map': study.map_filename,
+        'output': simulated_csv,
+        'graphs': [] 
+    }
+
+    # 2. Render the template you moved
+    return render_template('simulation_tool.html', study=study, active_page='simulation')

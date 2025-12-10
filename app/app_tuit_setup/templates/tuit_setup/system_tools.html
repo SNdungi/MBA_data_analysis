@@ -1,0 +1,70 @@
+{% extends "base_setup.html" %}
+
+{% block file_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <h2 class="text-danger mb-4"><i class="fas fa-user-shield me-2"></i>System Administration</h2>
+
+        <div class="alert alert-light border shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-lock fa-2x text-muted me-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-1 text-dark">Restricted Access Zone</h5>
+                    <p class="mb-0 small text-muted">Authorized for <strong>{{ current_user.username }}</strong>. Actions logged.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purge Card -->
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-trash-alt me-2"></i>Data Purge Utility</span>
+                <span class="badge bg-white text-danger">High Risk</span>
+            </div>
+            <div class="card-body">
+                <!-- UPDATED ACTION URL -->
+                <form action="{{ url_for('tuit_setup.purge_system') }}" method="POST">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">1. Target Data</label>
+                        <select class="form-select" name="study_id" required>
+                            <option value="" selected disabled>-- Select Study --</option>
+                            {% for s in studies %}
+                                <option value="{{ s.id }}">[ID: {{ s.id }}] {{ s.name }}</option>
+                            {% endfor %}
+                            <option disabled>────────────────</option>
+                            <option value="ALL_DATA" class="text-danger fw-bold">⚠ DELETE ALL (NUCLEAR)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">2. Verification</label>
+                        <input type="text" class="form-control" name="security_key" placeholder='Type "PURGE" to confirm' required autocomplete="off">
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-danger">Execute Purge</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Info Card -->
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase mb-3">Database Stats</h6>
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
+                        Studies <span class="fw-bold">{{ studies|length }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between px-0">
+                        DB Status <span class="badge bg-success">Online</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

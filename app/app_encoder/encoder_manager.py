@@ -1,4 +1,4 @@
-from app.app_encoder.encoder_models import db, Study, EncoderPrototype, EncoderDefinition, ColumnEncoding
+from app.app_database.encoder_models import db, Study, EncoderPrototype, EncoderDefinition, ColumnEncoding
 from typing import Dict, List, Any
 from config import AppConfig
 import os

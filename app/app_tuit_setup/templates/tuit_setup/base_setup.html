@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        
+        <!-- ADMIN SIDEBAR -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm sticky-top" style="top: 4rem;">
+                <div class="card-header bg-dark text-white fw-bold small text-uppercase">
+                    <i class="fas fa-cogs me-2"></i>Administration
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    
+                    <!-- 1. BACK TO PROJECTS -->
+                    <a href="{{ url_for('file_mgt.list_projects') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small text-muted">
+                        <i class="fas fa-arrow-left fa-fw me-2"></i> 
+                        Back to Projects
+                    </a>
+
+                    <!-- SEPARATOR -->
+                    <div class="p-2 bg-light border-top border-bottom small fw-bold text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">
+                        System Maintenance
+                    </div>
+
+                    <!-- 2. SYSTEM TOOLS (Purge) -->
+                    <a href="{{ url_for('tuit_setup.system_tools') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small 
+                       {% if active_page == 'system' %}active text-white bg-danger border-danger{% else %}text-dark{% endif %}">
+                        <i class="fas fa-shield-alt fa-fw me-2"></i> 
+                        Data Purge & Stats
+                    </a>
+
+                    <!-- 3. TUTORIAL EDITOR -->
+                    <a href="{{ url_for('tuit_setup.index') }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center py-2 small 
+                       {% if active_page == 'tutorials' %}active text-white bg-fluid-teal border-0{% else %}text-dark{% endif %}">
+                        <i class="fas fa-graduation-cap fa-fw me-2"></i> 
+                        Tutorial Editor
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="col-md-9 col-lg-10">
+            {% include '_messages.html' %}
+            
+
+                <!-- System Tools gets standard padding -->
+                <div class="bg-white p-4 border rounded-2 shadow-sm" style="min-height: 80vh;">
+                    {% block file_content %}{% endblock %}
+                </div>
+
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

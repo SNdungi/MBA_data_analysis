@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.app_encoder.encoder_manager import EncodingConfigManager
 from app.ops_bootstrap import DataBootstrapper
 from app.app_encoder.encoder import DataEncoder
-from app.app_encoder.encoder_models import db, Study, EncoderPrototype, EncoderDefinition
+from app.app_database.encoder_models import db, Study, EncoderPrototype, EncoderDefinition
 from markupsafe import Markup
 
 # The template_folder is set to 'templates' so we can use the 'encoding/' prefix in render_template calls.

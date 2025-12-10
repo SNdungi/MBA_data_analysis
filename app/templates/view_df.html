@@ -1,9 +1,0 @@
-{% extends "layout.html" %}
-{% block content %}
-    <h2 class="mb-3">Viewing: {{ filename }}</h2>
-    <a href="{{ url_for('ops.results') }}" class="btn btn-secondary mb-3">Back to Results</a>
-    <!-- === APPLY CLASS HERE === -->
-    <div class="preview-container">
-        {{ df_html|safe }}
-    </div>
-{% endblock %}

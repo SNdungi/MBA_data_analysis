@@ -7,7 +7,7 @@ import numpy as np
 import os
 import re
 from flask import current_app, session
-from app.app_encoder.encoder_models import Study, ColumnEncoding
+from app.app_database.encoder_models import Study, ColumnEncoding
 from app.app_encoder.encoder_manager import EncodingConfigManager
 from . import analysis_utils as utils
 

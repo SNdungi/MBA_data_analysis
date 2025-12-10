@@ -1,56 +1,49 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div div class="container">
 
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom border-fluid">
-        <h1 class="h2">Bootstrap Results</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ url_for('ops.index') }}" class="btn btn-sm btn-outline-dark">
-                <i class="fas fa-arrow-left me-1"></i> Run a New Simulation
-            </a>
-        </div>
-    </div>
-
-    <!-- "Next Step" Card using the custom theme -->
-    <div class="card text-center mb-4 border-fluid-orange shadow-sm">
-        <div class="card-body bg-fluid-cream">
-            <h5 class="card-title text-fluid-red">Proceed to Data Encoding</h5>
-            <p class="card-text">
-                Your data has been simulated. The next critical step is to encode it into a numerical format for statistical analysis.
-            </p>
-            <!-- THIS IS THE CORRECTED LINE -->
-            <a href="{{ url_for('encoding.definitions', study_id=session.filenames['study_id']) }}" class="btn btn-fluid-orange">
-                Configure Data Encoding <i class="fas fa-arrow-right ms-1"></i>
-            </a>
-        </div>
-    </div>
+<div class="container mt-4 vh-100">
 
     <div class="row g-4">
         <!-- File Viewer Column -->
         <div class="col-lg-5">
-            <h2>Generated Files</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                 <h2>Generated Files</h2>
+                 <a href="{{ url_for('file_mgt.project_admin', study_id=session.filenames.study_id) }}" class="btn btn-sm btn-outline-secondary">Back to Project</a>
+            </div>
+           
             <div class="list-group shadow-sm">
+                <!-- Original CSV (Uploads Folder) -->
                 <span class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-file-csv me-2 text-fluid-teal"></i>
-                        Original Data: <strong>{{ session.filenames.original }}</strong>
+                        Original Data<br>
+                        <small class="text-muted">{{ session.filenames.original }}</small>
                     </div>
-                    <a href="{{ url_for('ops.preview_csv', filename=session.filenames.original) }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                    <!-- CHANGED LINK -->
+                    <a href="{{ url_for('ops.view_file', filename=session.filenames.original, folder='uploads') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
                 </span>
+
+                <!-- Question Map JSON (Generated Folder) -->
                 <span class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-project-diagram me-2 text-fluid-teal"></i>
-                        Question Map: <strong>{{ session.filenames.map }}</strong>
+                        Question Map<br>
+                        <small class="text-muted">{{ session.filenames.map }}</small>
                     </div>
-                    <a href="{{ url_for('ops.preview_csv', type='generated', filename=session.filenames.map) }}" class="badge bg-secondary rounded-pill text-decoration-none">View JSON</a>
+                    <!-- CHANGED LINK -->
+                    <a href="{{ url_for('ops.view_file', filename=session.filenames.map, folder='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View JSON</a>
                 </span>
+
+                <!-- Simulated CSV (Generated Folder) -->
                 <span class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <i class="fas fa-file-invoice me-2 text-fluid-teal"></i>
-                        Simulated Data: <strong>{{ session.filenames.output }}</strong>
+                        Simulated Data<br>
+                        <small class="text-muted">{{ session.filenames.output }}</small>
                     </div>
-                    <a href="{{ url_for('ops.preview_csv', filename=session.filenames.output, type='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
+                    <!-- CHANGED LINK -->
+                    <a href="{{ url_for('ops.view_file', filename=session.filenames.output, folder='generated') }}" class="badge bg-secondary rounded-pill text-decoration-none">View Table</a>
                 </span>
             </div>
         </div>
@@ -66,7 +59,8 @@
                 {% endfor %}
             {% else %}
                 <div class="alert alert-fluid-info">
-                    <strong>No Graphs Generated.</strong> This can happen if the selected columns for comparison were not numeric.
+                    <strong>No Graphs Generated.</strong><br>
+                    <small>Comparison graphs are generated only if numeric columns were selected for simulation.</small>
                 </div>
             {% endif %}
         </div>

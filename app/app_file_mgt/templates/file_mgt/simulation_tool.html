@@ -1,0 +1,187 @@
+{% extends "base_file_mgt.html" %}
+
+{% block file_content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-0 text-fluid-teal">Legacy Simulation Tool</h3>
+                <p class="text-muted small mb-0">Project: <strong>{{ study.name }}</strong></p>
+            </div>
+            <a href="{{ url_for('file_mgt.project_admin', study_id=study.id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back to Admin
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- LEFT: Configuration -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold">Bootstrap Configuration</div>
+                <div class="card-body">
+                    <form action="{{ url_for('ops.run_bootstrap') }}" method="post" id="bootstrap-form">
+                        
+                        <!-- Hidden fields derived from the study object -->
+                        <input type="hidden" id="csv_file" name="csv_file" value="{{ study.map_filename.replace('.json', '.csv') }}">
+                        <input type="hidden" id="study_id" name="study_id" value="{{ study.id }}">
+                        <input type="hidden" id="map_path" name="map_path" value="{{ study.map_filename }}">
+                        <input type="hidden" id="output_file" name="output_file" value="simulated_{{ study.map_filename.replace('.json', '.csv') }}">
+                        
+                        <!-- Map Generation Button -->
+                        <div class="alert alert-light border small text-muted mb-3">
+                            <i class="fas fa-info-circle me-1"></i> You must generate the Question Map before running the simulation.
+                        </div>
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="button" class="btn btn-outline-dark" id="generate-map-btn">
+                                <i class="fas fa-cogs me-2"></i> Generate & Preview Map
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Bootstrap Type -->
+                        <h6 class="text-fluid-orange">Methodology</h6>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="bootstrap_type" id="type_standard" value="standard" checked>
+                                <label class="form-check-label" for="type_standard"><strong>Standard</strong> <small class="text-muted d-block">Preserves row correlations.</small></label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="bootstrap_type" id="type_remix" value="remix">
+                                <label class="form-check-label" for="type_remix"><strong>Remix</strong> <small class="text-muted d-block">Shuffles specific column block.</small></label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="radio" name="bootstrap_type" id="type_deep_remix" value="deep_remix">
+                                <label class="form-check-label" for="type_deep_remix"><strong>Deep Remix</strong> <small class="text-muted d-block">Full randomization (breaks correlations).</small></label>
+                            </div>
+                        </div>
+                        
+                        <!-- Settings -->
+                        <h6 class="text-fluid-orange mt-4">Parameters</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small">New Data Size</label>
+                                <input type="number" class="form-control" name="new_size" value="500" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">Random State</label>
+                                <input type="number" class="form-control" name="random_state" value="42">
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Remix Options -->
+                        <div id="remix-options-wrapper" class="mt-3 p-3 bg-light rounded border" style="display: none;">
+                            <h6 class="small fw-bold">Remix Range</h6>
+                            <div class="mb-2">
+                                <label class="form-label small">Start Column</label>
+                                <select class="form-select form-select-sm" id="start_remix_col" name="start_remix_col" disabled>
+                                    <option value="">-- Generate Map First --</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">End Column</label>
+                                <select class="form-select form-select-sm" id="end_remix_col" name="end_remix_col" disabled>
+                                    <option value="">-- Generate Map First --</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-fluid-orange btn-lg text-white">Run Simulation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Previews -->
+        <div class="col-lg-7">
+            <!-- JSON Preview -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light fw-bold">
+                    <i class="fas fa-project-diagram me-2"></i>Question Map Preview
+                </div>
+                <div class="card-body p-0">
+                    <div class="preview-container bg-white p-3" id="json-preview-container" style="height: 300px; overflow: auto;">
+                        <div class="text-center text-muted mt-5">
+                            <p>Click "Generate & Preview Map" to load data structure.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateMapBtn = document.getElementById('generate-map-btn');
+    const jsonPreviewContainer = document.getElementById('json-preview-container');
+    const csvFile = document.getElementById('csv_file').value;
+    
+    // Remix Logic
+    const bootstrapTypeRadios = document.querySelectorAll('input[name="bootstrap_type"]');
+    const remixWrapper = document.getElementById('remix-options-wrapper');
+    const startRemixSelect = document.getElementById('start_remix_col');
+    const endRemixSelect = document.getElementById('end_remix_col');
+
+    function populateRemixSelects(columns) {
+        startRemixSelect.innerHTML = '<option value="">-- Select Start --</option>';
+        endRemixSelect.innerHTML = '<option value="">-- Select End --</option>';
+        columns.forEach(col => {
+            startRemixSelect.innerHTML += `<option value="${col}">${col}</option>`;
+            endRemixSelect.innerHTML += `<option value="${col}">${col}</option>`;
+        });
+        startRemixSelect.disabled = false;
+        endRemixSelect.disabled = false;
+    }
+
+    generateMapBtn.addEventListener('click', function() {
+        if (!csvFile) return;
+        
+        jsonPreviewContainer.innerHTML = '<p class="text-info p-3">Generating map...</p>';
+        generateMapBtn.disabled = true;
+        generateMapBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Working...';
+
+        fetch(`/generate_and_preview_json/${csvFile}`)
+            .then(response => response.json())
+            .then(data => {
+                generateMapBtn.disabled = false;
+                generateMapBtn.innerHTML = '<i class="fas fa-check me-2"></i> Map Generated';
+                generateMapBtn.classList.remove('btn-outline-dark');
+                generateMapBtn.classList.add('btn-success');
+                
+                if (data.error) {
+                    jsonPreviewContainer.innerHTML = `<p class="text-danger p-3">${data.error}</p>`;
+                } else {
+                    const jsonString = JSON.stringify(data.map_data, null, 2);
+                    jsonPreviewContainer.innerHTML = `<pre class="m-0"><code>${jsonString}</code></pre>`;
+                    populateRemixSelects(data.columns);
+                }
+            })
+            .catch(error => {
+                generateMapBtn.disabled = false;
+                jsonPreviewContainer.innerHTML = '<p class="text-danger p-3">Failed to fetch JSON map.</p>';
+            });
+    });
+
+    // Toggle Remix Options
+    bootstrapTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'remix') {
+                remixWrapper.style.display = 'block';
+                startRemixSelect.required = true;
+                endRemixSelect.required = true;
+            } else {
+                remixWrapper.style.display = 'none';
+                startRemixSelect.required = false;
+                endRemixSelect.required = false;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
