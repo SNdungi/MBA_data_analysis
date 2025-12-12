@@ -32,6 +32,27 @@
             <a class="navbar-brand" href="{{ url_for('file_mgt.list_projects') }}">
                 <small>TXDataLab</small>
             </a>
+
+             {% if study %}
+                        <!-- Inside your Sticky Navbar or Top Bar -->
+            <div class="d-flex align-items-center bg-white border-bottom px-4 py-2">
+                <span class="me-3 fw-bold">{{ study.name }}</span>
+                
+                <!-- Connection Status -->
+                <span id="connectionStatus" class="badge bg-secondary me-3">Offline</span>
+                
+                <!-- Save Status -->
+                <span id="saveStatus" class="small me-auto"></span>
+
+                <!-- Manual Actions -->
+                <button onclick="SyncManager.pullFromServerAndSave('simulated_original.csv')" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-save"></i> Save Results to Disk
+                </button>
+            </div>
+            {% endif %}
+
+
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarNav" aria-controls="navbarNav"
                     aria-expanded="false" aria-label="Toggle navigation">
@@ -185,6 +206,28 @@
             </div>
         </div>
     </footer>
+    {% if study is defined and study %}
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if SyncManager is loaded (it might be in a separate file)
+            if (typeof SyncManager !== 'undefined') {
+                const success = await SyncManager.init({{ study.id }});
+                
+                const statusBadge = document.getElementById('connectionStatus');
+                if (statusBadge) {
+                    if (success) {
+                        statusBadge.className = "badge bg-success";
+                        statusBadge.innerText = "Linked to Folder";
+                    } else {
+                        statusBadge.className = "badge bg-warning text-dark";
+                        statusBadge.innerText = "Permission Needed";
+                        statusBadge.onclick = () => SyncManager.init({{ study.id }}); 
+                    }
+                }
+            }
+        });
+    </script>
+    {% endif %}
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>

@@ -2,9 +2,10 @@ import os
 import io
 import zipfile
 import pandas as pd
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_file, session,jsonify,send_file
+from app.app_file_mgt.file_workspace_mgt import WorkspaceManager
 from werkzeug.utils import secure_filename
-# Added User to imports
+from app.app_file_mgt.file_workspace_mgt import WorkspaceManager # Ensure this import exists
 from app.app_database.encoder_models import db, Study, EncoderDefinition, User
 from flask_login import login_required, current_user
 
@@ -52,6 +53,9 @@ def list_projects():
     studies = Study.query.filter_by(user_id=current_user.id).order_by(Study.created_at.desc()).all()
     return render_template('list_projects.html', studies=studies, active_page='list')
 
+# ... imports ...
+
+
 @file_mgt_bp.route('/new', methods=['GET', 'POST'])
 @login_required  # Protect this route
 def new_project():
@@ -70,13 +74,14 @@ def new_project():
             flash('Invalid file type. Please upload a CSV.', 'danger')
             return redirect(url_for('file_mgt.new_project'))
 
-        # --- 2. Get User ID (Fix for IntegrityError) ---
+        # --- 2. Get User ID ---
         user_id = _get_active_user_id()
         if not user_id:
             flash('System Error: Could not assign a user owner to this study.', 'danger')
             return redirect(url_for('file_mgt.new_project'))
 
         try:
+            # Generate filenames
             secure_base_name = secure_filename(study_name.lower().replace(' ', '_'))
             csv_filename = f"{secure_base_name}.csv"
             map_filename = f"{secure_base_name}.json"
@@ -86,22 +91,29 @@ def new_project():
                 flash(f"Study '{study_name}' already exists.", 'warning')
                 return redirect(url_for('file_mgt.new_project'))
 
-            # Save File
-            csv_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_filename)
-            uploaded_file.save(csv_path)
-
-            # --- 3. Create DB Record with user_id ---
+            # --- 3. Create DB Record First (We need the ID for the workspace) ---
             new_study = Study(
                 name=study_name,
                 map_filename=map_filename,
                 topic=request.form.get('study_topic', ''),
                 description=request.form.get('study_description', ''),
-                user_id=current_user.id   # <--- THIS WAS MISSING
+                user_id=current_user.id
             )
             db.session.add(new_study)
-            db.session.flush() # Get ID
+            db.session.flush() # Flush to get new_study.id immediately
 
-            # Clone Logic
+            # --- 4. USE WORKSPACE MANAGER TO SAVE FILE ---
+            # Save to the specific workspace folder for this study ID
+            WorkspaceManager.save_temp_file(new_study.id, csv_filename, uploaded_file)
+            
+            # (Optional Legacy Backup): If other parts of your app still look in 
+            # app.config['UPLOADS_FOLDER'], you might want to save a copy there too.
+            # Otherwise, you can remove these lines if fully transitioning to WorkspaceManager.
+            uploaded_file.seek(0) # Reset file pointer after save
+            permanent_path = os.path.join(current_app.config['UPLOADS_FOLDER'], csv_filename)
+            uploaded_file.save(permanent_path)
+
+            # --- 5. Clone Logic (Unchanged) ---
             if clone_id and clone_id.isdigit():
                 source = Study.query.get(int(clone_id))
                 if source:
@@ -115,7 +127,12 @@ def new_project():
                         db.session.add(new_def)
 
             db.session.commit()
+            
+            # --- 6. Success Feedback & Redirect ---
             flash(f"Project '{study_name}' created successfully.", 'success')
+            
+            # If using client-side sync, you might want to redirect to a page 
+            # that triggers the 'Download to Client' logic immediately.
             return redirect(url_for('file_mgt.project_admin', study_id=new_study.id))
 
         except Exception as e:
@@ -123,7 +140,7 @@ def new_project():
             flash(f"Creation failed: {e}", 'danger')
             return redirect(url_for('file_mgt.new_project'))
 
-    # GET Request: Render Form
+    # GET Request
     existing_studies = Study.query.order_by(Study.name).all()
     return render_template('new_project.html', existing_studies=existing_studies, active_page='new')
 
@@ -241,3 +258,40 @@ def simulation_setup(study_id):
 
     # 2. Render the template you moved
     return render_template('simulation_tool.html', study=study, active_page='simulation')
+
+
+#===========================================================
+
+#SERVER WORKSPACE MANAGEMENT
+
+#========================================================
+
+
+# 1. UPLOAD (Browser -> Server Cache)
+@file_mgt_bp.route('/workspace/sync_up/<int:study_id>', methods=['POST'])
+@login_required
+def sync_up(study_id):
+    """Client sends local file content to server temp folder."""
+    files = request.files
+    for filename, file_obj in files.items():
+        WorkspaceManager.save_temp_file(study_id, filename, file_obj)
+    
+    return jsonify({'status': 'synced', 'message': 'Server cache updated'})
+
+# 2. DOWNLOAD (Server Cache -> Browser)
+@file_mgt_bp.route('/workspace/sync_down/<int:study_id>/<filename>', methods=['GET'])
+@login_required
+def sync_down(study_id, filename):
+    """Client requests latest server version to save locally."""
+    content = WorkspaceManager.read_temp_file(study_id, filename)
+    if content is None:
+        return jsonify({'error': 'File not found in cache'}), 404
+    
+    return jsonify({'filename': filename, 'content': content})
+
+# 3. CLEANUP
+@file_mgt_bp.route('/workspace/close/<int:study_id>', methods=['POST'])
+@login_required
+def close_workspace(study_id):
+    WorkspaceManager.clear_workspace(study_id)
+    return jsonify({'status': 'cleaned'})

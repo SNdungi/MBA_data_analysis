@@ -13,7 +13,7 @@
   --app-bg: #ffffff;
   --app-sidebar-bg: #f8f9fa;      /* Very light grey for sidebars */
   --app-panel-bg: #ffffff;
-  --app-header-bg: #e9ecef;       /* Darker grey for card headers */
+  --app-header-bg: #e9e4da;       /* Darker grey for card headers */
   --app-border: #ced4da;          /* Standard input border color */
   --app-text-main: #212529;
   --app-text-muted: #6c757d;
@@ -151,49 +151,96 @@ pre {
     color: #000;
 }
 
-/* Form Controls */
-.form-control, .form-select {
-    padding: 0.3rem 0.6rem;
-    font-size: var(--font-sm);
-    border-radius: var(--radius-sm);
-    border-color: var(--app-border);
-    background-color: #fff;
+
+/* ================================
+
+AUTHORISATION PAGES 
+
+======================================== */
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
 }
 
-.form-control:focus, .form-select:focus {
-    box-shadow: none;
-    border-color: var(--fluidcore-teal);
+/* Soft geometric background shapes */
+.auth-wrapper::before,
+.auth-wrapper::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 20% 80% 50% 70%;
+    background: rgba(19, 79, 92, 0.08);
+    z-index: 0;
+    filter: blur(8px);
 }
 
-.form-label {
-    margin-bottom: 0.2rem;
-    font-size: var(--font-xs);
-    font-weight: 600;
-    color: var(--app-text-muted);
+.auth-wrapper::before {
+    top: -40px;
+    left: -40px;
 }
 
-.form-floating > .form-control:focus ~ label,
-.form-floating > .form-control:not(:placeholder-shown) ~ label {
-    color: var(--fluidcore-teal, #134f5c);
-    transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+.auth-wrapper::after {
+    bottom: -40px;
+    right: -40px;
 }
 
+/* Card styling */
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* Sleek input fields */
+.form-control {
+    height: 46px !important;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 14px;
+    border: 1px solid #d9dfe3;
+    background: #f9fbfc;
+    transition: all 0.2s ease-out;
+}
+
+.form-control:focus {
+    border-color: #134f5c;
+    background: #ffffff;
+    box-shadow: 0 0 0 0.15rem rgba(19, 79, 92, 0.25);
+}
+
+/* Label style */
+.form-floating label {
+    font-size: 0.75rem !important;
+    opacity: 0.85;
+}
+
+/* Login button */
 .btn-login {
-    background-color: var(--fluidcore-orange, #ff6b35);
-    border: none;
-    color: white;
-    padding: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
+    background: var(--fluidcore-orange,#134f5c);
+    color: #fff;
+    padding: 0.65rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 50px;
+    transition: 0.25s;
+}
+.btn-login:hover {
+    background: #0e3944;
+    transform: translateY(-1px);
 }
 
-.btn-login:hover {
-    background-color: #e85a2d; /* Slightly darker orange */
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
-    color: white;
-}
+
 
 /*==========================================================================
    FLASH MESSAGES (Centered & Compact)

@@ -3,6 +3,9 @@ from sqlalchemy.types import JSON
 from sqlalchemy.sql import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin 
+import secrets
+import string
+from datetime import datetime
 
 
 
@@ -22,34 +25,88 @@ class Role(db.Model):
         return f'<Role {self.name}>'
 
 # -----------------------------------------------------------------------------  
-# User model (UPDATED)
+# User model 
 # -----------------------------------------------------------------------------  
-class User(UserMixin, db.Model):  
-    __tablename__ = 'users'  
-    id = db.Column(db.Integer, primary_key=True)  
-    username = db.Column(db.String(64), index=True, unique=True, nullable=False)  
-    email = db.Column(db.String(120), index=True, unique=True, nullable=False)  
-    password_hash = db.Column(db.String(256))  
-    
-    # Foreign Key to Role
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Username: user-chosen
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+
+    # System-generated user identifier
+    user_code = db.Column(db.String(20), unique=True, index=True, nullable=True)
+
+    # Role relationship
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-
-    # Relationships  
     role = db.relationship('Role', back_populates='users')
-    studies = db.relationship('Study', back_populates='user', lazy='dynamic', cascade='all, delete-orphan')  
 
-    def set_password(self, password):  
-        self.password_hash = generate_password_hash(password)  
+    # Example extra relationship
+    studies = db.relationship(
+        'Study',
+        back_populates='user',
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
-    def check_password(self, password):  
-        return check_password_hash(self.password_hash, password) 
-        
+    # -------------------------------------------------------------
+    # 🔵 User Code Generator: STU-YYYY-0001 (incremental per year)
+    # -------------------------------------------------------------
+    @staticmethod
+    def generate_user_code():
+        """
+        Generates unique, incremental user code, e.g. STU-2025-0001.
+        Pattern: DL-{YEAR}-{4-digit-sequence}
+        """
+        year = datetime.utcnow().year
+
+        # Find last user for this year
+        last_user = (
+            db.session.query(User)
+            .filter(User.user_code.like(f"STU-{year}-%"))
+            .order_by(User.user_code.desc())
+            .first()
+        )
+
+        if last_user:
+            # Extract numeric sequence at the end
+            last_seq = int(last_user.user_code.split("-")[-1])
+            new_seq = last_seq + 1
+        else:
+            new_seq = 1
+
+        return f"DL-{year}-{new_seq:04d}"
+
+    def assign_user_code(self):
+        """Assign user_code only if it's empty."""
+        if not self.user_code:
+            self.user_code = self.generate_user_code()
+
+    # -------------------------------------------------------------
+    # Password Helpers
+    # -------------------------------------------------------------
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    # -------------------------------------------------------------
+    # Role Helper
+    # -------------------------------------------------------------
     def has_role(self, role_name):
-        """Helper to check user role safely."""
-        return self.role and self.role.name == role_name 
+        return self.role and self.role.name == role_name
 
-    def __repr__(self):  
-        return f'<User {self.username}>' 
+    def __repr__(self):
+        return f"<User {self.username} | Code {self.user_code}>"
+
+
 
 
 # -----------------------------------------------------------------------------  

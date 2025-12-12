@@ -41,6 +41,7 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        confirm_password = request.form.get('password_confirm')
 
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'warning')
@@ -49,9 +50,14 @@ def register():
         if User.query.filter_by(username=username).first():
             flash('Username already taken.', 'warning')
             return redirect(url_for('auth.register'))
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'warning')
+            return redirect(url_for('auth.register'))
 
-        new_user = User(username=username, email=email)
+        new_user = User(email=email, username=username)
         new_user.set_password(password)
+        new_user.generate_user_code()
         
         db.session.add(new_user)
         db.session.commit()

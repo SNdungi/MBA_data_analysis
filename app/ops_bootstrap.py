@@ -39,7 +39,7 @@ class DataBootstrapper:
         print(f"--- Question map not found at '{self.map_path}'. Generating new map... ---")
         try:
             original_headers = pd.read_csv(self.file_path, encoding=self.encoding, nrows=0).columns.tolist()
-            new_map = {f"q{i+1}": header for i, header in enumerate(original_headers)}
+            new_map = {f"{i+1}": header for i, header in enumerate(original_headers)}
             with open(self.map_path, 'w', encoding='utf-8') as f:
                 json.dump(new_map, f, indent=2)
             self.question_map = new_map
