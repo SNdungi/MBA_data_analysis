@@ -13,8 +13,6 @@ file_mgt_bp = Blueprint('file_mgt', __name__, template_folder='templates/file_mg
 
 # --- Helper Functions ---
 
-
-
 def _get_active_user_id():
     """
     Helper to get a valid user_id. 

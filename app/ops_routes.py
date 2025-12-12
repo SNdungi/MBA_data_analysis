@@ -16,6 +16,7 @@ def index():
 
 @ops_bp.route('/documentation')
 def documentation():
+    
     return render_template('documentation.html', title="Encoding Methodology")
 
 # --- Simulation Logic ---
