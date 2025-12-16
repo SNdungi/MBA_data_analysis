@@ -35,27 +35,24 @@
 
              {% if study %}
                         <!-- Inside your Sticky Navbar or Top Bar -->
-            <div class="d-flex align-items-center bg-white border-bottom px-4 py-2">
+            <div class="d-flex align-items-center border-start border-end  px-4 py-2">
                 
                 <!-- Study Initial Pill -->
-                <span class="badge rounded-pill bg-primary text-white me-2"
-                    style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                <span class="badge rounded-pill bg-secondary-subtle text-black me-2"
+                    style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">
                     {{ study.name[0]|upper }}
                 </span>
 
-                <!-- Study Name -->
-                <span class="fw-bold me-3">{{ study.name }}</span>
-
                 <!-- Connection Status -->
-                <span id="connectionStatus" class="badge bg-secondary me-3">Offline</span>
+                <span id="connectionStatus" class="badge bg-secondary-subtle text-black me-3">Offline</span>
 
                 <!-- Save Status -->
                 <span id="saveStatus" class="small me-auto"></span>
 
                 <!-- Manual Actions -->
                 <button onclick="SyncManager.pullFromServerAndSave('simulated_original.csv')"
-                        class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-save"></i> Save Results to Disk
+                        class="btn btn-sm ">
+                    <i class="fas fa-save text-white fs-5"></i> 
                 </button>
             </div>
 
@@ -90,15 +87,10 @@
 
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-light btn-sm px-3 rounded-5" href="#">
-                            <i class="fas fa-hand-paper me-2"></i> ?
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-warning btn-sm px-3"
+                        <a class="btn btn-outline-light btn-sm px-3 rounded-5"
                         style="background: var(--fluidcore-orange); border: none; color: var(--fluidcore-white);"
-                        href="#">
-                            Donate
+                        href="#"><i class="fas fa-hand-paper me-2"></i> 
+                            Request Support
                         </a>
                     </li>
                 </ul>
