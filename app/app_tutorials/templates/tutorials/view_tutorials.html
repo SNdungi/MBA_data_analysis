@@ -7,31 +7,35 @@
 <!-- ========================================== -->
 <script>
 window.MathJax = {
+  loader: { 
+    // Load the color extension to handle hex codes (e.g. #FF0000)
+    load: ['[tex]/color'] 
+  },
   tex: {
-    // 1. Define delimiters (Allow $ for inline, $$ for block)
+    // Enable the color package
+    packages: {'[+]': ['color']},
     inlineMath: [['$', '$'], ['\\(', '\\)']],
     displayMath: [['$$', '$$'], ['\\[', '\\]']],
-    processEscapes: true,
+    processEscapes: true,      // Allows \$ to escape dollar signs
     processEnvironments: true
   },
   options: {
-    // 2. Tell MathJax to scan the HTML
     ignoreHtmlClass: 'tex2jax_ignore',
     processHtmlClass: 'tex2jax_process'
   },
-  // 3. REMOVED 'typeset: false'. We want it to run automatically on load.
+  startup: {
+    // STOP automatic rendering. We will trigger it manually to prevent race conditions.
+    typeset: false 
+  }
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
-<!-- ========================================== -->
-<!-- STYLES                                     -->
-<!-- ========================================== -->
 <style>
     /* Blackboard specific font style */
     .blackboard-font {
-        font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif !important; 
-        font-size: 1.1rem !important; 
+        font-family: 'Marker Felt', sans-serif !important; 
+        font-size: 0.9rem !important; 
         letter-spacing: 0.5px;
         line-height: 1.8;
     }
@@ -42,7 +46,7 @@ window.MathJax = {
         font-size: 115% !important;
     }
     
-    /* MathJax Outline Fix (removes blue focus outline on math) */
+    /* Remove outline on click */
     mjx-container:focus { outline: none !important; }
 
     /* Blackboard Images */
@@ -63,7 +67,6 @@ window.MathJax = {
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
         <div>
-            <!-- Breadcrumb: Level > Section > Topic -->
             <span class="badge bg-light text-dark border mb-1" style="font-weight: normal; font-size: 0.8rem;">
                 {{ active_subtopic.topic.section.level.title }} <span class="text-muted mx-1">/</span> 
                 {{ active_subtopic.topic.section.title }} <span class="text-muted mx-1">/</span> 
@@ -99,15 +102,18 @@ window.MathJax = {
         <div class="tab-pane fade show active" id="notes" role="tabpanel">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="prose p-3  border rounded" style="font-size: 0.75rem; line-height: 1.8;">
+                    <div class="prose p-3 bg-white border rounded" style="font-size: 0.95rem; line-height: 1.8;">
                         {% if active_subtopic.short_description %}
-                            <div class=" alert border-start ">
+                            <div class="alert border-start py-1">
                                 <p class="mb-0 text-muted">{{ active_subtopic.short_description }}</p>
                             </div>
                         {% endif %}
                         
                         <!-- Main Definition Content -->
-                        {{ active_subtopic.definition_text | safe }}
+                        <!-- Use the tex2jax_process class to ensure this block is scanned -->
+                        <div class="tex2jax_process">
+                            {{ active_subtopic.definition_text | safe }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -133,7 +139,7 @@ window.MathJax = {
             </div>
         </div>
 
-        <!-- 3. BLACKBOARD TAB (Images first, then Latex) -->
+        <!-- 3. BLACKBOARD TAB -->
         <div class="tab-pane fade" id="blackboard" role="tabpanel">
             <div class="card bg-dark text-white border-secondary rounded-0 shadow-lg">
                 <div class="card-header border-secondary bg-dark text-white-50 d-flex justify-content-between align-items-center">
@@ -145,7 +151,7 @@ window.MathJax = {
                     
                     {% if active_subtopic.examples %}
 
-                        <!-- A. QUESTION EXCERPTS / IMAGES (First) -->
+                        <!-- A. IMAGES (Top) -->
                         {% if active_subtopic.examples.images and active_subtopic.examples.images | length > 0 %}
                             <div class="mb-4 pb-3 border-bottom border-secondary">
                                 <p class="text-warning small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px;">
@@ -165,20 +171,18 @@ window.MathJax = {
                             </div>
                         {% endif %}
 
-                        <!-- B. WORKED SOLUTION / LATEX (Second) -->
+                        <!-- B. SOLUTION / LATEX (Bottom) -->
                         {% if active_subtopic.examples.content %}
                             <div>
                                 <p class="text-success small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px;">
                                     <i class="fas fa-calculator me-1"></i> Solution
                                 </p>
-                                <div class="mt-2">
-                                    <!-- The 'safe' filter ensures HTML tags are rendered, MathJax finds the $ within -->
+                                <div class="mt-2 tex2jax_process">
                                     {{ active_subtopic.examples.content | safe }}
                                 </div>
                             </div>
                         {% endif %}
 
-                        <!-- Fallback if JSON exists but is empty -->
                         {% if not active_subtopic.examples.content and not active_subtopic.examples.images %}
                              <div class="text-center text-muted mt-5 opacity-50">
                                 <i class="fas fa-pencil-ruler fa-2x mb-2"></i>
@@ -198,35 +202,47 @@ window.MathJax = {
         </div>
 
 {% else %}
-    <!-- EMPTY STATE -->
     <div class="text-center py-5">
-        <div class="mb-4 opacity-25">
-            <i class="fas fa-chalkboard-teacher fa-3x text-muted"></i>
-        </div>
         <h4 class="text-muted fw-light">Tutorials Hub</h4>
         <p class="small text-muted mb-0">Select a topic from the sidebar.</p>
     </div>
 {% endif %}
 
-<!-- SCRIPT: RELOAD MATHJAX ON TAB SWITCH -->
+<!-- SCRIPT: INTELLIGENT RENDERING -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Initial Render (Handled by config, but failsafe here)
+        // 1. Initial Render on Page Load
         if(window.MathJax && MathJax.typesetPromise) {
-            MathJax.typesetPromise();
+            MathJax.typesetPromise().catch(function(err) {
+                console.log('MathJax initial load error: ' + err.message);
+            });
         }
 
-        // 2. Re-render when switching tabs (Critical for hidden divs)
+        // 2. Tab Switch Handler
         var triggerTabList = [].slice.call(document.querySelectorAll('#tutorialTabs button'));
         triggerTabList.forEach(function (triggerEl) {
             triggerEl.addEventListener('shown.bs.tab', function (event) {
+                
+                // Only act if it's the blackboard tab
                 if (event.target.id === 'blackboard-tab') {
-                    // Force a re-scan of the blackboard container
                     var blackboardDiv = document.getElementById('blackboard-content');
-                    if(window.MathJax && blackboardDiv) {
-                        // Clear previous MathJax formatting to prevent double-rendering artifacts
+                    
+                    if(blackboardDiv && window.MathJax) {
+                        // CHECK FOR DUPLICATION:
+                        // If we see <mjx-container>, it has already been rendered.
+                        // However, if the tab was hidden initially, the width might be 0.
+                        // We clear it and re-render to be safe and ensure correct sizing.
+                        
+                        // Option A: Just typeset. (MathJax 3 is smart, but tabs confuse it).
+                        // Option B: Clear then typeset.
+                        
+                        // Resetting the content to original HTML is hard because MathJax modifies DOM in place.
+                        // Strategy: We just call typeset. If it was 0-width, MathJax usually fixes it on re-call.
+                        
                         MathJax.typesetPromise([blackboardDiv]).then(() => {
-                            console.log('MathJax re-rendered blackboard.');
+                            // Render Complete
+                        }).catch((err) => {
+                            console.log('Blackboard render error: ', err);
                         });
                     }
                 }
