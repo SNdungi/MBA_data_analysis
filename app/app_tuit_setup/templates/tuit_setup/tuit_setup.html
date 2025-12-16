@@ -1,217 +1,162 @@
 {% extends "base_setup.html" %}
 
 {% block file_content %}
+
+<!-- 1. EXTERNAL ASSETS -->
+<script src="//unpkg.com/mathlive"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    /* --- DASHBOARD THEME --- */
-    .control-panel {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        padding: 1.5rem;
-    }
-    
-    /* Card Styles */
-    .step-card {
-        border: 1px solid #e9ecef;
-        background: white;
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        height: 100%;
-        transition: all 0.2s;
-        position: relative;
-    }
-    .step-card.active-step {
-        border-color: var(--fluidcore-teal);
-        border-top-width: 3px;
-    }
-    .step-label {
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 700;
-        color: #adb5bd;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Inputs & Selects */
-    .form-select-sm, .form-control-sm {
-        font-size: 0.8rem;
-        border-radius: 2px;
-        border-color: #ced4da;
-    }
-    .form-select-sm:focus, .form-control-sm:focus {
-        border-color: var(--fluidcore-teal);
-        box-shadow: 0 0 0 2px rgba(35, 121, 124, 0.1);
+    /* --- THEME VARIABLES --- */
+    :root {
+        --fc-teal: #23797c;
+        --fc-teal-light: #e6fcf5;
+        --fc-orange: #f37021;
+        --fc-border: #e9ecef;
+        --fc-gray-bg: #f8f9fa;
+        --fc-text-dark: #343a40;
     }
 
-    /* Subtopic List */
-    .subtopic-list-container {
-        height: 65vh;
-        overflow-y: auto;
-        border-right: 1px solid #dee2e6;
-        background-color: #fff;
-    }
-    .subtopic-item {
-        border: none;
-        border-bottom: 1px solid #f1f3f5;
-        font-size: 0.8rem;
-        padding: 0.75rem 1rem;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .subtopic-item:hover { background-color: #f8f9fa; }
-    .subtopic-item.active {
-        background-color: #e6fcf5; /* Very light teal */
-        color: var(--fluidcore-teal);
-        font-weight: 600;
-        border-left: 3px solid var(--fluidcore-teal);
+    /* 
+       CRITICAL FIX FOR MATHLIVE:
+       1. Set keyboard z-index higher than Bootstrap Modal (1055) 
+    */
+    body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #f1f3f5; 
+        color: var(--fc-text-dark);
+        --keyboard-zindex: 3000 !important; 
     }
 
-    /* Editor Area */
-    .editor-container {
-        height: 65vh;
-        overflow-y: auto;
-        padding: 2rem;
-        background-color: #ffffff;
+    /* --- LAYOUT --- */
+    .dashboard-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* Top Nav */
+    .top-nav { background: white; border-bottom: 1px solid var(--fc-border); padding: 0.75rem 1.5rem; }
+    .nav-card { background: var(--fc-gray-bg); border: 1px solid var(--fc-border); border-radius: 6px; padding: 0.5rem 1rem; }
+    .nav-label { font-size: 0.65rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 0.25rem; }
+
+    /* Workspace */
+    .workspace { display: flex; flex: 1; overflow: hidden; }
+    .sidebar { width: 300px; background: white; border-right: 1px solid var(--fc-border); display: flex; flex-direction: column; }
+    .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--fc-border); background: var(--fc-gray-bg); }
+    .subtopic-item { padding: 0.85rem 1.25rem; border-bottom: 1px solid #f1f3f5; cursor: pointer; font-size: 0.85rem; display: flex; justify-content: space-between; }
+    .subtopic-item:hover { background-color: var(--fc-gray-bg); }
+    .subtopic-item.active { background-color: var(--fc-teal-light); color: var(--fc-teal); font-weight: 600; border-left: 4px solid var(--fc-teal); }
+
+    /* Editor Pane */
+    .editor-pane { flex: 1; overflow-y: auto; background: white; position: relative; padding: 2rem; }
+    #editor-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.96); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    .editor-label { font-size: 0.75rem; font-weight: 700; color: var(--fc-text-dark); margin-bottom: 0.4rem; display: block; }
+    .form-control-sm, .form-select-sm { border-radius: 4px; border: 1px solid #ced4da; }
+
+    /* --- QUILL & TOOLBARS --- */
+    .quill-wrapper { background: white; border-radius: 4px; border: 1px solid #ced4da; margin-bottom: 1rem; overflow: hidden; }
+    
+    /* Custom Toolbar Styling */
+    .custom-toolbar { background: var(--fc-gray-bg); border-bottom: 1px solid #ced4da; padding: 5px 10px; display: flex; align-items: center; gap: 10px; }
+    .ql-container.ql-snow { border: none !important; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
+    
+    /* The Visual Math Button inside Toolbar */
+    .btn-math-insert {
+        background-color: var(--fc-teal); color: white; border: none; 
+        font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 4px;
+        display: inline-flex; align-items: center; transition: 0.2s;
     }
-    .editor-label {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #495057;
-        margin-bottom: 0.25rem;
+    .btn-math-insert:hover { background-color: #1a5c5e; color: white; }
+
+    /* Image Upload Strip */
+    .upload-strip {
+        border: 2px dashed #dee2e6; border-radius: 6px; padding: 0.75rem;
+        background: #fdfdfd; display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; transition: 0.2s; margin-bottom: 1rem;
     }
-    .code-input {
-        font-family: 'JetBrains Mono', 'Consolas', monospace;
-        font-size: 0.8rem;
-        color: #212529;
-        background-color: #f8f9fa;
+    .upload-strip:hover { border-color: var(--fc-teal); background: #f8f9fa; }
+    .img-preview-row { display: flex; gap: 10px; overflow-x: auto; padding-left: 10px; }
+    .img-thumb-mini { height: 40px; border-radius: 4px; border: 1px solid #ddd; }
+
+    /* MathLive Field Styling */
+    math-field { 
+        font-size: 1.5rem; 
+        padding: 15px; 
+        border: 1px solid #ced4da; 
+        border-radius: 6px; 
+        width: 100%; 
+        background: #fff;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    math-field:focus-within {
+        outline: 2px solid var(--fc-teal);
+        border-color: transparent;
     }
 </style>
 
-<div class="d-flex flex-column h-100">
+<div class="dashboard-container">
     
-    <!-- ROW 1: HIERARCHY SELECTORS -->
-    <div class="control-panel">
-        <div class="row g-3">
-            
-            <!-- 1. LEVEL -->
-            <div class="col-md-4">
-                <div class="step-card p-3 active-step">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="step-label">1. Education Level</div>
-                        <i class="fas fa-layer-group text-muted small"></i>
-                    </div>
+    <!-- 1. NAVIGATION -->
+    <div class="top-nav">
+        <div class="row g-2">
+            <!-- Level -->
+            <div class="col-md-3">
+                <div class="nav-card">
+                    <div class="nav-label">1. Level</div>
                     <select id="sel-level" class="form-select form-select-sm" onchange="loadSections()">
-                        <option value="" selected disabled>-- Select Level --</option>
-                        {% for level in levels %}
-                            <option value="{{ level.id }}">{{ level.title }}</option>
-                        {% endfor %}
+                        <option value="" selected disabled>-- Select --</option>
+                        {% for level in levels %}<option value="{{ level.id }}">{{ level.title }}</option>{% endfor %}
                     </select>
                 </div>
             </div>
-
-            <!-- 2. SECTION -->
-            <div class="col-md-4">
-                <div class="step-card p-3" id="card-section">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="step-label mb-0">2. Module / Section</div>
-                        <div>
-                            <button class="btn btn-sm btn-link text-success p-0 me-2" title="Add New" onclick="toggleAdd('section')"><i class="fas fa-plus"></i></button>
-                            <button class="btn btn-sm btn-link text-danger p-0" title="Delete Selected" onclick="deleteItem('section')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-                    
-                    <!-- Select Mode -->
-                    <div id="view-section-select">
-                        <select id="sel-section" class="form-select form-select-sm" onchange="loadTopics()" disabled>
-                            <option value="">-- Select Level First --</option>
-                        </select>
-                    </div>
-
-                    <!-- Add Mode -->
-                    <div id="view-section-add" style="display:none;">
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="new-section-title" class="form-control" placeholder="New Section Name...">
-                            <button class="btn btn-outline-secondary" onclick="toggleAdd('section')"><i class="fas fa-times"></i></button>
-                            <button class="btn btn-success" onclick="addItem('section')"><i class="fas fa-check"></i></button>
-                        </div>
-                    </div>
+            <!-- Section -->
+            <div class="col-md-3">
+                <div class="nav-card">
+                    <div class="d-flex justify-content-between"><div class="nav-label">2. Section</div><i class="fas fa-plus text-success pointer" onclick="toggleAdd('section')"></i></div>
+                    <div id="view-section-select"><select id="sel-section" class="form-select form-select-sm" onchange="loadTopics()" disabled></select></div>
+                    <div id="view-section-add" class="d-none"><input id="new-section-title" class="form-control form-control-sm" placeholder="New..."><button class="btn btn-sm btn-success w-100 mt-1" onclick="addItem('section')">Add</button></div>
                 </div>
             </div>
-
-            <!-- 3. TOPIC -->
-            <div class="col-md-4">
-                <div class="step-card p-3" id="card-topic">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="step-label mb-0">3. Topic</div>
-                        <div>
-                            <button class="btn btn-sm btn-link text-success p-0 me-2" title="Add New" onclick="toggleAdd('topic')"><i class="fas fa-plus"></i></button>
-                            <button class="btn btn-sm btn-link text-danger p-0" title="Delete Selected" onclick="deleteItem('topic')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- Select Mode -->
-                    <div id="view-topic-select">
-                        <select id="sel-topic" class="form-select form-select-sm" onchange="loadSubtopics()" disabled>
-                            <option value="">-- Select Section First --</option>
-                        </select>
-                    </div>
-
-                    <!-- Add Mode -->
-                    <div id="view-topic-add" style="display:none;">
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="new-topic-title" class="form-control" placeholder="New Topic Name...">
-                            <button class="btn btn-outline-secondary" onclick="toggleAdd('topic')"><i class="fas fa-times"></i></button>
-                            <button class="btn btn-success" onclick="addItem('topic')"><i class="fas fa-check"></i></button>
-                        </div>
-                    </div>
+            <!-- Topic -->
+            <div class="col-md-3">
+                <div class="nav-card">
+                    <div class="d-flex justify-content-between"><div class="nav-label">3. Topic</div><i class="fas fa-plus text-success pointer" onclick="toggleAdd('topic')"></i></div>
+                    <div id="view-topic-select"><select id="sel-topic" class="form-select form-select-sm" onchange="loadSubtopics()" disabled></select></div>
+                    <div id="view-topic-add" class="d-none"><input id="new-topic-title" class="form-control form-control-sm" placeholder="New..."><button class="btn btn-sm btn-success w-100 mt-1" onclick="addItem('topic')">Add</button></div>
                 </div>
             </div>
-
+            <!-- Tools -->
+            <div class="col-md-3 text-end pt-3">
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem()"><i class="fas fa-trash-alt"></i></button>
+            </div>
         </div>
     </div>
 
-    <!-- ROW 2: SUBTOPIC WORKSPACE -->
-    <div class="row g-0 flex-grow-1 border-top">
-        
-        <!-- LEFT: SUBTOPIC LIST -->
-        <div class="col-md-3 subtopic-list-container">
-            <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center sticky-top">
-                <span class="fw-bold small text-muted text-uppercase">Content Units</span>
-                <button class="btn btn-sm btn-fluid-orange text-white py-0" style="font-size: 0.75rem;" onclick="initNewSubtopic()">
-                    <i class="fas fa-plus me-1"></i> New
-                </button>
+    <!-- 2. WORKSPACE -->
+    <div class="workspace">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <span class="small fw-bold text-muted">UNITS</span>
+                <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="initNewSubtopic()">New</button>
             </div>
-            <div id="subtopic-list" class="list-group list-group-flush">
-                <div class="text-center text-muted small mt-5 p-4">
-                    <i class="fas fa-arrow-up mb-2"></i><br>
-                    Select a Topic above to manage content.
-                </div>
+            <div id="subtopic-list" style="overflow-y:auto; flex:1;">
+                <div class="text-center mt-5 text-muted small">Select a Topic</div>
             </div>
         </div>
 
-        <!-- RIGHT: EDITOR FORM -->
-        <div class="col-md-9 editor-container position-relative">
-            
-            <!-- Overlay when no topic selected -->
-            <div id="editor-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white d-flex align-items-center justify-content-center" style="z-index: 10;">
-                <div class="text-center text-muted">
-                    <i class="fas fa-edit fa-3x mb-3 opacity-25"></i>
-                    <h5>Editor Locked</h5>
-                    <p class="small">Please select a Topic from the top panel to begin editing.</p>
-                </div>
+        <!-- Editor -->
+        <div class="editor-pane">
+            <div id="editor-overlay">
+                <i class="fas fa-lock fa-3x text-muted mb-3 opacity-25"></i>
+                <h6>Editor Locked</h6>
             </div>
 
-            <!-- Form -->
             <form id="editor-form">
                 <input type="hidden" id="edit-subtopic-id" name="subtopic_id">
                 
-                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                    <h5 class="mb-0 text-fluid-teal" id="editor-header">New Subtopic</h5>
-                    <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-sub" style="display:none;" onclick="deleteSubtopic()">
-                        <i class="fas fa-trash-alt me-1"></i> Delete Unit
-                    </button>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+                    <h5 id="editor-header" class="mb-0 fw-bold">New Unit</h5>
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0" id="btn-delete-sub" onclick="deleteSubtopic()" style="display:none;">Delete</button>
                 </div>
 
                 <div class="row g-3">
@@ -220,309 +165,301 @@
                         <input type="text" class="form-control form-control-sm" id="edit-title" name="title" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="editor-label">Video URL (Optional)</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-video" name="video_url" placeholder="https://...">
+                        <label class="editor-label">Video URL</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-video" name="video_url">
                     </div>
-                    
                     <div class="col-12">
                         <label class="editor-label">Short Summary</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-desc" name="short_description" placeholder="Brief overview shown at the top of notes...">
+                        <input type="text" class="form-control form-control-sm" id="edit-desc" name="short_description">
                     </div>
 
-                    <div class="col-12">
-                        <label class="editor-label">Definition / Concept Notes (HTML Support)</label>
-                        <textarea class="form-control code-input" id="edit-definition" name="definition_text" rows="8" placeholder="<p>Enter main content here...</p>"></textarea>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="editor-label">Examples Data (JSON)</label>
-                        <textarea class="form-control code-input" id="edit-examples" name="examples" rows="6" placeholder='{ "content": "<p>Math here...</p>", "images": [] }'></textarea>
-                        <div class="d-flex justify-content-between mt-1">
-                            <span class="form-text small text-muted">Must be valid JSON. Use triple quotes in TOML logic, but standard JSON here.</span>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="formatJSON()">Format JSON</button>
+                    <!-- CONCEPT NOTES (Standard Quill) -->
+                    <div class="col-12 mt-2">
+                        <label class="editor-label text-primary">Concept Notes</label>
+                        <div class="quill-wrapper">
+                            <div id="quill-notes" style="height: 150px;"></div>
                         </div>
+                        <input type="hidden" name="definition_text" id="hidden-notes">
+                    </div>
+
+                    <!-- WORKED EXAMPLE (Refined Layout) -->
+                    <div class="col-12 border-top pt-4 mt-2">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-chalkboard me-2"></i>Worked Example</h6>
+
+                        <!-- A. Image Strip (Top) -->
+                        <div class="upload-strip" onclick="document.getElementById('img-input').click()">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-images text-muted me-3 fa-lg"></i>
+                                <div>
+                                    <span class="d-block small fw-bold text-dark">Reference Images</span>
+                                    <span class="d-block small text-muted" style="font-size:0.7rem;">Click to upload snippets (Max 2MB)</span>
+                                </div>
+                            </div>
+                            <div id="image-preview-container" class="img-preview-row"></div>
+                            <input type="file" id="img-input" class="d-none" onchange="uploadImage(this)">
+                        </div>
+
+                        <!-- B. Editor with Custom Header (Bottom) -->
+                        <label class="editor-label">Step-by-Step Solution</label>
+                        <div class="quill-wrapper">
+                            <!-- Custom Toolbar Header -->
+                            <div id="example-toolbar" class="custom-toolbar">
+                                <!-- Standard Formats -->
+                                <span class="ql-formats">
+                                    <button class="ql-bold"></button>
+                                    <button class="ql-italic"></button>
+                                    <button class="ql-underline"></button>
+                                </span>
+                                <span class="ql-formats">
+                                    <button class="ql-list" value="ordered"></button>
+                                    <button class="ql-list" value="bullet"></button>
+                                </span>
+                                <span class="ql-formats">
+                                    <button class="ql-script" value="sub"></button>
+                                    <button class="ql-script" value="super"></button>
+                                </span>
+                                <span class="ql-formats">
+                                    <button class="ql-clean"></button>
+                                </span>
+                                <!-- THE VISUAL MATH BUTTON -->
+                                <span class="ql-formats border-start ps-2 ms-2">
+                                    <button type="button" class="btn-math-insert" onclick="openMathModal()">
+                                        <i class="fas fa-calculator me-2 text-black"></i> 
+                                    </button>
+                                </span>
+                            </div>
+                            <!-- Editor Body -->
+                            <div id="quill-example" style="height: 200px;"></div>
+                        </div>
+                        <input type="hidden" name="examples" id="hidden-examples-json">
                     </div>
                 </div>
 
                 <div class="mt-4 pt-3 border-top text-end">
-                    <button type="button" class="btn btn-light me-2" onclick="loadSubtopics()">Cancel</button>
-                    <button type="button" class="btn btn-fluid-orange text-white" onclick="saveSubtopic()">
-                        <i class="fas fa-save me-1"></i> Save Changes
-                    </button>
+                    <button type="button" class="btn btn-light me-2" onclick="loadSubtopics()">Discard</button>
+                    <button type="button" class="btn btn-primary px-4" onclick="saveSubtopic()" style="background:var(--fc-teal); border:none;">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<script>
-    // --- STATE MANAGEMENT ---
-    const state = {
-        level: null,
-        section: null,
-        topic: null,
-        subtopic: null
-    };
+<!-- MATH MODAL 
+     CRITICAL FIX: data-bs-backdrop="static" prevents Bootstrap from closing the modal 
+     when clicking the visual keyboard (which is technically outside the modal div) 
+-->
+<div class="modal fade" id="mathModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-dark text-white py-2">
+        <h6 class="modal-title small fw-bold">VISUAL FORMULA BUILDER</h6>
+        <!-- We use a custom close function to ensure focus clears -->
+        <button type="button" class="btn-close btn-close-white" onclick="closeMathModal()"></button>
+      </div>
+      <div class="modal-body bg-light">
+          <!-- virtual-keyboard-mode=onfocus ensures the keyboard pops up only when user clicks inside -->
+          <math-field id="math-input" virtual-keyboard-mode="onfocus"></math-field>
+          <div class="text-muted small mt-2 d-flex justify-content-between">
+              <span>Type <code>/sqrt</code>, <code>/frac</code>, or use the on-screen keyboard.</span>
+              <span id="latex-preview" class="text-primary font-monospace"></span>
+          </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="closeMathModal()">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="insertMath()">Insert Formula</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    // --- 1. CASCADING LOADERS ---
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script>
+    // --- 1. INITIALIZE EDITORS ---
+    // Notes Editor (Standard Toolbar)
+    const quillNotes = new Quill('#quill-notes', {
+        theme: 'snow',
+        modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] }
+    });
+
+    // Example Editor (CUSTOM TOOLBAR LINKED VIA ID)
+    const quillEx = new Quill('#quill-example', {
+        theme: 'snow',
+        modules: { toolbar: '#example-toolbar' } // This links to the custom HTML header
+    });
+
+    const mf = document.getElementById('math-input');
+    
+    // Live LaTeX preview
+    mf.addEventListener('input', (ev) => {
+        document.getElementById('latex-preview').innerText = mf.value;
+    });
+
+    // --- 2. STATE & LOGIC ---
+    let state = { level: null, section: null, topic: null, subtopic: null };
+    let currentImages = [];
+    let mathModalInstance = null;
+
+    function toggleOverlay(show) {
+        const ov = document.getElementById('editor-overlay');
+        show ? (ov.classList.remove('d-none'), ov.classList.add('d-flex')) : (ov.classList.remove('d-flex'), ov.classList.add('d-none'));
+    }
 
     function loadSections() {
-        const levelId = document.getElementById('sel-level').value;
-        state.level = levelId;
-        resetDownstream('section');
-
-        fetch(`/tutorial_admin/api/sections/${levelId}`)
-            .then(r => r.json())
-            .then(data => {
-                const sel = document.getElementById('sel-section');
-                sel.innerHTML = '<option value="" selected disabled>-- Select Section --</option>';
-                data.forEach(item => {
-                    sel.innerHTML += `<option value="${item.id}">${item.title}</option>`;
-                });
-                sel.disabled = false;
-                document.getElementById('card-section').classList.add('active-step');
-            });
+        const id = document.getElementById('sel-level').value;
+        state.level = id; resetUI('section');
+        fetch(`/tutorial_admin/api/sections/${id}`).then(r=>r.json()).then(d=>{
+            const s = document.getElementById('sel-section');
+            s.innerHTML='<option value="" disabled selected>-- Select --</option>';
+            d.forEach(i=>s.innerHTML+=`<option value="${i.id}">${i.title}</option>`);
+            s.disabled=false;
+        });
     }
-
     function loadTopics() {
-        const secId = document.getElementById('sel-section').value;
-        state.section = secId;
-        resetDownstream('topic');
-
-        fetch(`/tutorial_admin/api/topics/${secId}`)
-            .then(r => r.json())
-            .then(data => {
-                const sel = document.getElementById('sel-topic');
-                sel.innerHTML = '<option value="" selected disabled>-- Select Topic --</option>';
-                data.forEach(item => {
-                    sel.innerHTML += `<option value="${item.id}">${item.title}</option>`;
-                });
-                sel.disabled = false;
-                document.getElementById('card-topic').classList.add('active-step');
+        const id = document.getElementById('sel-section').value;
+        state.section=id; resetUI('topic');
+        fetch(`/tutorial_admin/api/topics/${id}`).then(r=>r.json()).then(d=>{
+            const s = document.getElementById('sel-topic');
+            s.innerHTML='<option value="" disabled selected>-- Select --</option>';
+            d.forEach(i=>s.innerHTML+=`<option value="${i.id}">${i.title}</option>`);
+            s.disabled=false;
+        });
+    }
+    function loadSubtopics(activeId=null) {
+        const id = document.getElementById('sel-topic').value;
+        state.topic=id; toggleOverlay(false); if(!activeId) initNewSubtopic();
+        fetch(`/tutorial_admin/api/subtopics/${id}`).then(r=>r.json()).then(d=>{
+            const l = document.getElementById('subtopic-list'); l.innerHTML='';
+            if(!d.length) l.innerHTML='<div class="text-center mt-4 small text-muted">No units found</div>';
+            d.forEach(i=>{
+                const act = (activeId && i.id == activeId) ? 'active' : '';
+                l.innerHTML+=`<div class="subtopic-item ${act}" id="sub-${i.id}" onclick="loadSubtopicDetails(${i.id})"><span>${i.title}</span><i class="fas fa-chevron-right small text-muted"></i></div>`;
             });
-    }
-
-    function loadSubtopics() {
-        const topicId = document.getElementById('sel-topic').value;
-        state.topic = topicId;
-        
-        // Enable Editor Overlay
-        document.getElementById('editor-overlay').style.display = 'none';
-        initNewSubtopic(); // Default to new form
-
-        fetch(`/tutorial_admin/api/subtopics/${topicId}`)
-            .then(r => r.json())
-            .then(data => {
-                const list = document.getElementById('subtopic-list');
-                list.innerHTML = '';
-                if(data.length === 0) {
-                    list.innerHTML = '<div class="text-muted small p-3 text-center">No content yet. <br>Click "New" to add.</div>';
-                } else {
-                    data.forEach(item => {
-                        list.innerHTML += `
-                            <div class="subtopic-item" id="sub-${item.id}" onclick="loadSubtopicDetails(${item.id})">
-                                <span class="text-truncate">${item.title}</span>
-                                <i class="fas fa-chevron-right small text-muted"></i>
-                            </div>`;
-                    });
-                }
-            });
-    }
-
-    // --- 2. EDITOR LOGIC ---
-
-    function initNewSubtopic() {
-        state.subtopic = null;
-        document.getElementById('editor-form').reset();
-        document.getElementById('edit-subtopic-id').value = '';
-        document.getElementById('editor-header').innerText = 'New Subtopic';
-        document.getElementById('editor-header').className = 'mb-0 text-success';
-        document.getElementById('btn-delete-sub').style.display = 'none';
-        
-        // Clear active class from list
-        document.querySelectorAll('.subtopic-item').forEach(el => el.classList.remove('active'));
-    }
-
-    function loadSubtopicDetails(id) {
-        // UI Highlight
-        document.querySelectorAll('.subtopic-item').forEach(el => el.classList.remove('active'));
-        const activeItem = document.getElementById(`sub-${id}`);
-        if(activeItem) activeItem.classList.add('active');
-
-        fetch(`/tutorial_admin/api/subtopic_details/${id}`)
-            .then(r => r.json())
-            .then(data => {
-                state.subtopic = id;
-                document.getElementById('edit-subtopic-id').value = data.id;
-                document.getElementById('edit-title').value = data.title;
-                document.getElementById('edit-desc').value = data.short_description || '';
-                document.getElementById('edit-definition').value = data.definition_text || '';
-                document.getElementById('edit-video').value = data.video_url || '';
-                
-                // Handle JSON formatting for display
-                try {
-                    const jsonObj = JSON.parse(data.examples);
-                    document.getElementById('edit-examples').value = JSON.stringify(jsonObj, null, 4);
-                } catch(e) {
-                    document.getElementById('edit-examples').value = data.examples;
-                }
-
-                document.getElementById('editor-header').innerText = 'Editing: ' + data.title;
-                document.getElementById('editor-header').className = 'mb-0 text-fluid-teal';
-                document.getElementById('btn-delete-sub').style.display = 'block';
-            });
-    }
-
-    function saveSubtopic() {
-        if(!state.topic) return alert("No topic selected.");
-        
-        const form = document.getElementById('editor-form');
-        const formData = new FormData(form);
-        formData.append('topic_id', state.topic);
-
-        // Validate JSON
-        try {
-            const jsonStr = document.getElementById('edit-examples').value;
-            if(jsonStr.trim()) JSON.parse(jsonStr);
-        } catch(e) {
-            alert("Invalid JSON format in Examples field.");
-            return;
-        }
-
-        fetch('/tutorial_admin/action/save_subtopic', {
-            method: 'POST',
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if(data.status === 'success') {
-                loadSubtopics(); // Refresh list
-                // If it was an update, reload details to keep focus? 
-                // For simplicity, we refresh the list which resets the form to new.
-                // Could optionally find the ID and re-click it.
-            } else {
-                alert("Error: " + data.message);
-            }
         });
     }
 
-    function deleteSubtopic() {
-        if(!state.subtopic || !confirm("Permanently delete this subtopic?")) return;
-        
-        fetch(`/tutorial_admin/action/delete_subtopic/${state.subtopic}`, { method: 'DELETE' })
-            .then(r => r.json())
-            .then(data => {
-                if(data.status === 'success') loadSubtopics();
-            });
+    function initNewSubtopic() {
+        if(!state.topic) return;
+        toggleOverlay(false); state.subtopic=null;
+        document.getElementById('editor-form').reset();
+        document.getElementById('edit-subtopic-id').value='';
+        quillNotes.root.innerHTML=''; quillEx.root.innerHTML='';
+        currentImages=[]; renderImages();
+        document.getElementById('editor-header').innerText='New Unit';
+        document.getElementById('btn-delete-sub').style.display='none';
+        document.querySelectorAll('.subtopic-item').forEach(e=>e.classList.remove('active'));
     }
 
-    // --- 3. HIERARCHY ADD/DELETE LOGIC ---
+    function loadSubtopicDetails(id) {
+        toggleOverlay(false);
+        document.querySelectorAll('.subtopic-item').forEach(e=>e.classList.remove('active'));
+        document.getElementById(`sub-${id}`).classList.add('active');
+        fetch(`/tutorial_admin/api/subtopic_details/${id}`).then(r=>r.json()).then(d=>{
+            state.subtopic=d.id;
+            document.getElementById('edit-subtopic-id').value=d.id;
+            document.getElementById('edit-title').value=d.title;
+            document.getElementById('edit-desc').value=d.short_description||'';
+            document.getElementById('edit-video').value=d.video_url||'';
+            quillNotes.root.innerHTML=d.definition_text||'';
+            const ex=d.examples||{};
+            quillEx.root.innerHTML=ex.content||'';
+            currentImages=ex.images||[]; renderImages();
+            document.getElementById('editor-header').innerText='Editing: '+d.title;
+            document.getElementById('btn-delete-sub').style.display='block';
+        });
+    }
 
-    function toggleAdd(type) {
-        const viewDiv = document.getElementById(`view-${type}-select`);
-        const addDiv = document.getElementById(`view-${type}-add`);
+    function cleanHtml(html) {
+        const t=document.createElement('div'); t.innerHTML=html;
+        t.querySelectorAll('img').forEach(i=>i.remove());
+        t.querySelectorAll('*').forEach(e=>{
+            e.removeAttribute('style'); e.removeAttribute('class');
+            if(e.tagName==='SPAN') { const p=e.parentNode; while(e.firstChild)p.insertBefore(e.firstChild,e); p.removeChild(e); }
+        });
+        return t.innerHTML.replace(/<p><br><\/p>/g,'');
+    }
+
+    function saveSubtopic() {
+        if(!state.topic) return;
+        document.getElementById('hidden-notes').value = cleanHtml(quillNotes.root.innerHTML);
+        const exData = { content: cleanHtml(quillEx.root.innerHTML), images: currentImages };
+        document.getElementById('hidden-examples-json').value = JSON.stringify(exData);
+
+        const fd = new FormData(document.getElementById('editor-form'));
+        fd.append('topic_id', state.topic);
+        fetch('/tutorial_admin/action/save_subtopic',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+            if(d.status==='success') { loadSubtopics(d.id); loadSubtopicDetails(d.id); }
+        });
+    }
+
+    // --- MATH MODAL HANDLERS ---
+    function openMathModal() { 
+        mf.value = ""; 
+        document.getElementById('latex-preview').innerText = "";
         
-        if (viewDiv.style.display === 'none') {
-            viewDiv.style.display = 'block';
-            addDiv.style.display = 'none';
+        // Init Bootstrap modal
+        const modalEl = document.getElementById('mathModal');
+        mathModalInstance = new bootstrap.Modal(modalEl);
+        mathModalInstance.show();
+        
+        // Focus MathLive field slightly after modal animation
+        setTimeout(() => { mf.focus(); }, 500);
+    }
+
+    function closeMathModal() {
+        if (mathModalInstance) mathModalInstance.hide();
+    }
+
+    function insertMath() {
+        if(!mf.value) { closeMathModal(); return; }
+        
+        const latex = ` $${mf.value}$ `;
+        
+        // Insert into Quill
+        const range = quillEx.getSelection(true);
+        if (range) {
+            quillEx.insertText(range.index, latex);
+            quillEx.setSelection(range.index + latex.length);
         } else {
-            viewDiv.style.display = 'none';
-            addDiv.style.display = 'flex'; // Input group needs flex
-            document.getElementById(`new-${type}-title`).focus();
+            quillEx.insertText(quillEx.getLength(), latex);
         }
+        
+        closeMathModal();
     }
 
-    function addItem(type) {
-        const title = document.getElementById(`new-${type}-title`).value;
-        if(!title.trim()) return;
-
-        let url = '', parentId = '';
-        const formData = new FormData();
-        formData.append('title', title);
-
-        if(type === 'section') {
-            url = '/tutorial_admin/action/add_section';
-            parentId = state.level;
-            formData.append('level_id', parentId);
-        } else if(type === 'topic') {
-            url = '/tutorial_admin/action/add_topic';
-            parentId = state.section;
-            formData.append('section_id', parentId);
-        }
-
-        fetch(url, { method: 'POST', body: formData })
-            .then(r => r.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    document.getElementById(`new-${type}-title`).value = '';
-                    toggleAdd(type); // Switch back to select
-                    // Reload dropdown
-                    if(type === 'section') loadSections();
-                    if(type === 'topic') loadTopics();
-                } else {
-                    alert(data.message);
-                }
-            });
+    function uploadImage(input) {
+        const f=input.files[0]; if(!f||f.size>2*1024*1024) return alert("Max 2MB");
+        const fd=new FormData(); fd.append('file',f);
+        fetch('/tutorial_admin/action/upload_image',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
+            if(d.location) { currentImages.push(d.location); renderImages(); }
+        }).finally(()=>input.value='');
     }
-
-    function deleteItem(type) {
-        let id;
-        if(type === 'section') id = document.getElementById('sel-section').value;
-        else if(type === 'topic') id = document.getElementById('sel-topic').value;
-
-        if(!id || !confirm(`Delete this ${type}? (Must be empty)`)) return;
-
-        fetch(`/tutorial_admin/action/delete_${type}/${id}`, { method: 'DELETE' })
-            .then(r => r.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    if(type === 'section') loadSections();
-                    if(type === 'topic') loadTopics();
-                } else {
-                    alert(data.message);
-                }
-            });
+    function renderImages() {
+        const c=document.getElementById('image-preview-container'); c.innerHTML='';
+        currentImages.forEach((u,i)=>c.innerHTML+=`<img src="${u}" class="img-thumb-mini pointer" onclick="removeImage(${i})" title="Click to remove">`);
     }
+    function removeImage(i) { if(confirm('Remove image?')) { currentImages.splice(i,1); renderImages(); } }
 
-    // --- UTILS ---
-
-    function resetDownstream(fromType) {
-        if(fromType === 'section') {
-            // Clear Section and Topic
-            document.getElementById('sel-section').innerHTML = '<option>Loading...</option>';
-            document.getElementById('sel-section').disabled = true;
-            document.getElementById('card-section').classList.remove('active-step');
-            
-            document.getElementById('sel-topic').innerHTML = '<option value="">-- Select Section First --</option>';
-            document.getElementById('sel-topic').disabled = true;
-            document.getElementById('card-topic').classList.remove('active-step');
-            
-            resetEditorState();
-        }
-        else if(fromType === 'topic') {
-            // Clear Topic
-            document.getElementById('sel-topic').innerHTML = '<option>Loading...</option>';
-            document.getElementById('sel-topic').disabled = true;
-            document.getElementById('card-topic').classList.remove('active-step');
-            
-            resetEditorState();
-        }
+    function resetUI(type) {
+        if(type==='section') { document.getElementById('sel-section').innerHTML='<option>Loading...</option>'; document.getElementById('sel-topic').disabled=true; }
+        document.getElementById('subtopic-list').innerHTML=''; toggleOverlay(true); state.topic=null;
     }
-
-    function resetEditorState() {
-        document.getElementById('subtopic-list').innerHTML = '';
-        document.getElementById('editor-overlay').style.display = 'flex';
-        state.topic = null;
+    function toggleAdd(t) { document.getElementById(`view-${t}-select`).classList.toggle('d-none'); document.getElementById(`view-${t}-add`).classList.toggle('d-none'); }
+    function addItem(t) {
+        const title=document.getElementById(`new-${t}-title`).value; if(!title)return;
+        const fd=new FormData(); fd.append('title',title);
+        const url=t==='section'?'/tutorial_admin/action/add_section':'/tutorial_admin/action/add_topic';
+        fd.append(t==='section'?'level_id':'section_id', t==='section'?state.level:state.section);
+        fetch(url,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{ if(d.status==='success') t==='section'?loadSections():loadTopics(); });
     }
-
-    function formatJSON() {
-        const el = document.getElementById('edit-examples');
-        try {
-            const obj = JSON.parse(el.value);
-            el.value = JSON.stringify(obj, null, 4);
-        } catch(e) {
-            alert("Invalid JSON");
-        }
+    function deleteItem() {
+        if(!document.getElementById('sel-topic').value || !confirm("Delete Topic?")) return;
+        fetch(`/tutorial_admin/action/delete_topic/${document.getElementById('sel-topic').value}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{if(d.status==='success')loadTopics();});
+    }
+    function deleteSubtopic() {
+        if(!state.subtopic||!confirm("Delete Unit?")) return;
+        fetch(`/tutorial_admin/action/delete_subtopic/${state.subtopic}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{if(d.status==='success')loadSubtopics();});
     }
 </script>
+
 {% endblock %}

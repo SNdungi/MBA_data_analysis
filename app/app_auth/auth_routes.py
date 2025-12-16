@@ -29,7 +29,6 @@ def login():
             next_page = url_for('file_mgt.list_projects')
             
         return redirect(next_page)
-
     return render_template('auth/login.html', title='Sign In')
 
 @auth_bp.route('/register', methods=['GET', 'POST'])

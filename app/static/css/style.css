@@ -237,6 +237,7 @@ AUTHORISATION PAGES
 }
 .btn-login:hover {
     background: #0e3944;
+    color: #fff;
     transform: translateY(-1px);
 }
 
@@ -245,31 +246,59 @@ AUTHORISATION PAGES
 /*==========================================================================
    FLASH MESSAGES (Centered & Compact)
    ========================================================================== */
-.flash-container {              /* spacing from navbar */
+
+.flash-container {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6000;              /* ensure it's above other page elements */
+    width: 100%;
+    pointer-events: auto;       /* allow clicks inside */
     display: flex;
     justify-content: center;
-    width: 100%;
+    align-items: flex-start;
+    gap: 0.5rem;                /* spacing when multiple messages stack */
 }
 
+/* ALERT: anchor for the close button */
 .flash-alert {
-    width: 50%;                      /* tighten width */
-    text-align: center;              /* center text */
-    font-size: 0.85rem;              /* smaller text */
-    padding: 0.8rem 1rem;            /* cleaner spacing */
-    word-wrap: break-word;           /* ensure long text wraps */
-    white-space: normal;             /* allow wrapping */
-}
-.flash-close {
-    transform: scale(0.7);     /* reduce size */
-    margin-top: -4px;          /* adjust vertical alignment */
-    margin-right: -2px;        /* tuck it in slightly */
-    opacity: 0.7;              /* softer look */
+    position: relative;
+    width: 50%;
+    margin: 0;
+    padding: 0.6rem 2.4rem 0.6rem 1rem;  /* extra right padding so text doesn't overlap close */
+    font-size: 0.75rem;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    pointer-events: auto;       /* ensure alert is interactive */
+    background-clip: padding-box; /* keep background inside rounded corners if any */
 }
 
-.flash-close:hover {
-    opacity: 1;                /* normal opacity on hover */
-    transform: scale(0.8);     /* slightly bigger on hover */
+/* CLOSE BUTTON: small, inside the alert and clickable */
+.flash-close {
+    position: absolute;
+    top: -5px !important;
+    right: 6px;
+    transform: scale(0.7);
+    opacity: 0.85;
+    padding-bottom: 20px;
+    border: none;
+    z-index: 6100;              /* above the alert content */
+    pointer-events: auto;       /* very explicit that it must be clickable */
 }
+
+/* hover state */
+.flash-close:hover {
+    opacity: 1;
+    transform: scale(0.88);
+}
+
+/* If you still use bootstrap's fade animations, ensure the container keeps pointer events */
+.fade.show .flash-alert {
+    pointer-events: auto;
+}
+
+
 
 
 

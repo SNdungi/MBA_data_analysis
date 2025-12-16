@@ -2,65 +2,74 @@
 
 {% block tutorial_content %}
 
-<!-- Custom Styles for Technical Tabs -->
-<!-- 1. Configure MathJax to recognize $ and $$ -->
-<!-- MATHJAX CONFIGURATION -->
+<!-- ========================================== -->
+<!-- MATHJAX CONFIGURATION                      -->
+<!-- ========================================== -->
 <script>
 window.MathJax = {
   tex: {
+    // 1. Define delimiters (Allow $ for inline, $$ for block)
     inlineMath: [['$', '$'], ['\\(', '\\)']],
-    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
   },
   options: {
+    // 2. Tell MathJax to scan the HTML
     ignoreHtmlClass: 'tex2jax_ignore',
     processHtmlClass: 'tex2jax_process'
-  }
+  },
+  // 3. REMOVED 'typeset: false'. We want it to run automatically on load.
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
-<!-- STYLES -->
+<!-- ========================================== -->
+<!-- STYLES                                     -->
+<!-- ========================================== -->
 <style>
-
-    
-    /* BLACKBOARD SPECIFIC STYLES */
-    
-    /* 1. Apply the Custom Font */
+    /* Blackboard specific font style */
     .blackboard-font {
-        font-family:  'Comic Sans MS','Caveat Brush', cursive, sans-serif !important; 
-        font-size: 1rem !important; /* Handwriting needs to be slightly larger to be readable */
+        font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif !important; 
+        font-size: 1.1rem !important; 
         letter-spacing: 0.5px;
-        line-height: 1.5;
-    }
-
-    /* 2. Force MathJax to be white and slightly larger to match handwriting */
-    #blackboard mjx-container {
-        color: #e9ecef !important;
-        font-size: 1.1em !important; 
+        line-height: 1.8;
     }
     
-    /* 3. Ensure standard text is white */
-    #blackboard-content, #blackboard-content p {
+    /* Force MathJax output to be white/light for the blackboard */
+    #blackboard-content mjx-container {
         color: #e9ecef !important;
+        font-size: 115% !important;
+    }
+    
+    /* MathJax Outline Fix (removes blue focus outline on math) */
+    mjx-container:focus { outline: none !important; }
+
+    /* Blackboard Images */
+    .blackboard-img-card {
+        background-color: #343a40;
+        border: 1px solid #495057;
+        padding: 4px;
+        border-radius: 4px;
+        transition: transform 0.2s;
+    }
+    .blackboard-img-card:hover {
+        transform: scale(1.02);
+        border-color: #adb5bd;
     }
 </style>
-
 
 {% if active_subtopic %}
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
         <div>
-            <!-- Breadcrumb-like category: Level > Section > Topic -->
-            <span class="badge bg-light text-dark border mb-1" style="font-weight: normal;">
-                {{ active_subtopic.topic.section.level.title }} / {{ active_subtopic.topic.section.title }}/{{ active_subtopic.title }}
+            <!-- Breadcrumb: Level > Section > Topic -->
+            <span class="badge bg-light text-dark border mb-1" style="font-weight: normal; font-size: 0.8rem;">
+                {{ active_subtopic.topic.section.level.title }} <span class="text-muted mx-1">/</span> 
+                {{ active_subtopic.topic.section.title }} <span class="text-muted mx-1">/</span> 
+                {{ active_subtopic.title }}
             </span>
-        </div>
-        <div class="text-end">
-            <!-- Navigation Logic could be added here later -->
-             <div class="btn-group btn-group-sm">
-                 <button class="btn btn-outline-secondary" disabled title="Previous"><i class="fas fa-chevron-left"></i></button>
-                 <button class="btn btn-outline-secondary" disabled title="Next"><i class="fas fa-chevron-right"></i></button>
-             </div>
+            <h4 class="mb-0 fw-light text-dark">{{ active_subtopic.title }}</h4>
         </div>
     </div>
 
@@ -90,12 +99,14 @@ window.MathJax = {
         <div class="tab-pane fade show active" id="notes" role="tabpanel">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="prose" style="font-size: 0.9rem; line-height: 1.7;">
+                    <div class="prose p-3  border rounded" style="font-size: 0.75rem; line-height: 1.8;">
                         {% if active_subtopic.short_description %}
-                            <p class="lead text-dark">{{ active_subtopic.short_description }}</p>
-                            <hr>
+                            <div class=" alert border-start ">
+                                <p class="mb-0 text-muted">{{ active_subtopic.short_description }}</p>
+                            </div>
                         {% endif %}
                         
+                        <!-- Main Definition Content -->
                         {{ active_subtopic.definition_text | safe }}
                     </div>
                 </div>
@@ -118,57 +129,66 @@ window.MathJax = {
                             </div>
                         {% endif %}
                     </div>
-                    {% if active_subtopic.video_url %}
-                    <div class="mt-2 text-muted small text-center">
-                        <i class="fas fa-info-circle me-1"></i> Content provided by external educational partners.
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
 
-        
-        <!-- 3. BLACKBOARD TAB -->
+        <!-- 3. BLACKBOARD TAB (Images first, then Latex) -->
         <div class="tab-pane fade" id="blackboard" role="tabpanel">
-            <div class="card bg-dark text-white border-secondary rounded-0">
-                <div class="card-header border-secondary bg-dark text-white-50 small text-uppercase fw-bold">
-                    <i class="fas fa-pen-fancy me-2"></i>Worked Example
+            <div class="card bg-dark text-white border-secondary rounded-0 shadow-lg">
+                <div class="card-header border-secondary bg-dark text-white-50 d-flex justify-content-between align-items-center">
+                    <span class="small text-uppercase fw-bold"><i class="fas fa-pen-fancy me-2"></i>Worked Example</span>
+                    <span class="badge bg-secondary text-white small" style="font-size: 0.65rem;">BLACKBOARD MODE</span>
                 </div>
                 
-                <!-- APPLIED CLASS: .blackboard-font (uses Caveat Brush) -->
-                <div id="blackboard-content" class="card-body blackboard-font" style="min-height: 400px; background-color: #212529; color: #e9ecef;">
+                <div id="blackboard-content" class="card-body blackboard-container blackboard-font" style="min-height: 500px; background-color: #2b2f33; color: #e9ecef;">
                     
                     {% if active_subtopic.examples %}
-                        
-                        {# Case 1: HTML Content #}
-                        {% if active_subtopic.examples.content %}
-                            {{ active_subtopic.examples.content | safe }}
-                        
-                        {# Case 2: List Content #}
-                        {% elif active_subtopic.examples.list_content %}
-                            {% for line in active_subtopic.examples.list_content %}
-                                <p class="mb-1">{{ line | safe }}</p>
-                            {% endfor %}
-                            
-                        {# Case 3: Raw Dump #}
-                        {% else %}
-                             <pre class="text-white font-monospace">{{ active_subtopic.examples | tojson(indent=2) }}</pre>
+
+                        <!-- A. QUESTION EXCERPTS / IMAGES (First) -->
+                        {% if active_subtopic.examples.images and active_subtopic.examples.images | length > 0 %}
+                            <div class="mb-4 pb-3 border-bottom border-secondary">
+                                <p class="text-warning small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px;">
+                                    <i class="fas fa-question-circle me-1"></i> Problem Reference
+                                </p>
+                                <div class="row g-3">
+                                {% for img_url in active_subtopic.examples.images %}
+                                    <div class="col-md-6 col-lg-5">
+                                        <a href="{{ img_url }}" target="_blank">
+                                            <div class="blackboard-img-card">
+                                                <img src="{{ img_url }}" class="img-fluid rounded" alt="Question Reference">
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            </div>
                         {% endif %}
 
-                        {# Images #}
-                        {% if active_subtopic.examples.images %}
-                            <hr class="border-secondary mt-4">
-                            <p class="text-muted small" style="font-family: sans-serif;">Reference Figures:</p>
-                            {% for img in active_subtopic.examples.images %}
-                                <div class="mb-3 border border-secondary p-1 bg-white d-inline-block">
-                                    <img src="{{ img }}" class="img-fluid" alt="Example Figure">
+                        <!-- B. WORKED SOLUTION / LATEX (Second) -->
+                        {% if active_subtopic.examples.content %}
+                            <div>
+                                <p class="text-success small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px;">
+                                    <i class="fas fa-calculator me-1"></i> Solution
+                                </p>
+                                <div class="mt-2">
+                                    <!-- The 'safe' filter ensures HTML tags are rendered, MathJax finds the $ within -->
+                                    {{ active_subtopic.examples.content | safe }}
                                 </div>
-                            {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Fallback if JSON exists but is empty -->
+                        {% if not active_subtopic.examples.content and not active_subtopic.examples.images %}
+                             <div class="text-center text-muted mt-5 opacity-50">
+                                <i class="fas fa-pencil-ruler fa-2x mb-2"></i>
+                                <p>Content coming soon.</p>
+                            </div>
                         {% endif %}
 
                     {% else %}
-                        <div class="text-center text-muted mt-5" style="font-family: sans-serif;">
-                            <i class="fas fa-calculator fa-2x mb-3"></i>
+                        <div class="text-center text-muted mt-5 opacity-50">
+                            <i class="fas fa-calculator fa-3x mb-3"></i>
                             <p>No worked examples available.</p>
                         </div>
                     {% endif %}
@@ -178,27 +198,41 @@ window.MathJax = {
         </div>
 
 {% else %}
-    <!-- EMPTY STATE (Welcome Screen) -->
+    <!-- EMPTY STATE -->
     <div class="text-center py-5">
         <div class="mb-4 opacity-25">
             <i class="fas fa-chalkboard-teacher fa-3x text-muted"></i>
         </div>
-        <h4 class="text-muted fw-light">Welcome to the Tutorials Hub</h4>
-        <p class="small text-muted mb-0">Select a topic from the curriculum sidebar to begin.</p>
-        
-        <div class="row justify-content-center mt-5">
-            {% for level in levels %}
-            <div class="col-md-4 mb-3">
-                <div class="card h-100 border bg-light shadow-sm">
-                    <div class="card-body text-center">
-                        <h6 class="text-fluid-teal fw-bold">{{ level.title }}</h6>
-                        <p class="small text-muted">{{ level.description or 'Explore these topics.' }}</p>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        <h4 class="text-muted fw-light">Tutorials Hub</h4>
+        <p class="small text-muted mb-0">Select a topic from the sidebar.</p>
     </div>
 {% endif %}
+
+<!-- SCRIPT: RELOAD MATHJAX ON TAB SWITCH -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Initial Render (Handled by config, but failsafe here)
+        if(window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+
+        // 2. Re-render when switching tabs (Critical for hidden divs)
+        var triggerTabList = [].slice.call(document.querySelectorAll('#tutorialTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+            triggerEl.addEventListener('shown.bs.tab', function (event) {
+                if (event.target.id === 'blackboard-tab') {
+                    // Force a re-scan of the blackboard container
+                    var blackboardDiv = document.getElementById('blackboard-content');
+                    if(window.MathJax && blackboardDiv) {
+                        // Clear previous MathJax formatting to prevent double-rendering artifacts
+                        MathJax.typesetPromise([blackboardDiv]).then(() => {
+                            console.log('MathJax re-rendered blackboard.');
+                        });
+                    }
+                }
+            });
+        });
+    });
+</script>
 
 {% endblock %}

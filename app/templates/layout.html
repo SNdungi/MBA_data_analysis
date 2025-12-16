@@ -36,19 +36,29 @@
              {% if study %}
                         <!-- Inside your Sticky Navbar or Top Bar -->
             <div class="d-flex align-items-center bg-white border-bottom px-4 py-2">
-                <span class="me-3 fw-bold">{{ study.name }}</span>
                 
+                <!-- Study Initial Pill -->
+                <span class="badge rounded-pill bg-primary text-white me-2"
+                    style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                    {{ study.name[0]|upper }}
+                </span>
+
+                <!-- Study Name -->
+                <span class="fw-bold me-3">{{ study.name }}</span>
+
                 <!-- Connection Status -->
                 <span id="connectionStatus" class="badge bg-secondary me-3">Offline</span>
-                
+
                 <!-- Save Status -->
                 <span id="saveStatus" class="small me-auto"></span>
 
                 <!-- Manual Actions -->
-                <button onclick="SyncManager.pullFromServerAndSave('simulated_original.csv')" class="btn btn-sm btn-outline-primary">
+                <button onclick="SyncManager.pullFromServerAndSave('simulated_original.csv')"
+                        class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-save"></i> Save Results to Disk
                 </button>
             </div>
+
             {% endif %}
 
 
@@ -69,7 +79,7 @@
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.system_tools') }}">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.index') }}">
                         <i class="fas fa-shield-alt fa-fw me-2"></i> 
                     </a>
                     </li>
@@ -112,9 +122,10 @@
             </div>
         </div>
     </nav>
+    {% include '_messages.html' %}
     
     <main >      
-        {% include '_messages.html' %}
+        
         {% block content %}
         
         {% endblock %}

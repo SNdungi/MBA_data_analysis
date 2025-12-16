@@ -51,8 +51,6 @@ def list_projects():
     studies = Study.query.filter_by(user_id=current_user.id).order_by(Study.created_at.desc()).all()
     return render_template('list_projects.html', studies=studies, active_page='list')
 
-# ... imports ...
-
 
 @file_mgt_bp.route('/new', methods=['GET', 'POST'])
 @login_required  # Protect this route
