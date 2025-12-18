@@ -32,30 +32,39 @@
             <a class="navbar-brand" href="{{ url_for('file_mgt.list_projects') }}">
                 <small>TXDataLab</small>
             </a>
-
+            {% if current_user.is_authenticated %}
              {% if study %}
-                        <!-- Inside your Sticky Navbar or Top Bar -->
+            <!-- Inside your Sticky Navbar or Top Bar -->
             <div class="d-flex align-items-center border-start border-end  px-4 py-2">
                 
                 <!-- Study Initial Pill -->
-                <span class="badge rounded-pill bg-secondary-subtle text-black me-2"
-                    style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">
-                    {{ study.name[0]|upper }}
+                <span class="badge rounded-pill bg-secondary-subtle text-black me-2"> 
+                    {{ study.project_code }}
                 </span>
 
-                <!-- Connection Status -->
-                <span id="connectionStatus" class="badge bg-secondary-subtle text-black me-3">Offline</span>
+                <!-- Connection Status ICON -->
+                <span id="connectionStatus" 
+                    class="badge bg-secondary text-white me-3" 
+                    title="Checking status..." 
+                    style="cursor: pointer;">
+                    <i class="fas fa-circle-notch fa-spin"></i> Checking...
+                </span>
 
                 <!-- Save Status -->
                 <span id="saveStatus" class="small me-auto"></span>
 
                 <!-- Manual Actions -->
-                <button onclick="SyncManager.pullFromServerAndSave('simulated_original.csv')"
-                        class="btn btn-sm ">
+                <button onclick="SyncManager.syncProjectState()"
+                        class="btn btn-sm"
+                        title="Save Project State (CSV, JSON, Results) to Local Disk">
                     <i class="fas fa-save text-white fs-5"></i> 
                 </button>
+                <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data Encoder</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>  
+                </ul>
             </div>
-
+            {% endif %}
             {% endif %}
 
 
@@ -70,10 +79,7 @@
                 {% if current_user.is_authenticated %}
                 <ul class="navbar-nav mx-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
-                    {% if study %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data Encoder</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>
-                    {% endif %}
+
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.index') }}">
@@ -89,7 +95,7 @@
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light btn-sm px-3 rounded-5"
                         style="background: var(--fluidcore-orange); border: none; color: var(--fluidcore-white);"
-                        href="#"><i class="fas fa-hand-paper me-2"></i> 
+                        href="{{ url_for('ops.support') }}"><i class="fas fa-hand-paper me-2"></i> 
                             Request Support
                         </a>
                     </li>
@@ -107,7 +113,9 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                            <a class="nav-link" href="{{ url_for('ops.index') }}">
+                                <i class="fas fa-home text-white pt-2"></i>
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -209,28 +217,28 @@
             </div>
         </div>
     </footer>
-    {% if study is defined and study %}
+{% if study is defined and study %}
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Check if SyncManager is loaded (it might be in a separate file)
             if (typeof SyncManager !== 'undefined') {
-                const success = await SyncManager.init({{ study.id }});
-                
-                const statusBadge = document.getElementById('connectionStatus');
-                if (statusBadge) {
-                    if (success) {
-                        statusBadge.className = "badge bg-success";
-                        statusBadge.innerText = "Linked to Folder";
-                    } else {
-                        statusBadge.className = "badge bg-warning text-dark";
-                        statusBadge.innerText = "Permission Needed";
-                        statusBadge.onclick = () => SyncManager.init({{ study.id }}); 
-                    }
+                const csvName = "{{ study.map_filename.replace('.json', '.csv') }}";
+                await SyncManager.init({{ study.id }}, csvName);
+
+                // AUTO-SYNC ON RESULTS PAGE
+                // If the user just finished a simulation, we want to capture the results immediately.
+                if (window.location.href.includes("results") || window.location.href.includes("view_study_results")) {
+                    console.log("📊 Results page detected. Triggering auto-save to local disk...");
+                    setTimeout(() => {
+                        SyncManager.syncProjectState();
+                    }, 1000); // Small delay to ensure init is done
                 }
             }
         });
     </script>
     {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+    <script src="{{ url_for('static', filename='js/storage_strategies.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/apexcharts.min.js') }}"></script>

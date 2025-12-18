@@ -6,6 +6,9 @@ from flask_login import LoginManager # Import LoginManager
 from app.app_database.tutorials_models import TutorialLevel
 from app.app_database.encoder_models import User # Import User model
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
+
 
 def create_app():
     """Application Factory Function"""
@@ -15,7 +18,7 @@ def create_app():
     app.config['BASE_DIR'] = BASE_DIR
 
     # --- 1. Basic App Configuration ---
-    app.secret_key = secrets.token_hex(16)
+    app.secret_key = os.getenv('SECRET_KEY') or secrets.token_hex(16)
     
     # --- 2. Database Configuration ---
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///TXdata.db'
@@ -25,6 +28,7 @@ def create_app():
     app.config['UPLOADS_FOLDER'] = os.path.join(app.static_folder, 'uploads')
     app.config['GENERATED_FOLDER'] = os.path.join(app.static_folder, 'generated')
     app.config['GRAPHS_FOLDER'] = os.path.join(app.static_folder, 'graphs')
+    app.config['PURGE_DATA_PW'] = os.getenv('PURGE_DATA_PW') 
 
     # --- 4. Initialize Extensions ---
     from app.app_database.extensions import db
@@ -59,7 +63,7 @@ def create_app():
         from app.app_auth.auth_routes import auth_bp
         app.register_blueprint(auth_bp)
 
-        from app.ops_routes import ops_bp
+        from app.app_routes import ops_bp
         app.register_blueprint(ops_bp) 
 
         from app.app_encoder.encoder_routes import encoding_bp

@@ -1,29 +1,42 @@
 from flask import Blueprint, render_template, abort
-from app.app_database.tutorials_models import TutorialLevel, TutorialSubtopic
+from app.app_database.tutorials_models import TutorialLevel, TutorialTopic, TutorialSubtopic
 
 tutorials_bp = Blueprint('tutorials', __name__, template_folder='templates', url_prefix='/tutorials')
 
-def get_sidebar_data():
-    """Helper to fetch the full curriculum hierarchy for the sidebar."""
-    # We order by ID to ensure they appear in the logical order of insertion/seeding
-    return TutorialLevel.query.order_by(TutorialLevel.id).all()
-
 @tutorials_bp.route('/')
 def index():
-    """Landing page: Show sidebar but no active topic."""
-    levels = get_sidebar_data()
-    return render_template('tutorials/view_tutorials.html', 
-                           levels=levels, 
-                           active_subtopic=None)
+    # Load just the levels/sections for the sidebar
+    # FIX: Changed .order to .id because 'order' column doesn't exist
+    levels = TutorialLevel.query.order_by(TutorialLevel.id).all()
+    return render_template('tutorials/base_tutorials.html', levels=levels)
 
-@tutorials_bp.route('/<int:subtopic_id>')
-def view(subtopic_id):
-    """View a specific subtopic content."""
-    levels = get_sidebar_data()
+@tutorials_bp.route('/topic/<int:topic_id>')
+def view_topic(topic_id):
+    """
+    Called when clicking a Topic in Col 1.
+    Loads Col 2 (Subtopics) but leaves Col 3 (Content) empty or intro.
+    """
+    # FIX: Changed .order to .id
+    levels = TutorialLevel.query.order_by(TutorialLevel.id).all()
+    topic = TutorialTopic.query.get_or_404(topic_id)
     
-    # Fetch the specific subtopic or 404 if not found
+    # Pass 'active_topic' to trigger the 3-column layout
+    return render_template('tutorials/base_tutorials.html', 
+                           levels=levels, 
+                           active_topic=topic)
+
+@tutorials_bp.route('/lesson/<int:subtopic_id>')
+def view(subtopic_id):
+    """
+    Called when clicking a Subtopic in Col 2.
+    Loads Col 3 (Content).
+    """
+    # FIX: Changed .order to .id
+    levels = TutorialLevel.query.order_by(TutorialLevel.id).all()
     subtopic = TutorialSubtopic.query.get_or_404(subtopic_id)
     
+    # Pass active_subtopic so the template knows what to render in Col 3
+    # and what to highlight in Col 2.
     return render_template('tutorials/view_tutorials.html', 
                            levels=levels, 
                            active_subtopic=subtopic)

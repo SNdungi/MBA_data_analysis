@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" itemscope itemtype="http://schema.org/SoftwareApplication">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- SEO: Primary Meta Tags -->
+    <title>TXDataLab | Free SPSS Alternative & Statistical Tutorials</title>
+    <meta name="title" content="TXDataLab | Free SPSS Alternative & Statistical Tutorials">
+    <meta name="description" content="Master data analysis with TXDataLab. A free, open-source statistical package alternative to SPSS. Access comprehensive tutorials, thesis research guides, and encoding tools for students and researchers.">
+    <meta name="keywords" content="Free SPSS alternative, Statistical Analysis Software, Open Source Statistics, Data Science Tutorials, Thesis Research Guide, Quantitative Analysis, Python for Research, Data Encoding">
+    <meta name="author" content="TXDataLab">
+    <meta name="robots" content="index, follow">
+
+    <!-- SEO: Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="TXDataLab | Free SPSS Alternative">
+    <meta property="og:description" content="Free statistical software and educational coursework. The modern alternative to SPSS for thesis research and data analysis.">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-preview.jpg') }}">
+
+    <!-- SEO: Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="TXDataLab | Free SPSS Alternative">
+    <meta property="twitter:description" content="Free statistical software and educational coursework. Stop paying for SPSS.">
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Comfortaa for the Hero Text -->
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&family=JetBrains+Mono:wght@400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "TXDataLab",
+      "operatingSystem": "Web-based",
+      "applicationCategory": "EducationalApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "An open statistical package and educational platform for research data analysis.",
+      "featureList": "Data Encoding, Statistical Analysis, Thesis Guide, Interactive Tutorials"
+    }
+    </script>
+</head>
+<body class="landing-page">
+
+    <!-- Top Right Login -->
+    <div class="position-absolute top-0 end-0 p-4 z-3">
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('file_mgt.list_projects') }}" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                Dashboard <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                Log In
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="container-fluid h-100">
+        <div class="row h-100 align-items-center">
+            
+            <!-- LEFT SECTION: HERO CONTENT -->
+            <div class="col-lg-7 col-md-10 offset-md-1 offset-lg-1">
+                
+                <!-- H1: Gradient Luminous Text -->
+                <h1 class="hero-title mb-4">
+                    Open Statistical<br>
+                    Packages & Tutorials
+                </h1>
+
+                <p class="hero-subtitle mb-5 text-white-50">
+                    The modern, free alternative to commercial analysis software. 
+                    <span class="text-white">Learn. Encode. Analyze. Publish.</span>
+                </p>
+
+                <!-- SUSPENDED PILLS NAV -->
+                <div class="d-flex flex-column flex-sm-row gap-3 pill-container">
+                    
+                    <!-- Pill 1: Tutorials -->
+                    <a href="{{ url_for('tutorials.index') }}" class="service-pill" style="--delay: 0s">
+                        <div class="pill-icon bg-gradient-teal">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="pill-content">
+                            <span class="pill-title">Tutorials Hub</span>
+                            <span class="pill-desc">Interactive Learning</span>
+                        </div>
+                        <i class="fas fa-chevron-right pill-arrow"></i>
+                    </a>
+
+                    <!-- Pill 2: Analysis -->
+                    <!-- Note: Checks if user has a study active, otherwise goes to project list -->
+                    <a href="{{ url_for('file_mgt.list_projects') }}" class="service-pill" style="--delay: 0.2s">
+                        <div class="pill-icon bg-gradient-orange">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="pill-content">
+                            <span class="pill-title">Analysis Workbench</span>
+                            <span class="pill-desc">Process Data</span>
+                        </div>
+                        <i class="fas fa-chevron-right pill-arrow"></i>
+                    </a>
+
+                    <!-- Pill 3: Research Guide -->
+                    <a href="{{ url_for('ops.documentation') }}" class="service-pill" style="--delay: 0.4s">
+                        <div class="pill-icon bg-gradient-gold">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="pill-content">
+                            <span class="pill-title">Research Guide</span>
+                            <span class="pill-desc">Thesis Methodology</span>
+                        </div>
+                        <i class="fas fa-chevron-right pill-arrow"></i>
+                    </a>
+
+                </div>
+            </div>
+            
+            <!-- Optional: Right Side / Background Graphic Area -->
+            <div class="col-lg-4 d-none d-lg-block">
+                <!-- Can be left empty to let the background breathe, or add an abstract SVG -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="bg-glow-orb orb-1"></div>
+    <div class="bg-glow-orb orb-2"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

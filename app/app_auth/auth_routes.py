@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app.app_database.encoder_models import db, User
 from urllib.parse import urlparse 
+from app.app_file_mgt.file_workspace_mgt import WorkspaceManager
 
 auth_bp = Blueprint('auth', __name__, template_folder='templates')
 
@@ -69,6 +70,10 @@ def register():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    # 1. Clean up the temp file system for this user
+    WorkspaceManager.cleanup_user_session(current_user.id)
+    
+    # 2. Log out
     logout_user()
-    flash('You have been logged out.', 'info')
+    flash('You have been logged out and your temporary workspace cleared.', 'info')
     return redirect(url_for('auth.login'))

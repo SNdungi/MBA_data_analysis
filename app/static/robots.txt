@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /tutorials
+Disallow: /auth/
+Disallow: /analysis/
+Disallow: /encoding/
+
+Sitemap: https://infolab.fluid-core.com/sitemap.xml

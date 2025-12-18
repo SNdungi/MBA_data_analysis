@@ -10,11 +10,12 @@
 
 {% if studies %}
 <div class="table-responsive">
-    <table class="table table-hover align-middle">
+    <table class="table table-sm table-hover align-middle">
         <thead class="table-light">
             <tr>
+                <th class="col-code">Study Code</th>
                 <th>Study Name</th>
-                <th>Topic</th>
+                <th class="col-topic">Topic</th>
                 <th>Data File</th>
                 <th>Created</th>
                 <th class="text-end">Actions</th>
@@ -22,13 +23,34 @@
         </thead>
         <tbody>
             {% for study in studies %}
-            <tr style="cursor: pointer;" onclick="window.location='{{ url_for('file_mgt.project_admin', study_id=study.id) }}'">
-                <td class="fw-bold text-primary">{{ study.name }}</td>
-                <td>{{ study.topic or '-' }}</td>
-                <td class="text-muted small">{{ study.map_filename.replace('.json', '.csv') }}</td>
-                <td>{{ study.created_at.strftime('%Y-%m-%d') }}</td>
+            <tr style="cursor: pointer;"
+                onclick="window.location='{{ url_for('file_mgt.project_admin', study_id=study.id) }}'">
+
+                <!-- Study Code: full length, no wrap -->
+                <td class="fw-bold text-success col-code">
+                    {{ study.project_code }}
+                </td>
+
+                <td class="fw-bold text-muted">
+                    {{ study.name }}
+                </td>
+
+                <!-- Topic: narrow, wraps line-wise -->
+                <td class="col-topic">
+                    {{ study.topic or '-' }}
+                </td>
+
+                <td class="text-muted small">
+                    {{ study.map_filename.replace('.json', '.csv') }}
+                </td>
+
+                <td>
+                    {{ study.created_at.strftime('%Y-%m-%d') }}
+                </td>
+
                 <td class="text-end" onclick="event.stopPropagation()">
-                    <a href="{{ url_for('file_mgt.project_admin', study_id=study.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{{ url_for('file_mgt.project_admin', study_id=study.id) }}"
+                       class="btn btn-sm btn-outline-secondary">
                         Manage <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </td>

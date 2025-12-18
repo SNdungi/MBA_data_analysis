@@ -7,40 +7,63 @@ analysis_bp = Blueprint('analysis', __name__, url_prefix='/analysis', template_f
 
 @analysis_bp.route('/dashboard/<int:study_id>')
 def dashboard(study_id):
-    """Main dashboard. Clears old data if requested."""
+    """Main dashboard."""
     if request.args.get('reset'):
-        session.pop(f"analysis_data_{study_id}", None)
-        flash("Analysis data has been reset to the original file.", "info")
+        session.pop(f"analysis_ops_{study_id}", None) # Fixed key name
+        flash("Analysis data reset to original encoded file.", "info")
         return redirect(url_for('analysis.dashboard', study_id=study_id))
 
     try:
         manager = AnalysisManager(study_id)
         variable_types = manager.get_variable_types()
+        
+        # Prepare labeled data for JS (e.g. for dynamic dropdowns)
         labeled_data = {}
         for col in variable_types.get('categorical', []):
             labeled_data[col] = manager._apply_value_labels(manager.data[col]).dropna().tolist()
+            
+        return render_template('analysis_dashboard.html', 
+                               study=manager.study,
+                               variables=variable_types,
+                               data_for_js=labeled_data,
+                               result=None)
+                               
     except FileNotFoundError:
-        flash("Encoded data not found. Please generate the encoded file from the Encoding Workflow first.", "warning")
+        flash("Encoded data not found in workspace. Please run the Encoding Workflow first.", "warning")
         return redirect(url_for('encoding.assign', study_id=study_id))
-    
-    return render_template('analysis_dashboard.html', 
-                           study=manager.study,
-                           variables=variable_types,
-                           data_for_js=labeled_data,
-                           result=None)
+    except PermissionError:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('file_mgt.list_projects'))
+    except Exception as e:
+        flash(f"Error loading dashboard: {e}", "danger")
+        return redirect(url_for('file_mgt.project_admin', study_id=study_id))
 
 @analysis_bp.route('/create_composite/<int:study_id>', methods=['POST'])
 def create_composite(study_id):
-    """Handles the form submission to create a composite variable."""
     try:
         manager = AnalysisManager(study_id)
-        new_var_name = request.form.get('new_var_name')
-        source_vars = request.form.getlist('source_vars')
-        message = manager.create_composite_variable(new_var_name, source_vars)
-        flash(message, 'success')
-    except (ValueError, TypeError, Exception) as e:
-        flash(f"Error creating composite variable: {e}", "danger")
-    
+        msg = manager.create_composite_variable(
+            request.form.get('new_var_name'), 
+            request.form.getlist('source_vars')
+        )
+        flash(msg, 'success')
+    except Exception as e:
+        flash(f"Error: {e}", "danger")
+    return redirect(url_for('analysis.dashboard', study_id=study_id))
+
+@analysis_bp.route('/tamper_data', methods=['POST'])
+def tamper_data():
+    study_id = request.form.get('study_id')
+    try:
+        manager = AnalysisManager(int(study_id))
+        col = request.form.get('tamper_col')
+        val = int(request.form.get('tamper_value'))
+        rows = int(request.form.get('tamper_num_rows'))
+        
+        msg = manager.run_data_tampering(col, val, rows)
+        flash(msg, 'success')
+    except Exception as e:
+        flash(f"Tampering failed: {e}", "danger")
     return redirect(url_for('analysis.dashboard', study_id=study_id))
 
 
@@ -153,39 +176,23 @@ def run_analysis():
         else:
             flash("Invalid analysis type selected.", "danger")
 
-    except (ValueError, TypeError, Exception) as e:
-        flash(f"An error occurred during analysis: {e}", "danger")
+    except Exception as e:
+        flash(f"Analysis failed: {e}", "danger")
+    
+    # Reload dashboard with result
+    try:
+        # Re-instantiate manager to get fresh state/variables for template
+        manager = AnalysisManager(int(study_id))
+        variable_types = manager.get_variable_types()
+        labeled_data = {c: manager._apply_value_labels(manager.data[c]).dropna().tolist() for c in variable_types.get('categorical', [])}
         
-    labeled_data = {}
-    for col in variable_types.get('categorical', []):
-        labeled_data[col] = manager._apply_value_labels(manager.data[col]).dropna().tolist()
-        
-    return render_template('analysis_dashboard.html',
+        return render_template('analysis_dashboard.html',
                            study=manager.study,
                            variables=variable_types,
                            data_for_js=labeled_data,
                            result=result,
                            selected_analysis=analysis_type)
+    except:
+        return redirect(url_for('analysis.dashboard', study_id=study_id))
     
 
-# === NEW DEDICATED ROUTE FOR TAMPERING ===
-@analysis_bp.route('/tamper_data', methods=['POST'])
-def tamper_data():
-    """Handles the form submission for the data tampering tool."""
-    study_id = request.form.get('study_id')
-    try:
-        manager = AnalysisManager(int(study_id))
-        
-        col = request.form.get('tamper_col')
-        new_val = int(request.form.get('tamper_value'))
-        num_rows = int(request.form.get('tamper_num_rows'))
-        
-        # The manager will handle the logic and save the new file
-        message = manager.run_data_tampering(col, new_val, num_rows)
-        flash(message, 'success')
-
-    except Exception as e:
-        flash(f"An error occurred during data tampering: {e}", "danger")
-        
-    # Redirect back to the dashboard. The manager will now load the tampered file.
-    return redirect(url_for('analysis.dashboard', study_id=study_id))

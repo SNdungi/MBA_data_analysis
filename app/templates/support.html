@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                    <h2 class="h4 text-fluid-teal mb-1">Request Research Support</h2>
+                    <p class="text-muted small">Fill out the details below for assistance with statistical analysis or software issues.</p>
+                </div>
+                
+                <div class="card-body px-4 pb-4">
+                    <form action="{{ url_for('ops.support') }}" method="POST">
+                        <div class="row g-0">
+                            
+                            <!-- LEFT SECTION: Personal & Org Details -->
+                            <div class="col-md-6 pe-md-4 position-relative support-left-col">
+                                
+                                <!-- Name Row -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label-small">First Name</label>
+                                        <input type="text" name="first_name" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-small">Other Names</label>
+                                        <input type="text" name="other_names" class="form-control form-control-sm" required>
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="mb-3">
+                                    <label class="form-label-small">Email Address</label>
+                                    <input type="email" name="email" class="form-control form-control-sm" value="{{ current_user.email if current_user.is_authenticated else '' }}" required>
+                                </div>
+
+                                <!-- Contact -->
+                                <div class="mb-3">
+                                    <label class="form-label-small">Contact Number</label>
+                                    <input type="tel" name="contact" class="form-control form-control-sm">
+                                </div>
+
+                                <!-- Organization -->
+                                <div class="mb-3">
+                                    <label class="form-label-small">Organization / University / School</label>
+                                    <input type="text" name="organization" class="form-control form-control-sm" placeholder="e.g. University of Nairobi" required>
+                                </div>
+
+                                <!-- Vertical Line (CSS handled) -->
+                                <div class="vertical-separator d-none d-md-block"></div>
+                            </div>
+
+                            <!-- RIGHT SECTION: Study Context -->
+                            <div class="col-md-6 ps-md-4">
+                                
+                                <!-- Field of Study -->
+                                <div class="mb-3">
+                                    <label class="form-label-small">Field of Study (Discipline)</label>
+                                    <select name="discipline" class="form-select form-select-sm" required>
+                                        <option value="" selected disabled>Select Discipline...</option>
+                                        <option value="psychology">Psychology & Behavioral Sciences</option>
+                                        <option value="sociology">Sociology & Social Work</option>
+                                        <option value="public_health">Public Health & Epidemiology</option>
+                                        <option value="economics">Economics & Econometrics</option>
+                                        <option value="education">Education & Pedagogy</option>
+                                        <option value="business">Business, Marketing & Management</option>
+                                        <option value="political_science">Political Science</option>
+                                        <option value="biostatistics">Biostatistics / Medicine</option>
+                                        <option value="other">Other Quantitative Field</option>
+                                    </select>
+                                </div>
+
+                                <!-- Study Name -->
+                                <div class="mb-3">
+                                    <label class="form-label-small">Study / Project Name</label>
+                                    <input type="text" name="study_name" class="form-control form-control-sm" placeholder="e.g. Impact of X on Y..." required>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-4">
+                                    <label class="form-label-small">Research Description & Support Needed</label>
+                                    <textarea name="description" class="form-control form-control-sm" style="height: 140px;" placeholder="Describe your variables, hypothesis, or the specific technical issue you are facing..." required></textarea>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Submit Action -->
+                        <div class="row mt-4">
+                            <div class="col-12 text-end border-top pt-3">
+                                <a href="{{ url_for('file_mgt.list_projects') }}" class="btn btn-sm btn-outline-secondary me-2">Cancel</a>
+                                <button type="submit" class="btn btn-fluid-orange btn-sm px-4">
+                                    <i class="fas fa-paper-plane me-2"></i> Submit Request
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

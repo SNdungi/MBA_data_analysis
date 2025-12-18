@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import json
+import io
 
 import os
 from typing import Optional, Dict
@@ -152,3 +153,12 @@ class DataBootstrapper:
             raise ValueError("No simulated data to save.")
         self.simulated_df.to_csv(output_path, index=False)
         print(f"\n💾 Simulated data successfully saved to '{output_path}'.")
+        
+    def get_result_as_csv_string(self):
+        """Returns the simulated dataframe as a CSV string."""
+        if self.simulated_df is None:
+            raise ValueError("No simulation data found. Run bootstrap() first.")
+        
+        buffer = io.StringIO()
+        self.simulated_df.to_csv(buffer, index=False)
+        return buffer.getvalue()

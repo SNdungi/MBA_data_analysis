@@ -4,7 +4,7 @@ import shutil
 from flask import render_template, request, jsonify, flash, redirect, url_for, Blueprint,current_app
 from flask_login import login_required, current_user
 from app.app_database.extensions import db
-from app.app_database.encoder_models import Study
+from app.app_database.encoder_models import Study, ColumnEncoding, EncodingConfig,EncoderDefinition
 from app.app_database.tutorials_models import TutorialLevel, TutorialSection, TutorialTopic, TutorialSubtopic
 from app.app_utils import process_and_save_image
 
@@ -238,9 +238,11 @@ def purge_system():
     if not current_user.has_role('Admin'):
         flash("Unauthorized action.", "danger")
         return redirect(url_for('file_mgt.list_projects'))
+    
+    retrieve_sec_key = current_app.config.get('PURGE_DATA_PW')
 
     security_key = request.form.get('security_key')
-    if security_key != 'PURGE':
+    if security_key != retrieve_sec_key:
         flash("Invalid Security Key.", "warning")
         return redirect(url_for('tuit_setup.system_tools'))
 
@@ -249,10 +251,10 @@ def purge_system():
     try:
         if target_id == 'ALL_DATA':
             db.session.query(Study).delete()
+            db.session.query(ColumnEncoding).delete()
+            db.session.query(EncodingConfig).delete()
+            db.session.query(EncoderDefinition).delete()
             db.session.commit()
-            _clear_folder_contents(current_app.config['UPLOADS_FOLDER'])
-            _clear_folder_contents(current_app.config['GENERATED_FOLDER'])
-            _clear_folder_contents(current_app.config['GRAPHS_FOLDER'])
             flash("SYSTEM PURGE COMPLETE. All data wiped.", "success")
         
         elif target_id and target_id.isdigit():

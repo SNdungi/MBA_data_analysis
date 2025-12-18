@@ -112,6 +112,11 @@ class User(UserMixin, db.Model):
 # -----------------------------------------------------------------------------  
 # Study model  
 # -----------------------------------------------------------------------------  
+# ... (Previous imports remain the same) ...
+
+# -----------------------------------------------------------------------------  
+# Study model  
+# -----------------------------------------------------------------------------  
 class Study(db.Model):  
     __tablename__ = 'studies'  
     id = db.Column(db.Integer, primary_key=True)  
@@ -120,6 +125,9 @@ class Study(db.Model):
     description = db.Column(db.Text)  
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())  
     map_filename = db.Column(db.String(255), unique=True, nullable=False)  
+    
+    # NEW: Project Code Column
+    project_code = db.Column(db.String(50), unique=True, index=True)
 
     # Foreign key to User  
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  
@@ -129,8 +137,57 @@ class Study(db.Model):
     definitions = db.relationship('EncoderDefinition', back_populates='study', cascade='all, delete-orphan')  
     column_encodings = db.relationship('ColumnEncoding', back_populates='study', cascade='all, delete-orphan')  
 
+    # -------------------------------------------------------------
+    # 🔵 Project Code Generator: YYYYMMDD-{UserInitial}-{Seq}
+    # -------------------------------------------------------------
+    @classmethod
+    def generate_project_code(cls, user_id):
+        """
+        Generates a unique project code based on Date + User + Sequence.
+        Format: YYYYMMDD-U-001
+        """
+        # 1. Get Date String (YYYYMMDD)
+        date_str = datetime.utcnow().strftime('%Y%m%d')
+
+        # 2. Get User Initial
+        user_initial = 'X'
+        if user_id:
+            found_user = db.session.get(User, user_id)
+            if found_user:
+                user_initial = found_user.username[0].upper()
+
+        # 3. Define the Prefix
+        prefix = f"{date_str}-{user_initial}"
+
+        # 4. Find the last code used with this prefix
+        last_study = (
+            db.session.query(cls)
+            .filter(cls.project_code.like(f"{prefix}-%"))
+            .order_by(cls.project_code.desc())
+            .first()
+        )
+
+        # 5. Determine Sequence
+        if last_study and last_study.project_code:
+            try:
+                # Split '20231025-S-001' -> get '001' -> int(1)
+                last_seq = int(last_study.project_code.split('-')[-1])
+                new_seq = last_seq + 1
+            except (ValueError, IndexError):
+                new_seq = 1
+        else:
+            new_seq = 1
+
+        # 6. Return the Code string
+        return f"{prefix}-{new_seq:03d}"
+
+    def assign_project_code(self):
+        """Helper to assign code only if it doesn't exist."""
+        if not self.project_code:
+            self.generate_project_code()
+
     def __repr__(self):  
-        return f"<Study(id={self.id}, name='{self.name}')>"  
+        return f"<Study(id={self.id}, code='{self.project_code}', name='{self.name}')>" 
 
 
 # -----------------------------------------------------------------------------

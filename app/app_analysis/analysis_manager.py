@@ -4,49 +4,57 @@
 from typing import Optional
 import pandas as pd
 import numpy as np
-import os
+import io
 import re
+import os
 from flask import current_app, session
+from flask_login import current_user
 from app.app_database.encoder_models import Study, ColumnEncoding
 from app.app_encoder.encoder_manager import EncodingConfigManager
+from app.app_file_mgt.file_workspace_mgt import WorkspaceManager
 from . import analysis_utils as utils
 
 class AnalysisManager:
 
     def __init__(self, study_id: int):
         self.study = Study.query.get_or_404(study_id)
-        # The session key now points to a list of operations, not the dataframe
+        # Verify ownership
+        if self.study.user_id != current_user.id:
+            raise PermissionError("Unauthorized access to this study.")
+            
+        # The session key now points to a list of operations
         self.ops_session_key = f"analysis_ops_{study_id}"
         self.data = self._load_and_process_data()
+        
         if self.data is None:
-            raise FileNotFoundError("Encoded data file not found for this study.")
+            raise FileNotFoundError("Encoded data file not found in workspace.")
 
     def _load_and_process_data(self) -> Optional[pd.DataFrame]:
         """
-        Loads the base encoded data from the CSV file and then applies any
-        user-defined operations (like creating composite variables) from the session.
+        Loads the encoded data from the Workspace Cache and applies session operations.
         """
         base_name = self.study.map_filename.replace('.json', '')
         encoded_filename = f"{base_name}_encoded.csv"
-        file_path = os.path.join(current_app.config['GENERATED_FOLDER'], encoded_filename)
         
-        if not os.path.exists(file_path):
+        # 1. READ FROM WORKSPACE
+        content = WorkspaceManager.get_file(current_user.id, self.study.project_code, encoded_filename)
+        
+        if not content:
             return None
 
-        # 1. Load the base DataFrame from the CSV every time
-        df = pd.read_csv(file_path)
-        # Fix for FutureWarning and ensures numeric types
+        # 2. Parse CSV
+        df = pd.read_csv(io.StringIO(content))
+        
+        # Fix numeric types
         for col in df.columns:
             try:
                 df[col] = pd.to_numeric(df[col])
             except (ValueError, TypeError):
-                # This column is not numeric, which is fine
                 pass
 
-        # 2. Get the list of operations from the session
+        # 3. Apply Session Operations (e.g., Composite Variables)
         operations = session.get(self.ops_session_key, [])
         
-        # 3. Re-apply each operation to the DataFrame
         for op in operations:
             if op.get('type') == 'create_composite':
                 name = op.get('name')
@@ -55,6 +63,35 @@ class AnalysisManager:
                     df[name] = df[sources].mean(axis=1)
         
         return df
+
+    def run_data_tampering(self, column: str, new_value: int, num_rows: int):
+        """
+        Modifies the dataframe and SAVES it back to the workspace.
+        """
+        if column not in self.data.columns:
+            raise ValueError(f"Column '{column}' not found.")
+
+        # 1. Perform Tampering
+        # We limit num_rows to the dataframe size
+        num_rows = min(num_rows, len(self.data))
+        indices_to_change = self.data.sample(n=num_rows).index
+        self.data.loc[indices_to_change, column] = new_value
+
+        # 2. SAVE BACK TO WORKSPACE
+        base_name = self.study.map_filename.replace('.json', '')
+        encoded_filename = f"{base_name}_encoded.csv"
+        
+        buffer = io.StringIO()
+        self.data.to_csv(buffer, index=False)
+        
+        WorkspaceManager.save_file(
+            current_user.id, 
+            self.study.project_code, 
+            encoded_filename, 
+            buffer.getvalue()
+        )
+        
+        return f"Successfully modified {num_rows} rows in '{column}'."
 
     def reset_data(self):
         """Resets the data by simply clearing the operations from the session."""
