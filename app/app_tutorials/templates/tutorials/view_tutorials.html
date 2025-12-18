@@ -38,8 +38,8 @@ window.MathJax = {
         border: none;
         border-bottom: 2px solid transparent;
         color: var(--app-text-muted);
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.65rem;
+        font-weight: 500;
         text-transform: uppercase;
         padding: 0.6rem 1.2rem;
         margin-bottom: -2px; /* Overlap border */
@@ -58,20 +58,42 @@ window.MathJax = {
     }
     .tutorial-tabs .nav-link i {
         margin-right: 0.5rem;
-        font-size: 0.8rem;
+        font-size: 0.65rem;
     }
 
     /* --- BLACKBOARD STYLING --- */
     .blackboard-font {
-        font-family: 'Marker Felt', sans-serif !important; 
-        font-size: 0.9rem !important; 
+        font-family:  'JetBrains',Ubuntu', 'Marker Felt', sans-serif !important; 
+        font-size: 0.75rem !important; 
         letter-spacing: 0.5px;
         line-height: 1.8;
     }
-    #blackboard-content mjx-container {
+
+    /* ===============================
+    MATHJAX THEME COLORS
+    =============================== */
+
+    /* Night / Blackboard mode */
+    .blackboard-night mjx-container {
         color: #e9ecef !important;
-        font-size: 115% !important;
     }
+
+    /* Day / Paper mode */
+    .blackboard-day mjx-container {
+        color: #212529 !important;
+    }
+
+    /* Ensure operators, fractions, roots inherit correctly */
+    .blackboard-day mjx-container * {
+        fill: #212529 !important;
+        stroke: #212529 !important;
+    }
+
+    .blackboard-night mjx-container * {
+        fill: #e9ecef !important;
+        stroke: #e9ecef !important;
+    }
+
     mjx-container:focus { outline: none !important; }
 
     .blackboard-img-card {
@@ -95,22 +117,47 @@ window.MathJax = {
         font-size: 0.85rem;
         line-height: 1.7;
     }
+    /* ===============================
+   BLACKBOARD DAY / NIGHT THEMES
+   =============================== */
+
+.blackboard-night {
+    background-color: #2b2f33 !important;
+    color: #e9ecef !important;
+}
+
+.blackboard-day {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Images adapt better in day mode */
+.blackboard-day img {
+    background: #fff;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+/* Smooth transition */
+.blackboard-container {
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
 </style>
 
 {% if active_subtopic %}
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <!-- Breadcrumb Badge -->
-            <span class="badge bg-light text-dark border rounded-0 mb-2" 
+            <span class="badge bg-secondary-subtle text-dark border rounded-0 mb-2" 
                   style="font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">
                 {{ active_subtopic.topic.section.level.title }} 
                 <span class="text-muted mx-1">/</span> 
                 {{ active_subtopic.topic.section.title }}
-            </span>
-            <h4 class="mb-0 fw-bold text-dark" style="font-size: 1.1rem; letter-spacing: -0.5px;">
+                 <span class="text-muted mx-1">/</span> 
                 {{ active_subtopic.title }}
-            </h4>
+            </span>
         </div>
     </div>
 
@@ -128,7 +175,7 @@ window.MathJax = {
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="blackboard-tab" data-bs-toggle="tab" data-bs-target="#blackboard" type="button" role="tab">
-                <i class="fas fa-chalkboard"></i>Example Blackboard
+                <i class="fas fa-chalkboard"></i>Worked Examples
             </button>
         </li>
     </ul>
@@ -181,7 +228,13 @@ window.MathJax = {
                     <span class="small text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
                         <i class="fas fa-pen-fancy me-2"></i>Worked Example
                     </span>
-                    <span class="badge bg-secondary text-white rounded-0" style="font-size: 0.6rem;">BLACKBOARD MODE</span>
+                   <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" id="blackboardThemeToggle">
+                        <label class="form-check-label small text-muted ms-1" for="blackboardThemeToggle">
+                            <i class="fas fa-moon"></i>
+                        </label>
+                    </div>
+
                 </div>
                 
                 <div id="blackboard-content" class="card-body blackboard-container blackboard-font" style="min-height: 500px; background-color: #2b2f33; color: #e9ecef;">
@@ -191,8 +244,8 @@ window.MathJax = {
                         <!-- A. IMAGES (Top) -->
                         {% if active_subtopic.examples.images and active_subtopic.examples.images | length > 0 %}
                             <div class="mb-4 pb-3 border-bottom border-secondary">
-                                <p class="text-warning small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px; font-size: 0.65rem;">
-                                    <i class="fas fa-question-circle me-1"></i> Problem Reference
+                                <p class="text-warning small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px; font-size: 0.6rem;">
+                                    <i class="fas fa-question-circle me-1"></i> Problem
                                 </p>
                                 <div class="row g-3">
                                 {% for img_url in active_subtopic.examples.images %}
@@ -211,7 +264,7 @@ window.MathJax = {
                         <!-- B. SOLUTION / LATEX (Bottom) -->
                         {% if active_subtopic.examples.content %}
                             <div>
-                                <p class="text-success small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px; font-size: 0.65rem;">
+                                <p class="text-success small mb-2 text-uppercase fw-bold" style="font-family:sans-serif; letter-spacing: 1px; font-size: 0.6rem;">
                                     <i class="fas fa-calculator me-1"></i> Solution
                                 </p>
                                 <div class="mt-2 tex2jax_process">
@@ -279,5 +332,29 @@ window.MathJax = {
         });
     });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.getElementById("blackboardThemeToggle");
+    const board = document.getElementById("blackboard-content");
+
+    if (!toggle || !board) return;
+
+    // Default: night mode
+    board.classList.add("blackboard-night");
+
+    toggle.addEventListener("change", function () {
+        if (this.checked) {
+            board.classList.remove("blackboard-night");
+            board.classList.add("blackboard-day");
+            this.nextElementSibling.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            board.classList.remove("blackboard-day");
+            board.classList.add("blackboard-night");
+            this.nextElementSibling.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    });
+});
+</script>
+
 
 {% endblock %}
