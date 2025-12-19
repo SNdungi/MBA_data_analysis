@@ -27,8 +27,8 @@
 
     /* --- COLUMN 2: SUBTOPIC SIDEBAR --- */
     .sidebar-subtopic {
-        width: 150px; /* Even slimmer */
-        min-width: 150px;
+        width: 180px; /* Even slimmer */
+        min-width: 180px;
         background: #fdfdfd;
         border-right: 1px solid #e9ecef;
         overflow-y: auto;
@@ -37,7 +37,7 @@
         z-index: 5;
     }
     .sidebar-subtopic.collapsed {
-        margin-left: -150px;
+        margin-left: -180px;
     }
 
     /* --- COLUMN 3: MAIN CONTENT --- */
@@ -54,22 +54,22 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
         border-radius: 4px;
-        background: #f1f3f5;
-        color: #adb5bd;
+        background: var(--fluidcore-cream);
+        color: var(--fluidcore-teal);
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 0.7rem;
+        font-size: 0.5rem;
         z-index: 20;
     }
     .toggle-btn:hover {
-        color: var(--fluidcore-teal);
-        background: #e9ecef;
+        color: var(--app-bg);
+        background: var(--fluidcore-gold);
     }
 
     /* Floating Re-Open Buttons (Visible when collapsed) */
@@ -97,10 +97,10 @@
     /* --- LIST STYLES (Retained & Refined) --- */
     .level-header {
         font-size: 0.65rem;
-        font-weight: 800;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #adb5bd;
+        color: #8b9996ff;
         padding: 1.5rem 1rem 0.5rem;
     }
     .section-toggler {
@@ -108,7 +108,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.5rem 1rem;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: #495057;
         cursor: pointer;
@@ -159,7 +159,7 @@
         text-decoration: none;
         border-bottom: 1px solid #f8f9fa;
     }
-    .subtopic-link:hover { background-color: #f8f9fa; color: #000; }
+    .subtopic-link:hover { background-color: #e8e8e9ff; color: #000; }
     .subtopic-link.active { background-color: var(--fluidcore-teal); color: #fff; }
 
 </style>

@@ -5,460 +5,844 @@
 <!-- 1. EXTERNAL ASSETS -->
 <script src="//unpkg.com/mathlive"></script>
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Prettify CSS for code blocks -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+window.MathJax = {
+  loader: { 
+    load: ['[tex]/color'] 
+  },
+  tex: {
+    packages: {'[+]': ['color']},
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: {
+    ignoreHtmlClass: 'tex2jax_ignore',
+    processHtmlClass: 'tex2jax_process'
+  },
+  startup: {
+    typeset: false 
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
 <style>
-    /* --- THEME VARIABLES --- */
+    /* --- 1. SHARP AESTHETIC RESET --- */
     :root {
         --fc-teal: #23797c;
-        --fc-teal-light: #e6fcf5;
+        --fc-teal-dark: #185456;
         --fc-orange: #f37021;
-        --fc-border: #e9ecef;
-        --fc-gray-bg: #f8f9fa;
-        --fc-text-dark: #343a40;
+        --fc-border: #dcdcdc;
+        --fc-bg-light: #f4f5f7;
+        --fc-text-main: #2c3e50;
+        --fc-text-muted: #7f8c8d;
     }
 
-    /* 
-       CRITICAL FIX FOR MATHLIVE:
-       1. Set keyboard z-index higher than Bootstrap Modal (1055) 
-    */
+    /* Global Sharpness */
+    * { border-radius: 0 !important; }
+    
     body { 
         font-family: 'Inter', sans-serif; 
-        background-color: #f1f3f5; 
-        color: var(--fc-text-dark);
+        font-size: 0.75rem; 
+        color: var(--fc-text-main);
+        background-color: var(--fc-bg-light);
+        /* MathLive Keyboard Z-Index Fix */
         --keyboard-zindex: 3000 !important; 
     }
 
-    /* --- LAYOUT --- */
-    .dashboard-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    h1, h2, h3, h4, h5, h6 { font-weight: 600; letter-spacing: -0.5px; }
+    
+    /* Inputs & Buttons */
+    .form-control, .form-select, .btn {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid #ced4da;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--fc-teal);
+        box-shadow: none;
+        outline: 1px solid var(--fc-teal);
+    }
+    
+    .btn-teal { background-color: var(--fc-teal); color: white; border: none; }
+    .btn-teal:hover { background-color: var(--fc-teal-dark); color: white; }
+    
+    .btn-icon { padding: 0.25rem 0.5rem; color: var(--fc-text-muted); transition: 0.2s; background: transparent; border: 1px solid transparent; }
+    .btn-icon:hover { color: var(--fc-teal); background: rgba(35, 121, 124, 0.1); border-color: var(--fc-teal); }
+    .btn-icon.danger:hover { color: #dc3545; background: rgba(220, 53, 69, 0.1); border-color: #dc3545; }
 
-    /* Top Nav */
-    .top-nav { background: white; border-bottom: 1px solid var(--fc-border); padding: 0.75rem 1.5rem; }
-    .nav-card { background: var(--fc-gray-bg); border: 1px solid var(--fc-border); border-radius: 6px; padding: 0.5rem 1rem; }
-    .nav-label { font-size: 0.65rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 0.25rem; }
+    /* --- 2. LAYOUT GRID --- */
+    .admin-layout { display: flex; flex-direction: column; height: 95vh; border: 1px solid var(--fc-border); background: white; }
 
-    /* Workspace */
+    /* --- 3. TOP COMMAND BAR --- */
+    .command-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto; 
+        border-bottom: 2px solid var(--fc-teal);
+        background: #fff;
+    }
+    .command-col {
+        padding: 0.75rem 1rem;
+        border-right: 1px solid var(--fc-border);
+        position: relative;
+    }
+    .command-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--fc-teal);
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* --- 4. WORKSPACE SPLIT --- */
     .workspace { display: flex; flex: 1; overflow: hidden; }
-    .sidebar { width: 300px; background: white; border-right: 1px solid var(--fc-border); display: flex; flex-direction: column; }
-    .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--fc-border); background: var(--fc-gray-bg); }
-    .subtopic-item { padding: 0.85rem 1.25rem; border-bottom: 1px solid #f1f3f5; cursor: pointer; font-size: 0.85rem; display: flex; justify-content: space-between; }
-    .subtopic-item:hover { background-color: var(--fc-gray-bg); }
-    .subtopic-item.active { background-color: var(--fc-teal-light); color: var(--fc-teal); font-weight: 600; border-left: 4px solid var(--fc-teal); }
+
+    .sidebar {
+        width: 280px;
+        background: #fdfdfd;
+        border-right: 1px solid var(--fc-border);
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar-header {
+        padding: 0.7rem 1rem;
+        background: #f1f3f5;
+        border-bottom: 1px solid var(--fc-border);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .subtopic-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: 0.1s;
+        border-left: 3px solid transparent;
+    }
+    .subtopic-item:hover { background: #f8f9fa; }
+    .subtopic-item.active {
+        background: white;
+        border-left-color: var(--fc-teal);
+        font-weight: 600;
+        color: var(--fc-teal);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    /* --- LAYOUT TRANSITIONS --- */
+    .sidebar-transition {
+        transition: margin 0.3s ease, width 0.3s ease, opacity 0.3s ease;
+    }
+    .sidebar-collapsed {
+        width: 0 !important;
+        overflow: hidden;
+        border: none !important;
+    }
+    .fullscreen-mode .admin-sidebar-col { display: none !important; }
+    .fullscreen-mode .main-content-col { width: 100% !important; flex: 0 0 100%; max-width: 100%; }
+
+    /* Stacked vs Split Classes */
+    .layout-stacked .panel-gen { width: 100%; border-right: none; border-bottom: 1px solid var(--fc-border); }
+    .layout-stacked .panel-agg { width: 100%; }
+    /* Scroll fix for stacked mode */
+    .layout-stacked #live-notes-box, 
+    .layout-stacked #live-example-box { height: 200px !important; }
 
     /* Editor Pane */
-    .editor-pane { flex: 1; overflow-y: auto; background: white; position: relative; padding: 2rem; }
-    #editor-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.96); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .editor-pane { flex: 1; overflow-y: auto; padding: 0; position: relative; background: #fff; }
     
-    .editor-label { font-size: 0.75rem; font-weight: 700; color: var(--fc-text-dark); margin-bottom: 0.4rem; display: block; }
-    .form-control-sm, .form-select-sm { border-radius: 4px; border: 1px solid #ced4da; }
+    #editor-overlay {
+        position: absolute; inset: 0; background: rgba(255,255,255,0.95);
+        z-index: 50; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+    }
 
-    /* --- QUILL & TOOLBARS --- */
-    .quill-wrapper { background: white; border-radius: 4px; border: 1px solid #ced4da; margin-bottom: 1rem; overflow: hidden; }
+    /* Quill Overrides */
+    .ql-toolbar.ql-snow { border-color: var(--fc-border) !important; background: #f8f9fa; }
+    .ql-container.ql-snow { border-color: var(--fc-border) !important; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
     
-    /* Custom Toolbar Styling */
-    .custom-toolbar { background: var(--fc-gray-bg); border-bottom: 1px solid #ced4da; padding: 5px 10px; display: flex; align-items: center; gap: 10px; }
-    .ql-container.ql-snow { border: none !important; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
-    
-    /* The Visual Math Button inside Toolbar */
-    .btn-math-insert {
-        background-color: var(--fc-teal); color: white; border: none; 
-        font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 4px;
-        display: inline-flex; align-items: center; transition: 0.2s;
-    }
-    .btn-math-insert:hover { background-color: #1a5c5e; color: white; }
-
-    /* Image Upload Strip */
-    .upload-strip {
-        border: 2px dashed #dee2e6; border-radius: 6px; padding: 0.75rem;
-        background: #fdfdfd; display: flex; align-items: center; justify-content: space-between;
-        cursor: pointer; transition: 0.2s; margin-bottom: 1rem;
-    }
-    .upload-strip:hover { border-color: var(--fc-teal); background: #f8f9fa; }
-    .img-preview-row { display: flex; gap: 10px; overflow-x: auto; padding-left: 10px; }
-    .img-thumb-mini { height: 40px; border-radius: 4px; border: 1px solid #ddd; }
-
-    /* MathLive Field Styling */
-    math-field { 
-        font-size: 1.5rem; 
-        padding: 15px; 
-        border: 1px solid #ced4da; 
-        border-radius: 6px; 
-        width: 100%; 
-        background: #fff;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-    }
-    math-field:focus-within {
-        outline: 2px solid var(--fc-teal);
-        border-color: transparent;
+    math-field {
+        display: block; width: 100%; min-height: 4.5rem; padding: 0.75rem 1rem;
+        box-sizing: border-box; font-size: 1rem; background: #fff;
+        border: 1px solid var(--fc-border);
     }
 </style>
 
-<div class="dashboard-container">
+<div class="admin-layout shadow-sm">
     
-    <!-- 1. NAVIGATION -->
-    <div class="top-nav">
-        <div class="row g-2">
-            <!-- Level -->
-            <div class="col-md-3">
-                <div class="nav-card">
-                    <div class="nav-label">1. Level</div>
-                    <select id="sel-level" class="form-select form-select-sm" onchange="loadSections()">
-                        <option value="" selected disabled>-- Select --</option>
-                        {% for level in levels %}<option value="{{ level.id }}">{{ level.title }}</option>{% endfor %}
-                    </select>
+    <!-- TOP COMMAND BAR -->
+    <div class="command-bar">
+        <!-- 1. LEVEL -->
+        <div class="command-col">
+            <div class="command-label">
+                <span>1. Level</span>
+                <button class="btn-icon" onclick="openHierarchyModal('level')" title="New Level"><i class="fas fa-plus"></i></button>
+            </div>
+            <select id="sel-level" class="form-select" onchange="loadSections()">
+                <option value="" selected disabled>-- Select Level --</option>
+                {% for level in levels %}
+                    <option value="{{ level.id }}">{{ level.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- 2. SECTION -->
+        <div class="command-col">
+            <div class="command-label">
+                <span>2. Section</span>
+                <div>
+                    <button class="btn-icon danger me-1" onclick="deleteItem('section')" title="Delete Section"><i class="fas fa-trash"></i></button>
+                    <button class="btn-icon" onclick="openHierarchyModal('section')" title="New Section"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
-            <!-- Section -->
-            <div class="col-md-3">
-                <div class="nav-card">
-                    <div class="d-flex justify-content-between"><div class="nav-label">2. Section</div><i class="fas fa-plus text-success pointer" onclick="toggleAdd('section')"></i></div>
-                    <div id="view-section-select"><select id="sel-section" class="form-select form-select-sm" onchange="loadTopics()" disabled></select></div>
-                    <div id="view-section-add" class="d-none"><input id="new-section-title" class="form-control form-control-sm" placeholder="New..."><button class="btn btn-sm btn-success w-100 mt-1" onclick="addItem('section')">Add</button></div>
+            <select id="sel-section" class="form-select" onchange="loadTopics()" disabled>
+                <option>Select Level First...</option>
+            </select>
+        </div>
+
+        <!-- 3. TOPIC -->
+        <div class="command-col">
+            <div class="command-label">
+                <span>3. Topic</span>
+                <div>
+                    <button class="btn-icon danger me-1" onclick="deleteItem('topic')" title="Delete Topic"><i class="fas fa-trash"></i></button>
+                    <button class="btn-icon" onclick="openHierarchyModal('topic')" title="New Topic"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
-            <!-- Topic -->
-            <div class="col-md-3">
-                <div class="nav-card">
-                    <div class="d-flex justify-content-between"><div class="nav-label">3. Topic</div><i class="fas fa-plus text-success pointer" onclick="toggleAdd('topic')"></i></div>
-                    <div id="view-topic-select"><select id="sel-topic" class="form-select form-select-sm" onchange="loadSubtopics()" disabled></select></div>
-                    <div id="view-topic-add" class="d-none"><input id="new-topic-title" class="form-control form-control-sm" placeholder="New..."><button class="btn btn-sm btn-success w-100 mt-1" onclick="addItem('topic')">Add</button></div>
-                </div>
-            </div>
-            <!-- Tools -->
-            <div class="col-md-3 text-end pt-3">
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem()"><i class="fas fa-trash-alt"></i></button>
-            </div>
+            <select id="sel-topic" class="form-select" onchange="loadSubtopics()" disabled>
+                <option>Select Section First...</option>
+            </select>
+        </div>
+
+        <!-- TOOLS -->
+        <div class="command-col d-flex align-items-center justify-content-center bg-light">
+             <div class="text-center">
+                 <small class="d-block text-muted fw-bold" style="font-size:0.6rem;">EDITOR v2.5</small>
+                 <span class="badge bg-secondary text-white rounded-0">ADMIN</span>
+             </div>
         </div>
     </div>
 
-    <!-- 2. WORKSPACE -->
-    <div class="workspace">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <span class="small fw-bold text-muted">UNITS</span>
-                <button class="btn btn-sm btn-dark rounded-pill px-3" onclick="initNewSubtopic()">New</button>
+    <!-- MAIN WORKSPACE -->
+    <div class="workspace" id="workspace-container">
+        
+        <!-- SIDEBAR: SUBTOPICS -->
+        <div class="sidebar sidebar-transition" id="unit-sidebar">
+            <div class="sidebar-header">
+                <span class="text-uppercase fw-bold text-muted small">Content Units</span>
+                <button class="btn btn-sm btn-dark rounded-0" onclick="initNewSubtopic()">
+                    <i class="fas fa-plus me-1"></i> ADD
+                </button>
             </div>
             <div id="subtopic-list" style="overflow-y:auto; flex:1;">
-                <div class="text-center mt-5 text-muted small">Select a Topic</div>
+                <div class="text-center mt-5 p-4 text-muted">
+                    <i class="fas fa-level-up-alt fa-2x mb-2 opacity-25"></i><br>
+                    Select hierarchy above.
+                </div>
             </div>
         </div>
 
-        <!-- Editor -->
-        <div class="editor-pane">
+        <!-- EDITOR CANVAS -->
+        <div class="editor-pane d-flex flex-column p-0">
+            
+            <!-- Lock Screen -->
             <div id="editor-overlay">
-                <i class="fas fa-lock fa-3x text-muted mb-3 opacity-25"></i>
-                <h6>Editor Locked</h6>
+                <div class="text-center">
+                    <i class="fas fa-lock fa-3x text-muted mb-3 opacity-25"></i>
+                    <h5 class="text-muted fw-light">Workspace Locked</h5>
+                    <p class="small text-muted">Select a Topic to edit units.</p>
+                </div>
             </div>
 
-            <form id="editor-form">
-                <input type="hidden" id="edit-subtopic-id" name="subtopic_id">
-                
-                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
-                    <h5 id="editor-header" class="mb-0 fw-bold">New Unit</h5>
-                    <button type="button" class="btn btn-sm btn-outline-danger border-0" id="btn-delete-sub" onclick="deleteSubtopic()" style="display:none;">Delete</button>
+            <!-- VIEW CONTROLS TOOLBAR -->
+            <div class="bg-light border-bottom p-2 d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-white border shadow-sm" onclick="toggleUnitSidebar()" title="Toggle List">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <button class="btn btn-sm btn-white border shadow-sm" onclick="toggleFullscreen()" title="Focus Mode">
+                        <i class="fas fa-expand"></i> Focus
+                    </button>
                 </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="small text-muted fw-bold text-uppercase me-2">Layout:</span>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-white border active" id="btn-layout-stack" onclick="setLayout('stacked')">
+                            <i class="fas fa-layer-group"></i> Stacked
+                        </button>
+                        <button class="btn btn-sm btn-white border" id="btn-layout-split" onclick="setLayout('split')">
+                            <i class="fas fa-columns"></i> Split
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="editor-label">Title</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-title" name="title" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="editor-label">Video URL</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-video" name="video_url">
-                    </div>
-                    <div class="col-12">
-                        <label class="editor-label">Short Summary</label>
-                        <input type="text" class="form-control form-control-sm" id="edit-desc" name="short_description">
-                    </div>
-
-                    <!-- CONCEPT NOTES (Standard Quill) -->
-                    <div class="col-12 mt-2">
-                        <label class="editor-label text-primary">Concept Notes</label>
-                        <div class="quill-wrapper">
-                            <div id="quill-notes" style="height: 150px;"></div>
+            <!-- EDITOR FORM SCROLLABLE AREA -->
+            <div class="flex-grow-1 p-4" style="overflow-y: auto;">
+                <form id="editor-form">
+                    <input type="hidden" id="edit-subtopic-id" name="subtopic_id">
+                    
+                    <!-- Metadata Header -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-warning text-dark me-2 rounded-0">UNIT</span>
+                            <h5 id="editor-header" class="mb-0 fw-bold text-dark">New Unit</h5>
                         </div>
-                        <input type="hidden" name="definition_text" id="hidden-notes">
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-0" id="btn-delete-sub" onclick="deleteSubtopic()" style="display:none;">
+                            DELETE UNIT
+                        </button>
                     </div>
 
-                    <!-- WORKED EXAMPLE (Refined Layout) -->
-                    <div class="col-12 border-top pt-4 mt-2">
-                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-chalkboard me-2"></i>Worked Example</h6>
+                    <!-- Metadata Inputs -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Title</label>
+                            <input type="text" class="form-control" id="edit-title" name="title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Video URL</label>
+                            <input type="text" class="form-control" id="edit-video" name="video_url">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Abstract</label>
+                            <input type="text" class="form-control" id="edit-desc" name="short_description">
+                        </div>
+                    </div>
 
-                        <!-- A. Image Strip (Top) -->
-                        <div class="upload-strip" onclick="document.getElementById('img-input').click()">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-images text-muted me-3 fa-lg"></i>
-                                <div>
-                                    <span class="d-block small fw-bold text-dark">Reference Images</span>
-                                    <span class="d-block small text-muted" style="font-size:0.7rem;">Click to upload snippets (Max 2MB)</span>
+                    <!-- UNIFIED CONTENT WORKSPACE -->
+                    <div class="mt-2">
+                        <label class="editor-label text-primary px-2 mb-2">Content Studio</label>
+
+                        <!-- DYNAMIC LAYOUT CONTAINER -->
+                        <div id="studio-grid" class="d-flex flex-column border bg-white">
+                            
+                            <!-- PANE 1: GENERATOR (Input) -->
+                            <div id="pane-gen" class="p-3 bg-light border-bottom panel-gen">
+                                <h6 class="small fw-bold text-muted text-uppercase mb-3">1. Input Generator</h6>
+                                
+                                <!-- Generator Tools -->
+                                <div class="bg-white border shadow-sm mb-3">
+                                    <div class="p-1 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                        <span class="small fw-bold px-2">Editor</span>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-sm btn-icon" onclick="document.getElementById('img-upload-gen').click()"><i class="fas fa-image"></i></button>
+                                            <input type="file" id="img-upload-gen" class="d-none" onchange="uploadImageToGen(this)">
+                                            <button type="button" class="btn btn-sm btn-teal py-0" onclick="openMathModal()"><i class="fas fa-calculator"></i> Math</button>
+                                        </div>
+                                    </div>
+                                    <div id="quill-input-gen" style="height: 120px; background: white;"></div>
+                                </div>
+
+                                <!-- RAW HTML Toggle -->
+                                <div class="mb-2">
+                                    <a class="small text-decoration-none fw-bold" data-bs-toggle="collapse" href="#rawHtmlCollapse" role="button">
+                                        <i class="fas fa-code"></i> Toggle Raw HTML Input
+                                    </a>
+                                    <div class="collapse mt-2" id="rawHtmlCollapse">
+                                        <textarea id="raw-html-gen" class="form-control border font-monospace small" rows="3" placeholder="Paste HTML here..." style="background:#212529; color:#00d2d3;"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-sm btn-dark w-100 rounded-0" onclick="pushTo('notes')">
+                                            <i class="fas fa-arrow-down me-1"></i> Push to Notes
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-sm btn-teal w-100 rounded-0" onclick="pushTo('example')">
+                                            <i class="fas fa-arrow-down me-1"></i> Push to Example
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="image-preview-container" class="img-preview-row"></div>
-                            <input type="file" id="img-input" class="d-none" onchange="uploadImage(this)">
-                        </div>
 
-                        <!-- B. Editor with Custom Header (Bottom) -->
-                        <label class="editor-label">Step-by-Step Solution</label>
-                        <div class="quill-wrapper">
-                            <!-- Custom Toolbar Header -->
-                            <div id="example-toolbar" class="custom-toolbar">
-                                <!-- Standard Formats -->
-                                <span class="ql-formats">
-                                    <button class="ql-bold"></button>
-                                    <button class="ql-italic"></button>
-                                    <button class="ql-underline"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-list" value="ordered"></button>
-                                    <button class="ql-list" value="bullet"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-script" value="sub"></button>
-                                    <button class="ql-script" value="super"></button>
-                                </span>
-                                <span class="ql-formats">
-                                    <button class="ql-clean"></button>
-                                </span>
-                                <!-- THE VISUAL MATH BUTTON -->
-                                <span class="ql-formats border-start ps-2 ms-2">
-                                    <button type="button" class="btn-math-insert" onclick="openMathModal()">
-                                        <i class="fas fa-calculator me-2 text-black"></i> 
-                                    </button>
-                                </span>
+                            <!-- PANE 2: AGGREGATORS (Previews) -->
+                            <div id="pane-agg" class="p-0 d-flex flex-column flex-md-row panel-agg">
+                                
+                                <!-- Notes Box -->
+                                <div class="flex-fill p-3 border-end border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="small fw-bold text-teal text-uppercase mb-0">2A. Concept Notes</h6>
+                                        <button type="button" class="btn btn-sm btn-icon danger py-0" onclick="clearContainer('live-notes-box')"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div id="live-notes-box" contenteditable="true" class="border p-3 bg-white" style="height: 250px; overflow-y: auto; outline:none;"></div>
+                                </div>
+
+                                <!-- Examples Box -->
+                                <div class="flex-fill p-3 bg-light border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="small fw-bold text-orange text-uppercase mb-0" style="color:var(--fc-orange)">2B. Worked Example</h6>
+                                        <button type="button" class="btn btn-sm btn-icon danger py-0" onclick="clearContainer('live-example-box')"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div id="live-example-box" contenteditable="true" class="border p-3 bg-white" style="height: 250px; overflow-y: auto; outline:none;"></div>
+                                </div>
                             </div>
-                            <!-- Editor Body -->
-                            <div id="quill-example" style="height: 200px;"></div>
                         </div>
-                        <input type="hidden" name="examples" id="hidden-examples-json">
-                    </div>
-                </div>
 
-                <div class="mt-4 pt-3 border-top text-end">
-                    <button type="button" class="btn btn-light me-2" onclick="loadSubtopics()">Discard</button>
-                    <button type="button" class="btn btn-primary px-4" onclick="saveSubtopic()" style="background:var(--fc-teal); border:none;">Save Changes</button>
-                </div>
-            </form>
+                        <!-- Hidden Inputs -->
+                        <input type="hidden" name="definition_text" id="hidden-notes">
+                        <input type="hidden" name="examples_html" id="hidden-example">
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3">
+                        <button type="button" class="btn btn-light border" onclick="loadSubtopics()">Discard</button>
+                        <button type="button" class="btn btn-teal px-4 fw-bold" onclick="saveSubtopic()">SAVE CHANGES</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- MATH MODAL 
-     CRITICAL FIX: data-bs-backdrop="static" prevents Bootstrap from closing the modal 
-     when clicking the visual keyboard (which is technically outside the modal div) 
--->
-<div class="modal fade" id="mathModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content shadow border-0">
-      <div class="modal-header bg-dark text-white py-2">
-        <h6 class="modal-title small fw-bold">VISUAL FORMULA BUILDER</h6>
-        <!-- We use a custom close function to ensure focus clears -->
-        <button type="button" class="btn-close btn-close-white" onclick="closeMathModal()"></button>
-      </div>
-      <div class="modal-body bg-light">
-          <!-- virtual-keyboard-mode=onfocus ensures the keyboard pops up only when user clicks inside -->
-          <math-field id="math-input" virtual-keyboard-mode="onfocus"></math-field>
-          <div class="text-muted small mt-2 d-flex justify-content-between">
-              <span>Type <code>/sqrt</code>, <code>/frac</code>, or use the on-screen keyboard.</span>
-              <span id="latex-preview" class="text-primary font-monospace"></span>
-          </div>
-      </div>
-      <div class="modal-footer py-1">
-        <button type="button" class="btn btn-sm btn-secondary" onclick="closeMathModal()">Cancel</button>
-        <button type="button" class="btn btn-sm btn-primary" onclick="insertMath()">Insert Formula</button>
-      </div>
+<!-- ========================================== -->
+<!-- 1. HIERARCHY CRUD MODAL (Reusable)         -->
+<!-- ========================================== -->
+<div class="modal fade" id="hierarchyModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-secondary-subtle text-white rounded-0 py-2">
+                <h6 class="modal-title text-uppercase fw-bold" id="hierarchyModalTitle">Create Item</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <form id="hierarchyForm">
+                    <input type="hidden" id="crud-type">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase">Title / Name</label>
+                        <input type="text" class="form-control" id="crud-title" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase">Description</label>
+                        <textarea class="form-control" id="crud-desc" rows="3" placeholder="Optional description..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 py-2">
+                <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-teal px-4" onclick="submitHierarchyForm()">Create</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- SCRIPTS -->
+<!-- ========================================== -->
+<!-- 2. MATH FORMULA MODAL                      -->
+<!-- ========================================== -->
+<div class="modal fade" id="mathModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-teal text-white py-2" style="background:var(--fc-teal);">
+                <h6 class="modal-title fw-bold text-white">FORMULA BUILDER</h6>
+                <button type="button" class="btn-close btn-close-white" onclick="closeMathModal()"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <math-field id="math-input" virtual-keyboard-mode="onfocus"></math-field>
+                <div class="text-muted small mt-2 d-flex justify-content-between font-monospace">
+                    <span>LaTeX Preview:</span>
+                    <span id="latex-preview" class="text-primary"></span>
+                </div>
+            </div>
+            <div class="modal-footer py-1">
+                <button type="button" class="btn btn-sm btn-secondary rounded-0" onclick="closeMathModal()">Cancel</button>
+                <button type="button" class="btn btn-sm btn-teal rounded-0 px-3" onclick="insertMath()">Insert</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
-    // --- 1. INITIALIZE EDITORS ---
-    // Notes Editor (Standard Toolbar)
-    const quillNotes = new Quill('#quill-notes', {
-        theme: 'snow',
-        modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] }
-    });
-
-    // Example Editor (CUSTOM TOOLBAR LINKED VIA ID)
-    const quillEx = new Quill('#quill-example', {
-        theme: 'snow',
-        modules: { toolbar: '#example-toolbar' } // This links to the custom HTML header
-    });
-
-    const mf = document.getElementById('math-input');
+    // =========================================================
+    // 1. INITIALIZATION & STATE
+    // =========================================================
     
-    // Live LaTeX preview
-    mf.addEventListener('input', (ev) => {
-        document.getElementById('latex-preview').innerText = mf.value;
-    });
-
-    // --- 2. STATE & LOGIC ---
     let state = { level: null, section: null, topic: null, subtopic: null };
-    let currentImages = [];
+    let hierarchyModalInstance = null;
     let mathModalInstance = null;
 
-    function toggleOverlay(show) {
-        const ov = document.getElementById('editor-overlay');
-        show ? (ov.classList.remove('d-none'), ov.classList.add('d-flex')) : (ov.classList.remove('d-flex'), ov.classList.add('d-none'));
-    }
+    // --- GENERATOR EDITOR (INPUT) ---
+    const quillGen = new Quill('#quill-input-gen', { 
+        theme: 'snow', 
+        modules: { 
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'], 
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'color': [] }, { 'background': [] }],
+                ['clean']
+            ] 
+        },
+        placeholder: 'Build your content snippet here...'
+    });
 
-    function loadSections() {
-        const id = document.getElementById('sel-level').value;
-        state.level = id; resetUI('section');
-        fetch(`/tutorial_admin/api/sections/${id}`).then(r=>r.json()).then(d=>{
-            const s = document.getElementById('sel-section');
-            s.innerHTML='<option value="" disabled selected>-- Select --</option>';
-            d.forEach(i=>s.innerHTML+=`<option value="${i.id}">${i.title}</option>`);
-            s.disabled=false;
-        });
-    }
-    function loadTopics() {
-        const id = document.getElementById('sel-section').value;
-        state.section=id; resetUI('topic');
-        fetch(`/tutorial_admin/api/topics/${id}`).then(r=>r.json()).then(d=>{
-            const s = document.getElementById('sel-topic');
-            s.innerHTML='<option value="" disabled selected>-- Select --</option>';
-            d.forEach(i=>s.innerHTML+=`<option value="${i.id}">${i.title}</option>`);
-            s.disabled=false;
-        });
-    }
-    function loadSubtopics(activeId=null) {
-        const id = document.getElementById('sel-topic').value;
-        state.topic=id; toggleOverlay(false); if(!activeId) initNewSubtopic();
-        fetch(`/tutorial_admin/api/subtopics/${id}`).then(r=>r.json()).then(d=>{
-            const l = document.getElementById('subtopic-list'); l.innerHTML='';
-            if(!d.length) l.innerHTML='<div class="text-center mt-4 small text-muted">No units found</div>';
-            d.forEach(i=>{
-                const act = (activeId && i.id == activeId) ? 'active' : '';
-                l.innerHTML+=`<div class="subtopic-item ${act}" id="sub-${i.id}" onclick="loadSubtopicDetails(${i.id})"><span>${i.title}</span><i class="fas fa-chevron-right small text-muted"></i></div>`;
-            });
+    // --- MATHLIVE PREVIEW LISTENER ---
+    const mf = document.getElementById('math-input');
+    if(mf) {
+        // Just show the raw LaTeX code in the preview span. 
+        // The MathField itself acts as the visual preview.
+        mf.addEventListener('input', () => {
+            document.getElementById('latex-preview').innerText = mf.value;
         });
     }
 
-    function initNewSubtopic() {
-        if(!state.topic) return;
-        toggleOverlay(false); state.subtopic=null;
-        document.getElementById('editor-form').reset();
-        document.getElementById('edit-subtopic-id').value='';
-        quillNotes.root.innerHTML=''; quillEx.root.innerHTML='';
-        currentImages=[]; renderImages();
-        document.getElementById('editor-header').innerText='New Unit';
-        document.getElementById('btn-delete-sub').style.display='none';
-        document.querySelectorAll('.subtopic-item').forEach(e=>e.classList.remove('active'));
+
+    // =========================================================
+    // 2. CONTENT PUSH LOGIC (NO RENDERING)
+    // =========================================================
+// UPDATE PUSH LOGIC (Explicit & Robust)
+    function pushTo(targetName) {
+        let content = '';
+        let isQuill = false;
+        
+        // 1. Check Quill Generator First
+        const quillHtml = quillGen.root.innerHTML;
+        // Quill defaults to <p><br></p> when "empty". We strip tags to check real content.
+        const quillText = quillGen.getText().trim(); 
+        const hasQuillContent = quillText.length > 0 || (quillHtml.includes('<img') || quillHtml.includes('mjx-container'));
+
+        if (hasQuillContent) {
+            content = quillHtml;
+            isQuill = true;
+        } else {
+            // 2. Fallback to Raw HTML Generator
+            content = document.getElementById('raw-html-gen').value;
+        }
+
+        // 3. Validation
+        if (!content || !content.trim()) {
+            return alert("Generator is empty. Please add text, math, or HTML first.");
+        }
+
+        // 4. Determine Destination
+        const targetId = (targetName === 'notes') ? 'live-notes-box' : 'live-example-box';
+        const targetBox = document.getElementById(targetId);
+
+        if (!targetBox) {
+            console.error("Target box not found: " + targetId);
+            return alert("System Error: Target container missing.");
+        }
+
+        // 5. Append Content safely
+        const newBlock = document.createElement('div');
+        newBlock.className = "mb-3 position-relative"; // Spacing
+        newBlock.innerHTML = content;
+        targetBox.appendChild(newBlock);
+
+
+        // 7. Cleanup Source
+        if (isQuill) {
+            quillGen.setContents([]);
+        } else {
+            document.getElementById('raw-html-gen').value = '';
+        }
+        
+        console.log(`Pushed content to ${targetName}`);
     }
 
-    function loadSubtopicDetails(id) {
-        toggleOverlay(false);
-        document.querySelectorAll('.subtopic-item').forEach(e=>e.classList.remove('active'));
-        document.getElementById(`sub-${id}`).classList.add('active');
-        fetch(`/tutorial_admin/api/subtopic_details/${id}`).then(r=>r.json()).then(d=>{
-            state.subtopic=d.id;
-            document.getElementById('edit-subtopic-id').value=d.id;
-            document.getElementById('edit-title').value=d.title;
-            document.getElementById('edit-desc').value=d.short_description||'';
-            document.getElementById('edit-video').value=d.video_url||'';
-            quillNotes.root.innerHTML=d.definition_text||'';
-            const ex=d.examples||{};
-            quillEx.root.innerHTML=ex.content||'';
-            currentImages=ex.images||[]; renderImages();
-            document.getElementById('editor-header').innerText='Editing: '+d.title;
-            document.getElementById('btn-delete-sub').style.display='block';
-        });
-    }
+    // =========================================================
+    // 3. MATH MODAL
+    // =========================================================
 
-    function cleanHtml(html) {
-        const t=document.createElement('div'); t.innerHTML=html;
-        t.querySelectorAll('img').forEach(i=>i.remove());
-        t.querySelectorAll('*').forEach(e=>{
-            e.removeAttribute('style'); e.removeAttribute('class');
-            if(e.tagName==='SPAN') { const p=e.parentNode; while(e.firstChild)p.insertBefore(e.firstChild,e); p.removeChild(e); }
-        });
-        return t.innerHTML.replace(/<p><br><\/p>/g,'');
-    }
-
-    function saveSubtopic() {
-        if(!state.topic) return;
-        document.getElementById('hidden-notes').value = cleanHtml(quillNotes.root.innerHTML);
-        const exData = { content: cleanHtml(quillEx.root.innerHTML), images: currentImages };
-        document.getElementById('hidden-examples-json').value = JSON.stringify(exData);
-
-        const fd = new FormData(document.getElementById('editor-form'));
-        fd.append('topic_id', state.topic);
-        fetch('/tutorial_admin/action/save_subtopic',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
-            if(d.status==='success') { loadSubtopics(d.id); loadSubtopicDetails(d.id); }
-        });
-    }
-
-    // --- MATH MODAL HANDLERS ---
-    function openMathModal() { 
+    function openMathModal() {
+        if (!mathModalInstance) mathModalInstance = new bootstrap.Modal(document.getElementById('mathModal'));
         mf.value = ""; 
         document.getElementById('latex-preview').innerText = "";
-        
-        // Init Bootstrap modal
-        const modalEl = document.getElementById('mathModal');
-        mathModalInstance = new bootstrap.Modal(modalEl);
         mathModalInstance.show();
-        
-        // Focus MathLive field slightly after modal animation
-        setTimeout(() => { mf.focus(); }, 500);
+        setTimeout(() => mf.focus(), 500);
     }
 
-    function closeMathModal() {
-        if (mathModalInstance) mathModalInstance.hide();
-    }
+    function closeMathModal() { if(mathModalInstance) mathModalInstance.hide(); }
 
     function insertMath() {
         if(!mf.value) { closeMathModal(); return; }
         
+        // Wrap raw latex in delimiters
         const latex = ` $${mf.value}$ `;
         
-        // Insert into Quill
-        const range = quillEx.getSelection(true);
+        // Insert RAW STRING into Generator Quill
+        const range = quillGen.getSelection(true);
         if (range) {
-            quillEx.insertText(range.index, latex);
-            quillEx.setSelection(range.index + latex.length);
+            quillGen.insertText(range.index, latex);
+            quillGen.setSelection(range.index + latex.length);
         } else {
-            quillEx.insertText(quillEx.getLength(), latex);
+            quillGen.insertText(quillGen.getLength(), latex);
         }
-        
         closeMathModal();
     }
 
-    function uploadImage(input) {
-        const f=input.files[0]; if(!f||f.size>2*1024*1024) return alert("Max 2MB");
-        const fd=new FormData(); fd.append('file',f);
-        fetch('/tutorial_admin/action/upload_image',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{
-            if(d.location) { currentImages.push(d.location); renderImages(); }
-        }).finally(()=>input.value='');
+    function uploadImageToGen(input) {
+        const file = input.files[0];
+        if(!file) return;
+        
+        const fd = new FormData();
+        fd.append('file', file);
+
+        fetch('/tutorial_admin/action/upload_image', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if(d.location) {
+                const range = quillGen.getSelection(true);
+                const idx = range ? range.index : quillGen.getLength();
+                quillGen.insertEmbed(idx, 'image', d.location);
+            } else {
+                alert("Upload failed");
+            }
+        }).finally(() => input.value = '');
     }
-    function renderImages() {
-        const c=document.getElementById('image-preview-container'); c.innerHTML='';
-        currentImages.forEach((u,i)=>c.innerHTML+=`<img src="${u}" class="img-thumb-mini pointer" onclick="removeImage(${i})" title="Click to remove">`);
+
+
+    // =========================================================
+    // 4. CRUD OPERATIONS
+    // =========================================================
+
+    function initNewSubtopic() {
+        if(!state.topic) return;
+        toggleOverlay(false);
+        state.subtopic = null;
+
+        document.getElementById('editor-form').reset();
+        document.getElementById('edit-subtopic-id').value = '';
+        document.getElementById('editor-header').innerText = 'New Unit';
+        document.getElementById('btn-delete-sub').style.display = 'none';
+        
+        // Clear Content Areas
+        quillGen.setContents([]);
+        document.getElementById('raw-html-gen').value = '';
+        document.getElementById('live-notes-box').innerHTML = '';
+        document.getElementById('live-example-box').innerHTML = '';
+
+        document.querySelectorAll('.subtopic-item').forEach(e => e.classList.remove('active'));
     }
-    function removeImage(i) { if(confirm('Remove image?')) { currentImages.splice(i,1); renderImages(); } }
+
+    function loadSubtopicDetails(id) {
+        toggleOverlay(false);
+        document.querySelectorAll('.subtopic-item').forEach(e => e.classList.remove('active'));
+        const item = document.getElementById(`sub-${id}`);
+        if(item) item.classList.add('active');
+
+        fetch(`/tutorial_admin/api/subtopic_details/${id}`).then(r => r.json()).then(d => {
+            state.subtopic = d.id;
+            
+            // Metadata
+            document.getElementById('edit-subtopic-id').value = d.id;
+            document.getElementById('edit-title').value = d.title;
+            document.getElementById('edit-desc').value = d.short_description || '';
+            document.getElementById('edit-video').value = d.video_url || '';
+            document.getElementById('editor-header').innerText = d.title;
+            document.getElementById('btn-delete-sub').style.display = 'block';
+
+            // Content Loading (Raw HTML/Latex -> Editable Div)
+            const notesBox = document.getElementById('live-notes-box');
+            const exampleBox = document.getElementById('live-example-box');
+
+            // Inject HTML directly. No MathJax processing here.
+            notesBox.innerHTML = d.definition_text || '';
+
+            if (d.examples && typeof d.examples.html !== 'undefined') {
+                exampleBox.innerHTML = d.examples.html;
+            } else if (d.examples && d.examples.content) {
+                exampleBox.innerHTML = d.examples.content;
+            } else {
+                exampleBox.innerHTML = '';
+            }
+
+            quillGen.setContents([]);
+        });
+    }
+
+    function saveSubtopic() {
+        if(!state.topic) return;
+
+        // Scrape HTML (This contains raw $math$ because we never rendered it)
+        document.getElementById('hidden-notes').value = document.getElementById('live-notes-box').innerHTML;
+        document.getElementById('hidden-example').value = document.getElementById('live-example-box').innerHTML;
+
+        const fd = new FormData(document.getElementById('editor-form'));
+        fd.append('topic_id', state.topic);
+
+        fetch('/tutorial_admin/action/save_subtopic', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if(d.status === 'success') {
+                loadSubtopics(d.id);
+                // We reload details to ensure UI sync, but since we just saved clean data,
+                // the reload will just show that clean data again.
+                loadSubtopicDetails(d.id); 
+                alert("Saved Successfully");
+            } else {
+                alert("Error: " + d.message);
+            }
+        });
+    }
+
+    function deleteSubtopic() {
+        if(!state.subtopic || !confirm("Delete this unit?")) return;
+        fetch(`/tutorial_admin/action/delete_subtopic/${state.subtopic}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(d => { if(d.status === 'success') loadSubtopics(); });
+    }
+
+
+    // =========================================================
+    // 5. HIERARCHY NAVIGATION
+    // =========================================================
+
+    function loadSections() {
+        const id = document.getElementById('sel-level').value;
+        state.level = id; resetUI('section');
+        fetch(`/tutorial_admin/api/sections/${id}`).then(r => r.json()).then(d => {
+            const s = document.getElementById('sel-section');
+            s.innerHTML = '<option value="" disabled selected>-- Select --</option>';
+            d.forEach(i => s.innerHTML += `<option value="${i.id}">${i.title}</option>`);
+            s.disabled = false;
+        });
+    }
+
+    function loadTopics() {
+        const id = document.getElementById('sel-section').value;
+        state.section = id; resetUI('topic');
+        fetch(`/tutorial_admin/api/topics/${id}`).then(r => r.json()).then(d => {
+            const s = document.getElementById('sel-topic');
+            s.innerHTML = '<option value="" disabled selected>-- Select --</option>';
+            d.forEach(i => s.innerHTML += `<option value="${i.id}">${i.title}</option>`);
+            s.disabled = false;
+        });
+    }
+
+    function loadSubtopics(activeId = null) {
+        const id = document.getElementById('sel-topic').value;
+        state.topic = id; toggleOverlay(false); 
+        if(!activeId) initNewSubtopic();
+
+        fetch(`/tutorial_admin/api/subtopics/${id}`).then(r => r.json()).then(d => {
+            const l = document.getElementById('subtopic-list'); l.innerHTML = '';
+            if(!d.length) l.innerHTML = '<div class="text-center mt-5 text-muted small">No units found</div>';
+            
+            d.forEach(i => {
+                const act = (activeId && i.id == activeId) ? 'active' : '';
+                l.innerHTML += `<div class="subtopic-item ${act}" id="sub-${i.id}" onclick="loadSubtopicDetails(${i.id})"><span>${i.title}</span></div>`;
+            });
+        });
+    }
+
+
+    // =========================================================
+    // 6. HIERARCHY MODAL
+    // =========================================================
+
+    function openHierarchyModal(type) {
+        if(type === 'section' && !state.level) return alert("Select Level First");
+        if(type === 'topic' && !state.section) return alert("Select Section First");
+
+        if (!hierarchyModalInstance) hierarchyModalInstance = new bootstrap.Modal(document.getElementById('hierarchyModal'));
+        
+        document.getElementById('crud-type').value = type;
+        document.getElementById('hierarchyModalTitle').innerText = `New ${type}`;
+        document.getElementById('crud-title').value = '';
+        document.getElementById('crud-desc').value = '';
+        hierarchyModalInstance.show();
+    }
+
+    function submitHierarchyForm() {
+        const type = document.getElementById('crud-type').value;
+        const title = document.getElementById('crud-title').value;
+        const desc = document.getElementById('crud-desc').value;
+        if(!title) return alert("Title required");
+
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('description', desc);
+
+        let url = '';
+        if (type === 'level') url = '/tutorial_admin/action/add_level'; 
+        else if (type === 'section') { url = '/tutorial_admin/action/add_section'; fd.append('level_id', state.level); }
+        else if (type === 'topic') { url = '/tutorial_admin/action/add_topic'; fd.append('section_id', state.section); }
+
+        fetch(url, { method: 'POST', body: fd }).then(r => r.json()).then(d => {
+            if(d.status === 'success') {
+                hierarchyModalInstance.hide();
+                if(type === 'level') location.reload(); 
+                if(type === 'section') loadSections();
+                if(type === 'topic') loadTopics();
+            } else alert(d.message);
+        });
+    }
+
+    function deleteItem(type) {
+        let id = (type === 'section') ? state.section : state.topic;
+        if(!id || !confirm("Delete this entire item?")) return;
+        fetch(`/tutorial_admin/action/delete_${type}/${id}`, { method: 'DELETE' }).then(r=>r.json()).then(d=>{
+            if(d.status==='success') { type==='section'?loadSections():loadTopics(); } 
+            else alert(d.message);
+        });
+    }
+
+    // =========================================================
+    // 7. UTILITIES
+    // =========================================================
+
+    function toggleUnitSidebar() {
+        document.getElementById('unit-sidebar').classList.toggle('sidebar-collapsed');
+    }
+
+    function toggleFullscreen() {
+        const setupContainer = document.querySelector('.admin-layout').parentElement; 
+        const mainContentCol = setupContainer.parentElement; 
+        const adminSidebarCol = mainContentCol.previousElementSibling; 
+
+        if (adminSidebarCol) {
+            adminSidebarCol.classList.toggle('d-none');
+            if (mainContentCol.classList.contains('col-md-10')) {
+                mainContentCol.classList.remove('col-md-10', 'col-lg-10'); mainContentCol.classList.add('col-12');
+            } else {
+                mainContentCol.classList.add('col-md-10', 'col-lg-10'); mainContentCol.classList.remove('col-12');
+            }
+        }
+    }
+
+    function setLayout(mode) {
+        const grid = document.getElementById('studio-grid');
+        const paneGen = document.getElementById('pane-gen');
+        const paneAgg = document.getElementById('pane-agg');
+        const btnStack = document.getElementById('btn-layout-stack');
+        const btnSplit = document.getElementById('btn-layout-split');
+
+        if (mode === 'stacked') {
+            grid.classList.remove('flex-row'); grid.classList.add('flex-column');
+            paneGen.style.width = '100%'; paneGen.classList.add('border-bottom'); paneGen.classList.remove('border-end');
+            paneAgg.style.width = '100%';
+            btnStack.classList.add('active'); btnSplit.classList.remove('active');
+        } else {
+            grid.classList.remove('flex-column'); grid.classList.add('flex-row');
+            paneGen.style.width = '40%'; paneGen.classList.remove('border-bottom'); paneGen.classList.add('border-end');
+            paneAgg.style.width = '60%';
+            btnStack.classList.remove('active'); btnSplit.classList.add('active');
+        }
+    }
 
     function resetUI(type) {
-        if(type==='section') { document.getElementById('sel-section').innerHTML='<option>Loading...</option>'; document.getElementById('sel-topic').disabled=true; }
-        document.getElementById('subtopic-list').innerHTML=''; toggleOverlay(true); state.topic=null;
+        if(type === 'section') { 
+            document.getElementById('sel-section').innerHTML = '<option>Loading...</option>'; 
+            document.getElementById('sel-topic').disabled = true; 
+        }
+        document.getElementById('subtopic-list').innerHTML = ''; 
+        toggleOverlay(true); 
+        state.topic = null;
     }
-    function toggleAdd(t) { document.getElementById(`view-${t}-select`).classList.toggle('d-none'); document.getElementById(`view-${t}-add`).classList.toggle('d-none'); }
-    function addItem(t) {
-        const title=document.getElementById(`new-${t}-title`).value; if(!title)return;
-        const fd=new FormData(); fd.append('title',title);
-        const url=t==='section'?'/tutorial_admin/action/add_section':'/tutorial_admin/action/add_topic';
-        fd.append(t==='section'?'level_id':'section_id', t==='section'?state.level:state.section);
-        fetch(url,{method:'POST',body:fd}).then(r=>r.json()).then(d=>{ if(d.status==='success') t==='section'?loadSections():loadTopics(); });
-    }
-    function deleteItem() {
-        if(!document.getElementById('sel-topic').value || !confirm("Delete Topic?")) return;
-        fetch(`/tutorial_admin/action/delete_topic/${document.getElementById('sel-topic').value}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{if(d.status==='success')loadTopics();});
-    }
-    function deleteSubtopic() {
-        if(!state.subtopic||!confirm("Delete Unit?")) return;
-        fetch(`/tutorial_admin/action/delete_subtopic/${state.subtopic}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{if(d.status==='success')loadSubtopics();});
+
+    function toggleOverlay(show) {
+        const ov = document.getElementById('editor-overlay');
+        show ? (ov.classList.remove('d-none'), ov.classList.add('d-flex')) : (ov.classList.remove('d-flex'), ov.classList.add('d-none'));
     }
 </script>
 

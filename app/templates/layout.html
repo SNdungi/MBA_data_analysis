@@ -29,15 +29,28 @@
 </head>
 <body>
 <!-- TOP NAVBAR -->
-    <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top">
+    <nav class="navbar navbar-expand-md navbar-dark navbar-custom fixed-top " >
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('file_mgt.list_projects') }}">
-                <small>TXDataLab</small>
-            </a>
             {% if current_user.is_authenticated %}
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
+
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.index') }}">
+                        <i class="fas fa-shield-alt fa-fw me-2"></i> 
+                    </a>
+                    </li>
+                </ul>
+          
+
              {% if study %}
             <!-- Inside your Sticky Navbar or Top Bar -->
-            <div class="d-flex align-items-center border-start border-end  px-4 py-2">
+            <div class="d-flex align-items-center border-start border-end  px-3 py-2">
+                <ul class="navbar-nav border-end me-4 pe-3">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data Encoder</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>  
+                </ul>
                 
                 <!-- Study Initial Pill -->
                 <span class="badge rounded-pill bg-secondary-subtle text-black me-2"> 
@@ -61,10 +74,7 @@
                         title="Save Project State (CSV, JSON, Results) to Local Disk">
                     <i class="fas fa-save text-white fs-5"></i> 
                 </button>
-                <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('encoding.definitions', study_id=study.id) }}">Data Encoder</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('analysis.dashboard', study_id=study.id) }}">Analysis</a></li>  
-                </ul>
+
             </div>
             {% endif %}
             {% endif %}
@@ -78,21 +88,6 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                {% if current_user.is_authenticated %}
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
-
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.index') }}">
-                        <i class="fas fa-shield-alt fa-fw me-2"></i> 
-                    </a>
-                    </li>
-                </ul>
-                {% endif %}
-
-
-
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light btn-sm px-3 rounded-5"
@@ -103,7 +98,7 @@
                     </li>
                 </ul>
 
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item me-2">
                             <span class="nav-link text-white small">Hi, {{ current_user.username }}</span>

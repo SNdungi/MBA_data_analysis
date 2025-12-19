@@ -1,15 +1,14 @@
 import json
 import os
 import shutil
-from flask import render_template, request, jsonify, flash, redirect, url_for, Blueprint,current_app
+from flask import render_template, request, jsonify, flash, redirect, url_for, Blueprint, current_app
 from flask_login import login_required, current_user
 from app.app_database.extensions import db
-from app.app_database.encoder_models import Study, ColumnEncoding, EncodingConfig,EncoderDefinition
+from app.app_database.encoder_models import Study, ColumnEncoding, EncodingConfig, EncoderDefinition
 from app.app_database.tutorials_models import TutorialLevel, TutorialSection, TutorialTopic, TutorialSubtopic
 from app.app_utils import process_and_save_image
 
 tuit_setup_bp = Blueprint('tuit_setup', __name__, template_folder='templates/tuit_setup', url_prefix='/tutorial_admin')
-
 
 
 # =========================================================
@@ -20,7 +19,6 @@ tuit_setup_bp = Blueprint('tuit_setup', __name__, template_folder='templates/tui
 @login_required
 def index():
     """Tutorial Editor Dashboard."""
-    # CHANGED HERE: Use has_role()
     if not current_user.has_role('Admin'):
         flash("Access restricted.", "danger")
         return redirect(url_for('file_mgt.list_projects'))
@@ -59,19 +57,15 @@ def get_subtopic_details(sub_id):
         'examples': sub.examples if sub.examples else {} 
     })
 
-# --- API: CRUD ACTIONS ---
-
 
 # =========================================================
-#  IMAGE UPLOAD ROUTE (Optimized)
+#  IMAGE UPLOAD ROUTE
 # =========================================================
 
 @tuit_setup_bp.route('/action/upload_image', methods=['POST'])
 @login_required
 def upload_image():
-    """
-    Handles async image uploads with compression.
-    """
+    """Handles async image uploads with compression."""
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
@@ -80,38 +74,72 @@ def upload_image():
         return jsonify({'error': 'No selected file'}), 400
         
     try:
-        # Define absolute upload path
         upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'tutorials')
-        
-        # Call the Utility Function
-        # This handles: validation, resizing (max 1200px), compression (80%), and saving
         filename = process_and_save_image(file, upload_dir, max_width=1200, quality=80)
-        
-        # Generate the Web URL
         url_path = url_for('static', filename=f'uploads/tutorials/{filename}')
-        
         return jsonify({'location': url_path})
         
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        print(f"Upload Error: {e}") # Log error for server admin
+        print(f"Upload Error: {e}") 
         return jsonify({'error': 'Server could not process image.'}), 500
 
-# ================================================================
-# API: CRUD ACTIONS 
-# -=============================================================
+
+# =========================================================
+#  API: CRUD ACTIONS (HIERARCHY)
+# =========================================================
+
+# --- LEVEL CRUD ---
+
+@tuit_setup_bp.route('/action/add_level', methods=['POST'])
+@login_required
+def add_level():
+    try:
+        title = request.form.get('title')
+        description = request.form.get('description', '')
+        
+        if not title:
+            return jsonify({'status': 'error', 'message': 'Title is required'}), 400
+
+        # Check uniqueness
+        if TutorialLevel.query.filter_by(title=title).first():
+            return jsonify({'status': 'error', 'message': 'Level with this title already exists'}), 400
+
+        new_level = TutorialLevel(title=title, description=description)
+        db.session.add(new_level)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Level created successfully', 'id': new_level.id, 'title': new_level.title})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@tuit_setup_bp.route('/action/delete_level/<int:id>', methods=['DELETE'])
+@login_required
+def delete_level(id):
+    level = TutorialLevel.query.get_or_404(id)
+    if level.sections:
+        return jsonify({'status': 'error', 'message': 'Cannot delete: Level contains Sections.'}), 400
+    db.session.delete(level)
+    db.session.commit()
+    return jsonify({'status': 'success', 'message': 'Level deleted'})
+
+# --- SECTION CRUD ---
 
 @tuit_setup_bp.route('/action/add_section', methods=['POST'])
 @login_required
 def add_section():
     try:
         title = request.form.get('title')
+        description = request.form.get('description', '')
         level_id = request.form.get('level_id')
-        new_sec = TutorialSection(title=title, level_id=level_id, description="")
+
+        if not title or not level_id:
+            return jsonify({'status': 'error', 'message': 'Title and Level selection are required'}), 400
+
+        new_sec = TutorialSection(title=title, level_id=level_id, description=description)
         db.session.add(new_sec)
         db.session.commit()
-        return jsonify({'status': 'success', 'id': new_sec.id, 'title': new_sec.title})
+        return jsonify({'status': 'success', 'message': 'Section created', 'id': new_sec.id, 'title': new_sec.title})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
@@ -123,18 +151,25 @@ def delete_section(id):
         return jsonify({'status': 'error', 'message': 'Cannot delete: Section has Topics.'}), 400
     db.session.delete(sec)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success', 'message': 'Section deleted'})
+
+# --- TOPIC CRUD ---
 
 @tuit_setup_bp.route('/action/add_topic', methods=['POST'])
 @login_required
 def add_topic():
     try:
         title = request.form.get('title')
+        description = request.form.get('description', '')
         section_id = request.form.get('section_id')
-        new_topic = TutorialTopic(title=title, section_id=section_id, description="")
+
+        if not title or not section_id:
+            return jsonify({'status': 'error', 'message': 'Title and Section selection are required'}), 400
+
+        new_topic = TutorialTopic(title=title, section_id=section_id, description=description)
         db.session.add(new_topic)
         db.session.commit()
-        return jsonify({'status': 'success', 'id': new_topic.id, 'title': new_topic.title})
+        return jsonify({'status': 'success', 'message': 'Topic created', 'id': new_topic.id, 'title': new_topic.title})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
@@ -146,7 +181,9 @@ def delete_topic(id):
         return jsonify({'status': 'error', 'message': 'Cannot delete: Topic has Subtopics.'}), 400
     db.session.delete(topic)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success', 'message': 'Topic deleted'})
+
+# --- SUBTOPIC CRUD ---
 
 @tuit_setup_bp.route('/action/save_subtopic', methods=['POST'])
 @login_required
@@ -155,71 +192,59 @@ def save_subtopic():
         sub_id = request.form.get('subtopic_id') 
         topic_id = request.form.get('topic_id')
         
-        examples_raw = request.form.get('examples')
-        try:
-            # Handle empty strings gracefully
-            examples_json = json.loads(examples_raw) if examples_raw and examples_raw.strip() else {}
-        except json.JSONDecodeError:
-            return jsonify({'status': 'error', 'message': 'Invalid JSON in Examples field'}), 400
+        # 1. Capture HTML from the aggregators
+        definition_html = request.form.get('definition_text', '')
+        example_html = request.form.get('examples_html', '') # New field name
+
+        # 2. Structure the JSON for the existing 'examples' column
+        # We wrap it in a dict to keep it valid JSON, but it's just one HTML blob now.
+        examples_data = {
+            "html": example_html, 
+            "version": "v2_modular" # Helpful for future migrations
+        }
 
         if sub_id:
             # UPDATE
             sub = TutorialSubtopic.query.get_or_404(sub_id)
             sub.title = request.form.get('title')
             sub.short_description = request.form.get('short_description')
-            sub.definition_text = request.form.get('definition_text')
             sub.video_url = request.form.get('video_url')
-            sub.examples = examples_json
-            msg = "Subtopic Updated"
+            
+            sub.definition_text = definition_html
+            sub.examples = examples_data
+            msg = "Unit Updated"
         else:
             # CREATE
             sub = TutorialSubtopic(
                 topic_id=topic_id,
                 title=request.form.get('title'),
                 short_description=request.form.get('short_description'),
-                definition_text=request.form.get('definition_text'),
+                definition_text=definition_html,
                 video_url=request.form.get('video_url'),
-                examples=examples_json
+                examples=examples_data
             )
             db.session.add(sub)
-            msg = "Subtopic Created"
+            msg = "Unit Created"
 
         db.session.commit()
-        
-        # CHANGE: Return the ID so the frontend knows which item to select
         return jsonify({'status': 'success', 'message': msg, 'id': sub.id})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
-
+    
 @tuit_setup_bp.route('/action/delete_subtopic/<int:id>', methods=['DELETE'])
 @login_required
 def delete_subtopic(id):
     sub = TutorialSubtopic.query.get_or_404(id)
     db.session.delete(sub)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success', 'message': 'Unit deleted'})
 
 
 # =========================================================
-#  SYSTEM TOOLS & PURGE ROUTES (Moved from file_mgt)
+#  SYSTEM TOOLS & PURGE ROUTES
 # =========================================================
 
-# --- HELPER ---
-def _clear_folder_contents(folder_path):
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print(f'Failed to delete {file_path}. Reason: {e}')
-
-# =========================================================
-# ROUTES
-# =========================================================
-
+# ... (Previous helper and route code for System Tools remains unchanged) ...
 @tuit_setup_bp.route('/system')
 @login_required
 def system_tools():
@@ -260,7 +285,6 @@ def purge_system():
         elif target_id and target_id.isdigit():
             study = Study.query.get(int(target_id))
             if study:
-                # Delete associated files logic (simplified for brevity, assume same logic as before)
                 base_name = study.map_filename.replace('.json', '')
                 files = [
                     os.path.join(current_app.config['UPLOADS_FOLDER'], f"{base_name}.csv"),
