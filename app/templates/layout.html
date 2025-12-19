@@ -33,9 +33,10 @@
         <div class="container-fluid">
             {% if current_user.is_authenticated %}
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">File</a></li>
+                    
 
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tutorials.index') }}">Tutorials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('file_mgt.list_projects') }}">Projects</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('ops.documentation') }}">Methodology</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('tuit_setup.index') }}">
                         <i class="fas fa-shield-alt fa-fw me-2"></i> 

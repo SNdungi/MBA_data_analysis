@@ -84,6 +84,13 @@ pre {
   border-radius: var(--radius-sm);
 }
 
+.bg-fluid-teal { background-color: var(--fluidcore-teal) !important; }
+.bg-fluid-accent { background-color: var(--fluidcore-accent) !important; }
+.bg-fluid-orange { background-color: var(--fluidcore-orange) !important; }
+.bg-fluid-red { background-color: var(--fluidcore-red) !important; }
+.bg-fluid-gold { background-color: var(--fluidcore-gold) !important; }
+.bg-fluid-cream { background-color: var(--fluidcore-cream) !important; }
+
 
 /* ==========================================================================
    NAVBAR (Compact & Professional)
